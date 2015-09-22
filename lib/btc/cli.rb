@@ -73,5 +73,34 @@ module Btc
 
     end
 
+    desc 'console', 'Log into interactive console'
+    def console
+      if !ready?
+        say_status 'ERROR', 'Not logged in. Run btc login first', :red
+        return
+      end
+
+      require 'irb'
+      require 'irb/completion'
+      IRB.setup nil
+      IRB.conf[:MAIN_CONTEXT] = IRB::Irb.new.context
+      require 'irb/ext/multi-irb'
+      require 'btc/console'
+      context = Console.new
+      prompt = "/btc (#{root.user_name}|#{root.scopes}) $ "
+
+      IRB.conf[:PROMPT][:CUSTOM] = {
+        :PROMPT_I => prompt,
+        :PROMPT_S => "%l>> ",
+        :PROMPT_C => prompt,
+        :PROMPT_N => prompt,
+        :RETURN => "=> %s\n"
+      }
+      IRB.conf[:PROMPT_MODE] = :CUSTOM
+      IRB.conf[:AUTO_INDENT] = false
+
+      IRB.irb nil, context
+    end
+
   end
 end
