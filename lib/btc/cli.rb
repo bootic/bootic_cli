@@ -87,7 +87,7 @@ module Btc
       require 'irb/ext/multi-irb'
       require 'btc/console'
       context = Console.new
-      prompt = "/btc (#{root.user_name}|#{root.scopes}) $ "
+      prompt = "/#{shop.subdomain} (#{root.user_name}|#{root.scopes}) $ "
 
       IRB.conf[:PROMPT][:CUSTOM] = {
         :PROMPT_I => prompt,
