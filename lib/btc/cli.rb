@@ -22,7 +22,7 @@ module Btc
     end
 
     desc 'login', 'Login to your Bootic account'
-    def login
+    def login(scope = 'admin')
       if !setup?
         say "App not configured. Running setup first."
         invoke :setup
@@ -34,7 +34,7 @@ module Btc
       say "Loging in as #{username}. Getting access token..."
 
       begin
-        token = oauth_client.password.get_token(username, pwd, 'scope' => 'admin')
+        token = oauth_client.password.get_token(username, pwd, 'scope' => scope)
 
         store.transaction do
           store['access_token'] = token.token
