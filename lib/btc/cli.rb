@@ -40,8 +40,8 @@ module Btc
       end
     end
 
-    desc 'test', 'Test API connectivity'
-    def test
+    desc 'info', 'Test API connectivity'
+    def info
       if !session.setup?
         say_status "ERROR", "No app credentials. Run btc setup", :red
         return
