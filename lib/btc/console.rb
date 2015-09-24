@@ -2,13 +2,13 @@ module Btc
   class Console
     include Btc::Connectivity
 
-    SEPCOUNT = 40.freeze
+    SEPCOUNT = 80.freeze
 
     def initialize(root = root)
       @root = root
     end
 
-    def explain(entity)
+    def explain(entity, include_links = true)
       if entity.is_a?(String) || entity.is_a?(Integer)
         puts entity
         return
@@ -19,20 +19,22 @@ module Btc
         return
       end
 
-      title 'Properties:'
+      title 'PROPERTIES:'
       puts table(entity.properties)
 
       puts ''
 
-      title 'Links (explain_link <ENTITY>, <LINK_NAME>):'
-      puts links(entity.rels)
+      if include_links
+        title 'LINKS (explain_link <ENTITY>, <LINK_NAME>):'
+        puts links(entity.rels)
 
-      puts ''
+        puts ''
+      end
 
-      title 'Entities (explain <SUBENTITY>):'
+      title 'ENTITIES (explain <SUBENTITY>):'
       puts entity.entities.keys.join("\r\n")
 
-      puts '=' * SEPCOUNT
+      puts '-' * SEPCOUNT
       puts ''
       nil
     end
@@ -62,10 +64,12 @@ module Btc
 
     def list(entities)
       if entities.respond_to?(:each)
-        entities.each{|e| explain(e)}
+        entities.each{|e| explain(e, false)}
         puts ''
-        puts "Page #{entities.page} of #{(entities.total_items / entities.per_page) + 1}. Total items #{entities.total_items}"
-        if entities.has?(:next)
+        if entities.respond_to?(:total_items)
+          puts "Page #{entities.page} of #{(entities.total_items / entities.per_page) + 1}. Total items #{entities.total_items}"
+        end
+        if entities.respond_to?(:next)
           @last_in_list = entities
           puts "There is more. run 'more'"
         else
@@ -91,8 +95,7 @@ module Btc
     end
 
     def title(str)
-      puts str
-      puts "-" * SEPCOUNT
+      puts "### #{str}\r\n"
       nil
     end
 
