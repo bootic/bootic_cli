@@ -63,11 +63,25 @@ module Btc
     def list(entities)
       if entities.respond_to?(:each)
         entities.each{|e| explain(e)}
+        puts ''
+        puts "Page #{entities.page} of #{entities.total_items / entities.per_page}"
+        if entities.has?(:next)
+          @last_in_list = entities
+          puts "There is more. run 'more'"
+        else
+          @last_in_list = nil
+          puts "End of list"
+        end
       else
         explain entities
       end
 
       nil
+    end
+
+    def more
+      puts "End of list" unless @last_in_list
+      list @last_in_list.next
     end
 
     private
