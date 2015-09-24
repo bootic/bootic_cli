@@ -2,6 +2,10 @@ module Btc
   class Console
     include Btc::Connectivity
 
+    def initialize(root = root)
+      @root = root
+    end
+
     def explain(entity)
       if entity.is_a?(String) || entity.is_a?(Integer)
         puts entity
