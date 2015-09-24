@@ -2,6 +2,8 @@ module Btc
   class Console
     include Btc::Connectivity
 
+    SEPCOUNT = 40.freeze
+
     def initialize(root = root)
       @root = root
     end
@@ -29,7 +31,10 @@ module Btc
 
       title 'Entities (explain <SUBENTITY>):'
       puts entity.entities.keys.join("\r\n")
+
+      puts '=' * SEPCOUNT
       puts ''
+      nil
     end
 
     def explain_link(entity, key)
@@ -51,6 +56,18 @@ module Btc
       puts ''
       token = session.config[:access_token]
       puts %(curl -i -H "Authorization: Bearer #{token}" "#{rel.href}")
+
+      nil
+    end
+
+    def list(entities)
+      if entities.respond_to?(:each)
+        entities.each{|e| explain(e)}
+      else
+        explain entities
+      end
+
+      nil
     end
 
     private
@@ -61,7 +78,8 @@ module Btc
 
     def title(str)
       puts str
-      puts "------------------------------------"
+      puts "-" * SEPCOUNT
+      nil
     end
 
     def links(rels)
