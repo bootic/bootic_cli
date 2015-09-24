@@ -64,7 +64,7 @@ module Btc
       if entities.respond_to?(:each)
         entities.each{|e| explain(e)}
         puts ''
-        puts "Page #{entities.page} of #{entities.total_items / entities.per_page}"
+        puts "Page #{entities.page} of #{(entities.total_items / entities.per_page) + 1}. Total items #{entities.total_items}"
         if entities.has?(:next)
           @last_in_list = entities
           puts "There is more. run 'more'"
