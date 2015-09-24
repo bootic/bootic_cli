@@ -1,7 +1,7 @@
 require 'fileutils'
 require 'pstore'
 
-module Btc
+module BooticCli
 
   class Store
 

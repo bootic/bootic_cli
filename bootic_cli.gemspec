@@ -1,11 +1,11 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'btc/version'
+require 'bootic_cli/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "btc"
-  spec.version       = Btc::VERSION
+  spec.name          = "bootic_cli"
+  spec.version       = BooticCli::VERSION
   spec.authors       = ["Ismael Celis"]
   spec.email         = ["ismaelct@gmail.com"]
 

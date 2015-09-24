@@ -1,10 +1,10 @@
 require 'thor'
-require 'btc/connectivity'
+require 'bootic_cli/connectivity'
 
-module Btc
+module BooticCli
   class CLI < Thor
     include Thor::Actions
-    include Btc::Connectivity
+    include BooticCli::Connectivity
 
     package_name "Auth"
 
@@ -85,7 +85,7 @@ module Btc
       IRB.setup nil
       IRB.conf[:MAIN_CONTEXT] = IRB::Irb.new.context
       require 'irb/ext/multi-irb'
-      require 'btc/console'
+      require 'bootic_cli/console'
       context = Console.new(root)
       prompt = "/#{shop.subdomain} (#{root.user_name}|#{root.scopes}) $ "
 

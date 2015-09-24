@@ -1,15 +1,15 @@
-require 'btc/store'
-require 'btc/session'
+require 'bootic_cli/store'
+require 'bootic_cli/session'
 
-module Btc
+module BooticCli
   module Connectivity
 
     private
 
     def session
       @session ||= (
-        store = Btc::Store.new(ENV['HOME'])
-        Btc::Session.new(store)
+        store = BooticCli::Store.new(ENV['HOME'])
+        BooticCli::Session.new(store)
       )
     end
 

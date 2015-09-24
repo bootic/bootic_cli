@@ -1,6 +1,6 @@
-module Btc
+module BooticCli
   class Console
-    include Btc::Connectivity
+    include BooticCli::Connectivity
 
     SEPCOUNT = 80.freeze
 

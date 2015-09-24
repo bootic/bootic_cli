@@ -1,7 +1,7 @@
 require 'oauth2'
 require 'bootic_client'
 
-module Btc
+module BooticCli
 
   class Session
     def initialize(store)
