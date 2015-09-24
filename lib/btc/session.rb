@@ -37,6 +37,12 @@ module Btc
       end
     end
 
+    def logout!
+      store.transaction do
+        store['access_token'] = nil
+      end
+    end
+
     def config
       @config ||= store.transaction do
         {

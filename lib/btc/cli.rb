@@ -40,6 +40,12 @@ module Btc
       end
     end
 
+    desc 'logout', 'Log out (delete access token)'
+    def logout
+      session.logout!
+      say_status 'Logged out', 'You are now logged out', :red
+    end
+
     desc 'info', 'Test API connectivity'
     def info
       if !session.setup?
