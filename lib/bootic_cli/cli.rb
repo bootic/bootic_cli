@@ -102,5 +102,9 @@ module BooticCli
       IRB.irb nil, context
     end
 
+    Dir[File.join(File.dirname(__FILE__), 'cli', '*.rb')].each do |f|
+      require f
+    end
   end
 end
+
