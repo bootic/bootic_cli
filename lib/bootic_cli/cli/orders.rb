@@ -53,6 +53,7 @@ module BooticCli
       option :o, banner: "<output_format>", default: 'table'
       option :a, type: :boolean, desc: "Get full data set", default: false
       option :q, banner: "<query>"
+      option :so, banner: "<sort>"
       option :ugte, banner: "<updated_after>", desc: "Updated after, ie. 2015-10-01"
       option :ulte, banner: "<updated_before>", desc: "Updated before, ie. 2015-10-01"
       option :dgte, banner: "<discount_greater_than>", desc: "Discount greater than, ie. 10000"
@@ -65,6 +66,7 @@ module BooticCli
         opts = {}
         opts[:status] = options['s'] if options['s']
         opts[:q] = options['q'] if options['q']
+        opts[:sort] = options['so'] if options['so']
         opts[:updated_on_gte] = options['ugte'] if options['ugte']
         opts[:updated_on_lte] = options['ulte'] if options['ugte']
         opts[:total_gte] = options['tgte'] if options['tgte']
