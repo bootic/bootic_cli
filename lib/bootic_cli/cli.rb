@@ -1,5 +1,6 @@
 require 'thor'
 require 'bootic_cli/connectivity'
+require 'bootic_cli/formatters'
 
 module BooticCli
   class CLI < Thor
