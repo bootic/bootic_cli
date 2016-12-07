@@ -37,6 +37,10 @@ module BooticCli
       end
     end
 
+    def erase!
+      store.erase
+    end
+
     def logout!
       store.transaction do
         store['access_token'] = nil

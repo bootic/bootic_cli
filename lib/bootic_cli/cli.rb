@@ -47,6 +47,12 @@ module BooticCli
       say_status 'Logged out', 'You are now logged out', :red
     end
 
+    desc "erase", "clear all credentials from this computer"
+    def erase
+      session.erase!
+      say "all credentials erased from this computer"
+    end
+
     desc 'info', 'Test API connectivity'
     def info
       if !session.setup?

@@ -25,6 +25,10 @@ module BooticCli
       store.transaction(&block)
     end
 
+    def erase
+      FileUtils.rm_rf base_dir
+    end
+
     private
 
     attr_reader :base_dir
