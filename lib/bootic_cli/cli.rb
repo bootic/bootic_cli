@@ -74,6 +74,17 @@ module BooticCli
 
     end
 
+    desc 'runner', 'Run an arbitrary ruby script with a client session'
+    def runner(filename)
+      if !session.ready?
+        say_status 'ERROR', 'Not logged in. Run btc login first', :red
+        return
+      end
+
+      require 'bootic_cli/file_runner'
+      FileRunner.new(root, filename).run
+    end
+
     desc 'console', 'Log into interactive console'
     def console
       if !session.ready?

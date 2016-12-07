@@ -4,8 +4,8 @@ module BooticCli
 
     SEPCOUNT = 80.freeze
 
-    def initialize(root = root)
-      @root = root
+    def initialize(r = root)
+      @root = r
     end
 
     def explain(entity, include_links = true)
