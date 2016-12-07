@@ -1,4 +1,5 @@
 require 'json'
+require 'csv'
 
 module BooticCli
   module Formatters
@@ -43,9 +44,11 @@ module BooticCli
 
     class Csv
       def format(data)
-        data.map do |row|
-          row.join(',')
-        end.join("\r\n")
+        CSV.generate do |csv|
+          data.each do |row|
+            csv << row
+          end
+        end
       end
     end
 
