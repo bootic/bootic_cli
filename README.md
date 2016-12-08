@@ -1,8 +1,6 @@
 # Bootic CLI
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/btc`. To experiment with that code, run `bin/console` for an interactive prompt.
-
-TODO: Delete this and the text above, and describe your gem
+CLI to interact with the [Bootic.net API](https://developers.bootic.net/) and run custom API scripts.
 
 ## Installation
 
@@ -18,6 +16,65 @@ gem install bootic_cli
 btc help
 btc login
 btc console
+```
+
+### Custom scripts
+
+You can run simple Ruby scripts in the context of an API session with
+
+```
+btc runner my_script.rb
+```
+
+Your script will be provided with the following variables
+
+```ruby
+# the API root resource
+root
+
+# your default shop
+shop
+```
+
+An example script that lists your shop's products
+
+```ruby
+# list_products.rb
+shop.products.full_set.each do |pr|
+  puts pr.title
+end
+```
+
+You run it with
+
+```
+btc runner list_products.rb
+```
+
+### Custom Thor commands
+
+More advanced scripts can be written as [Thor]() commands. Any scripts in `~/btc` will be loaded automatically.
+
+```ruby
+# ~/btc/list_products
+class ListProducts < BooticCli::Command
+  desc "list", "list products by status"
+  option :s, banner: "<status>"
+  def list
+	shop.products(status: options["s"]).full_set.each do |pr|
+  		puts pr.title
+	end
+  end
+end
+```
+
+Now `btc help` will list your custom `list_products` command.
+
+```
+btc help list_products
+
+# list hidden products
+btc list_products list -s hidden
 ```
 
 ## Development
