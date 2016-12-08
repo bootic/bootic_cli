@@ -11,7 +11,7 @@ module BooticCli
 
     desc 'setup', 'Setup OAuth2 application credentials'
     def setup
-      client_id     = ask("Enter your applications client_id:")
+      client_id     = ask("Enter your application's client_id:")
       client_secret = ask("Enter your application's client_secret:")
 
       session.setup(client_id, client_secret)
@@ -60,7 +60,7 @@ module BooticCli
           ['username', root.user_name],
           ['email', root.email],
           ['scopes', root.scopes],
-          ['shop', shop.url]
+          ['shop', "#{shop.url} (#{shop.subdomain})"]
         ])
 
         say_status 'OK', 'API connection is working', :green
