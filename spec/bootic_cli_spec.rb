@@ -1,4 +1,4 @@
 require 'spec_helper'
 
-describe Btc do
+describe BooticCli do
 end

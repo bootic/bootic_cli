@@ -63,21 +63,23 @@ module BooticCli
       option :c, banner: "<code>"
 
       def list
-        opts = {}
-        opts[:status] = options['s'] if options['s']
-        opts[:q] = options['q'] if options['q']
-        opts[:sort] = options['so'] if options['so']
-        opts[:updated_on_gte] = options['ugte'] if options['ugte']
-        opts[:updated_on_lte] = options['ulte'] if options['ugte']
-        opts[:total_gte] = options['tgte'] if options['tgte']
-        opts[:total_lte] = options['tlte'] if options['tlte']
-        opts[:discount_total_gte] = options['dgte'] if options['dgte']
-        opts[:discount_total_lte] = options['dlte'] if options['dlte']
-        opts[:code] = options['c'] if options['c']
+        logged_in_action do
+          opts = {}
+          opts[:status] = options['s'] if options['s']
+          opts[:q] = options['q'] if options['q']
+          opts[:sort] = options['so'] if options['so']
+          opts[:updated_on_gte] = options['ugte'] if options['ugte']
+          opts[:updated_on_lte] = options['ulte'] if options['ugte']
+          opts[:total_gte] = options['tgte'] if options['tgte']
+          opts[:total_lte] = options['tlte'] if options['tlte']
+          opts[:discount_total_gte] = options['dgte'] if options['dgte']
+          opts[:discount_total_lte] = options['dlte'] if options['dlte']
+          opts[:code] = options['c'] if options['c']
 
-        orders = shop.orders(opts)
-        orders = orders.full_set if options[:a]
-        puts Formatters.format(options['o'], MAPPERS[options['o']].call(orders))
+          orders = shop.orders(opts)
+          orders = orders.full_set if options[:a]
+          puts Formatters.format(options['o'], MAPPERS[options['o']].call(orders))
+        end
       end
 
       BooticCli::CLI.register self, 'orders', 'orders SUBCOMMAND ...ARGS', 'manage orders'
