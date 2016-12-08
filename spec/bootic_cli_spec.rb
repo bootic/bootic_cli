@@ -1,8 +1,21 @@
 require 'spec_helper'
 require "bootic_cli/cli"
+require "bootic_cli/file_runner"
 
 describe BooticCli::CLI do
   let(:session) { instance_double(BooticCli::Session, setup?: true, logged_in?: true) }
+
+  let(:shop) { double(:shop, subdomain: "acme", url: "acme.bootic.net") }
+  let(:root) {
+    double(:root,
+            user_name: "joe",
+            email: "joe@bloggs.com",
+            scopes: "admin,public",
+            shops: [shop]
+          )
+  }
+
+  let(:client) { double(:client, root: root) }
 
   def allow_ask(question, response, opts = {})
     allow(Thor::LineEditor).to receive(:readline).with("#{question} ", opts).and_return response
@@ -32,6 +45,7 @@ describe BooticCli::CLI do
 
   before do
     allow(BooticCli::Session).to receive(:new).and_return session
+    allow(session).to receive(:client).and_return client
   end
 
   describe "#setup" do
@@ -87,21 +101,7 @@ describe BooticCli::CLI do
     end
 
     context "logged in" do
-      let(:shop) { double(:shop, subdomain: "acme", url: "acme.bootic.net") }
-      let(:root) {
-        double(:root,
-                user_name: "joe",
-                email: "joe@bloggs.com",
-                scopes: "admin,public",
-                shops: [shop]
-              )
-      }
-
-      let(:client) { double(:client, root: root) }
-
       it "prints session info" do
-        allow(session).to receive(:client).and_return client
-
         content = capture(:stdout) { described_class.start(%w(info)) }
 
         expect(content).to match /username  joe/
@@ -110,6 +110,14 @@ describe BooticCli::CLI do
         expect(content).to match /shop      acme.bootic.net \(acme\)/
         expect(content).to match /OK/
       end
+    end
+  end
+
+  describe "#runner" do
+    it "uses FileRunner" do
+      expect(BooticCli::FileRunner).to receive(:run).with(root, "./foo.rb")
+
+      described_class.start(%w(runner ./foo.rb))
     end
   end
 end

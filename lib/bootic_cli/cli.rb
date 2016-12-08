@@ -72,7 +72,7 @@ module BooticCli
       require 'bootic_cli/file_runner'
 
       logged_in_action do
-        FileRunner.new(root, filename).run
+        FileRunner.run(root, filename)
       end
     end
 
