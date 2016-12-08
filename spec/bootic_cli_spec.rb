@@ -104,10 +104,11 @@ describe BooticCli::CLI do
       it "prints session info" do
         content = capture(:stdout) { described_class.start(%w(info)) }
 
-        expect(content).to match /username  joe/
-        expect(content).to match /email     joe@bloggs.com/
-        expect(content).to match /scopes    admin,public/
-        expect(content).to match /shop      acme.bootic.net \(acme\)/
+        expect(content).to match /username             joe/
+        expect(content).to match /email                joe@bloggs.com/
+        expect(content).to match /scopes               admin,public/
+        expect(content).to match /shop                 acme.bootic.net \(acme\)/
+        expect(content).to match /custom commands dir  #{ENV["HOME"]}\/btc/
         expect(content).to match /OK/
       end
     end

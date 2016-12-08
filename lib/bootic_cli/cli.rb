@@ -7,7 +7,7 @@ module BooticCli
     include Thor::Actions
     include BooticCli::Connectivity
 
-    package_name "Auth"
+    CUSTOM_COMMANDS_DIR = ENV.fetch("BTC_CUSTOM_COMMANDS_PATH") { File.join(ENV["HOME"], "btc") }
 
     desc 'setup', 'Setup OAuth2 application credentials'
     def setup
@@ -60,7 +60,8 @@ module BooticCli
           ['username', root.user_name],
           ['email', root.email],
           ['scopes', root.scopes],
-          ['shop', "#{shop.url} (#{shop.subdomain})"]
+          ['shop', "#{shop.url} (#{shop.subdomain})"],
+          ['custom commands dir', CUSTOM_COMMANDS_DIR]
         ])
 
         say_status 'OK', 'API connection is working', :green
@@ -102,10 +103,31 @@ module BooticCli
       end
     end
 
+    def self.sub(klass, descr)
+      command_name = underscore(klass.name)
+      desc "#{command_name} SUBCOMMAND ...ARGS", descr
+      subcommand command_name, klass
+    end
+
     private
+
+    def self.underscore(str)
+      str.gsub(/::/, '/').
+        gsub(/([A-Z]+)([A-Z][a-z])/,'\1_\2').
+        gsub(/([a-z\d])([A-Z])/,'\1_\2').
+        tr("-", "_").
+        downcase
+    end
 
     Dir[File.join(File.dirname(__FILE__), 'cli', '*.rb')].each do |f|
       require f
+    end
+
+    if File.directory?(CUSTOM_COMMANDS_DIR)
+      require "bootic_cli/command"
+      Dir[File.join(CUSTOM_COMMANDS_DIR, '*.rb')].each do |f|
+        require f
+      end
     end
   end
 end
