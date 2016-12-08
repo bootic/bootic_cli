@@ -1,13 +1,6 @@
-require 'thor'
-require 'bootic_cli/connectivity'
-require 'bootic_cli/cli'
-
 module BooticCli
   module Commands
-    class Orders < Thor
-      include Thor::Actions
-      include BooticCli::Connectivity
-
+    class Orders < BooticCli::Command
       class OrdersTable
         def self.call(orders)
           new(orders).data
@@ -82,8 +75,7 @@ module BooticCli
         end
       end
 
-      BooticCli::CLI.register self, 'orders', 'orders SUBCOMMAND ...ARGS', 'manage orders'
+      declare self, "manage orders"
     end
-
   end
 end

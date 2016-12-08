@@ -105,8 +105,7 @@ module BooticCli
 
     def self.sub(klass, descr)
       command_name = underscore(klass.name)
-      desc "#{command_name} SUBCOMMAND ...ARGS", descr
-      subcommand command_name, klass
+      register klass, command_name, "#{command_name} SUBCOMMAND ...ARGS", descr
     end
 
     private
@@ -116,15 +115,16 @@ module BooticCli
         gsub(/([A-Z]+)([A-Z][a-z])/,'\1_\2').
         gsub(/([a-z\d])([A-Z])/,'\1_\2').
         tr("-", "_").
-        downcase
+        downcase.split("/").last
     end
+
+    require "bootic_cli/command"
 
     Dir[File.join(File.dirname(__FILE__), 'cli', '*.rb')].each do |f|
       require f
     end
 
     if File.directory?(CUSTOM_COMMANDS_DIR)
-      require "bootic_cli/command"
       Dir[File.join(CUSTOM_COMMANDS_DIR, '*.rb')].each do |f|
         require f
       end
