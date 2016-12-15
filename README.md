@@ -18,6 +18,22 @@ btc login
 btc console
 ```
 
+### Console
+
+`btc console` launches an API session into an IRB console. You'll have `root` and `shop` API entities already initialized for you.
+
+```
+shop.orders(status: "all").each do |o|
+  puts o.total
+end
+
+explain shop
+
+list shop.products
+
+explain_link shop, :products
+```
+
 ### Custom scripts
 
 You can run simple Ruby scripts in the context of an API session with
