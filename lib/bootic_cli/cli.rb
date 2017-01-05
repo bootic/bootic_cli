@@ -118,15 +118,23 @@ module BooticCli
         downcase.split("/").last
     end
 
+    def self.load_file(f)
+      begin
+        require f
+      rescue LoadError => e
+        puts "#{e.class} loading #{f}: #{e.message}"
+      end
+    end
+
     require "bootic_cli/command"
 
     Dir[File.join(File.dirname(__FILE__), 'cli', '*.rb')].each do |f|
-      require f
+      load_file f
     end
 
     if File.directory?(CUSTOM_COMMANDS_DIR)
       Dir[File.join(CUSTOM_COMMANDS_DIR, '*.rb')].each do |f|
-        require f
+        load_file f
       end
     end
   end
