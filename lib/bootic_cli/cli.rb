@@ -27,7 +27,7 @@ module BooticCli
         invoke :setup, []
       end
 
-      username  = ask("Enter your Bootic user name:")
+      username  = ask("Enter your Bootic email")
       pwd       = ask("Enter your Bootic password:", echo: false)
 
       say "Loging in as #{username}. Getting access token..."

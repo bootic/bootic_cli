@@ -22,7 +22,7 @@ describe BooticCli::CLI do
   end
 
   def assert_login
-    allow_ask("Enter your Bootic user name:", "joe")
+    allow_ask("Enter your Bootic email", "joe")
     allow_ask("Enter your Bootic password:", "bloggs", echo: false)
 
     expect(session).to receive(:login).with("joe", "bloggs", "admin")
