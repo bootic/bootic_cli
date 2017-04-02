@@ -34,6 +34,13 @@ list shop.products
 explain_link shop, :products
 ```
 
+Access the configured client:
+
+```
+client session.client
+new_root = client.from_url("https://some.endpoint.com")
+```
+
 ### Custom scripts
 
 You can run simple Ruby scripts in the context of an API session with
