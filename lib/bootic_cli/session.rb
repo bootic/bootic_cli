@@ -57,6 +57,22 @@ module BooticCli
       end
     end
 
+    # use a null store instead of the default memory store
+    # so in btc console we don't cache resources forever
+    class NullCacheStore
+      def read(key)
+        nil
+      end
+
+      def delete(key)
+        nil
+      end
+
+      def write(key, value)
+        value
+      end
+    end
+
     def client
       @client ||= begin
         raise "First setup credentials and log in" unless ready?
@@ -65,6 +81,7 @@ module BooticCli
           c.client_secret = config[:client_secret]
           c.logger = Logger.new(STDOUT)
           c.logging = false
+          c.cache_store = NullCacheStore.new
         end
 
         BooticClient.client(:authorized, access_token: config[:access_token]) do |new_token|
