@@ -23,4 +23,23 @@ describe BooticCli::Store do
 
     expect(result).to eq 1
   end
+
+  it "supports multiple namespaces" do
+    store1 = described_class.new(base_dir: store_dir)
+    store1.transaction do
+      store1[:foo] = 1
+    end
+
+    store2 = described_class.new(base_dir: store_dir, namespace: 'staging')
+    result = store2.transaction do
+      store2[:foo]
+    end
+
+    store3 = described_class.new(base_dir: store_dir)
+    result = store3.transaction do
+      store3[:foo]
+    end
+
+    expect(result).to be 1
+  end
 end
