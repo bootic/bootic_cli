@@ -8,7 +8,7 @@ module BooticCli
     DIRNAME = '.btc'.freeze
     FILE_NAME = 'store.pstore'.freeze
 
-    def initialize(base_dir = ENV['HOME'], dir = DIRNAME)
+    def initialize(base_dir: ENV['HOME'], dir: DIRNAME)
       @base_dir = File.join(base_dir, dir)
       FileUtils.mkdir_p @base_dir
     end

@@ -8,7 +8,7 @@ module BooticCli
 
     def session
       @session ||= (
-        store = BooticCli::Store.new(ENV['HOME'])
+        store = BooticCli::Store.new(base_dir: ENV['HOME'])
         BooticCli::Session.new(store)
       )
     end
