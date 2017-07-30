@@ -31,6 +31,8 @@ module BooticCli
     end
 
     def setup(client_id, client_secret, auth_host: nil, api_root: nil)
+      upgrade!
+
       store.transaction do
         store['client_id'] = client_id
         store['client_secret'] = client_secret
