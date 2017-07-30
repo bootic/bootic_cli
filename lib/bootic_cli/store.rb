@@ -4,7 +4,7 @@ require 'pstore'
 module BooticCli
 
   class Store
-
+    VERSION = 1
     DEFAULT_NAMESPACE = 'production'.freeze
     DIRNAME = '.btc'.freeze
     FILE_NAME = 'store.pstore'.freeze
@@ -36,7 +36,26 @@ module BooticCli
 
     def needs_upgrade?
       transaction do
-        store[DEFAULT_NAMESPACE].nil?
+        store['version'].to_i < VERSION && store[DEFAULT_NAMESPACE].nil?
+      end
+    end
+
+    def upgrade!
+      return unless needs_upgrade?
+
+      transaction do
+        current_values = {}
+        store.roots.each do |r|
+          v = store[r]
+          store.delete(r)
+          current_values[r] = v
+        end
+
+        current_values.each do |k, v|
+          self[k] = v
+        end
+
+        self['version'] = VERSION
       end
     end
 

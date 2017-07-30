@@ -3,7 +3,7 @@ require "bootic_cli/cli"
 require "bootic_cli/file_runner"
 
 describe BooticCli::CLI do
-  let(:session) { instance_double(BooticCli::Session, setup?: true, logged_in?: true) }
+  let(:session) { instance_double(BooticCli::Session, needs_upgrade?: false, setup?: true, logged_in?: true) }
 
   let(:shop) { double(:shop, subdomain: "acme", url: "acme.bootic.net") }
   let(:root) {

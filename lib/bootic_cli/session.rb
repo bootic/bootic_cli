@@ -8,6 +8,14 @@ module BooticCli
       @store = store
     end
 
+    def needs_upgrade?
+      store.needs_upgrade?
+    end
+
+    def upgrade!
+      store.upgrade!
+    end
+
     def setup?
       store.transaction do
         store['client_id'] && store['client_secret']

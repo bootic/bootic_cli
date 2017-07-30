@@ -22,6 +22,11 @@ module BooticCli
     end
 
     def logged_in_action(&block)
+      if session.needs_upgrade?
+        say_status "WARNING", "old store data structure, restructuring to support multiple environments"
+        session.upgrade!
+      end
+
       if !session.setup?
         say_status "ERROR", "No app credentials. Run btc setup", :red
         return
