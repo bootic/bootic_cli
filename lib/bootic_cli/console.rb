@@ -4,8 +4,10 @@ module BooticCli
 
     SEPCOUNT = 80.freeze
 
-    def initialize(r = root)
-      @root = r
+    attr_reader :session
+
+    def initialize(session)
+      @session = session
     end
 
     def explain(entity, include_links = true)

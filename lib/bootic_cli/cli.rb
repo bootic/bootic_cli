@@ -95,7 +95,7 @@ module BooticCli
         IRB.conf[:MAIN_CONTEXT] = IRB::Irb.new.context
         require 'irb/ext/multi-irb'
         require 'bootic_cli/console'
-        context = Console.new(root)
+        context = Console.new(session)
         prompt = "/#{shop.subdomain} (#{root.user_name}|#{root.scopes}) $ "
 
         IRB.conf[:PROMPT][:CUSTOM] = {
