@@ -3,7 +3,7 @@ require "thor"
 require "bootic_cli/connectivity"
 
 describe BooticCli::Connectivity do
-  let(:session) { instance_double(BooticCli::Session) }
+  let(:session) { instance_double(BooticCli::Session, needs_upgrade?: false) }
 
   let(:subject) do
     Class.new(Thor) do

@@ -3,7 +3,7 @@ require "bootic_cli/cli"
 require "bootic_cli/file_runner"
 
 describe BooticCli::CLI do
-  let(:session) { instance_double(BooticCli::Session, setup?: true, logged_in?: true) }
+  let(:session) { instance_double(BooticCli::Session, needs_upgrade?: false, setup?: true, logged_in?: true) }
 
   let(:shop) { double(:shop, subdomain: "acme", url: "acme.bootic.net") }
   let(:root) {
@@ -31,15 +31,25 @@ describe BooticCli::CLI do
     expect(content).to match /Logged in as joe \(admin\)/
   end
 
-  def assert_setup(&block)
+  def assert_setup(env = 'production', &block)
+    auth_host = nil
+    api_root = nil
+
+    if env != 'production'
+      auth_host = "https://auth-staging.bootic.net"
+      api_root = "https://api-staging.bootic.net/v1"
+      allow_ask("Enter auth endpoint host (https://auth.bootic.net):", auth_host)
+      allow_ask("Enter API root (https://api.bootic.net/v1):", api_root)
+    end
+
     allow_ask("Enter your application's client_id:", "abc")
     allow_ask("Enter your application's client_secret:", "xyz")
 
-    expect(session).to receive(:setup).with("abc", "xyz")
+    expect(session).to receive(:setup).with("abc", "xyz", auth_host: auth_host, api_root: api_root)
 
     if block_given?
       content = capture(:stdout) { yield }
-      expect(content).to match /Credentials stored. client_id: abc/
+      expect(content).to match /Credentials stored for #{env} environment. client_id: abc/
     end
   end
 
@@ -51,6 +61,10 @@ describe BooticCli::CLI do
   describe "#setup" do
     it "calls Session#setup(client_id, client_secret)" do
       assert_setup{ described_class.start(%w(setup)) }
+    end
+
+    it "sets up with custom env" do
+      assert_setup('staging') { described_class.start(%w(setup -e staging)) }
     end
   end
 
