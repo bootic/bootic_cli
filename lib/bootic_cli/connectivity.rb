@@ -8,7 +8,7 @@ module BooticCli
 
     def session
       @session ||= (
-        store = BooticCli::Store.new(base_dir: ENV['HOME'])
+        store = BooticCli::Store.new(base_dir: ENV['HOME'], namespace: options[:environment])
         BooticCli::Session.new(store)
       )
     end
@@ -28,12 +28,12 @@ module BooticCli
       end
 
       if !session.setup?
-        say_status "ERROR", "No app credentials. Run btc setup", :red
+        say_status "ERROR", "No app credentials. Run btc setup -e #{options[:environment]}", :red
         return
       end
 
       if !session.logged_in?
-        say_status "ERROR", "No access token. Run btc login", :red
+        say_status "ERROR", "No access token. Run btc login -e #{options[:environment]}", :red
         return
       end
 

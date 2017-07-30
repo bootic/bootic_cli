@@ -7,23 +7,32 @@ module BooticCli
     include Thor::Actions
     include BooticCli::Connectivity
 
+    DEFAULT_ENV = 'production'.freeze
     CUSTOM_COMMANDS_DIR = ENV.fetch("BTC_CUSTOM_COMMANDS_PATH") { File.join(ENV["HOME"], "btc") }
+
+    class_option :environment, type: :string, default: DEFAULT_ENV, aliases: :e, banner: '<production>'
 
     desc 'setup', 'Setup OAuth2 application credentials'
     def setup
+      if options[:environment] != DEFAULT_ENV
+        auth_host     = ask("Enter auth endpoint host (#{BooticClient::AUTH_HOST}):").chomp
+        api_root      = ask("Enter API root (#{BooticClient::API_ROOT}):").chomp
+        auth_host = nil if auth_host == ""
+        api_root  = nil if api_root == ""
+      end
       client_id     = ask("Enter your application's client_id:")
       client_secret = ask("Enter your application's client_secret:")
 
-      session.setup(client_id, client_secret)
+      session.setup(client_id, client_secret, auth_host: auth_host, api_root: api_root)
 
-      say "Credentials stored. client_id: #{client_id}"
+      say "Credentials stored for #{options[:environment]} environment. client_id: #{client_id}"
     end
 
     desc 'login', 'Login to your Bootic account'
     def login(scope = 'admin')
       if !session.setup?
-        say "App not configured. Running setup first. You only need to do this once."
-        say "Please create an OAuth2 app and get its credentials at https://auth.bootic.net/dev/apps"
+        say "App not configured for #{options[:environment]} environment. Running setup first. You only need to do this once."
+        say "Please create an OAuth2 app and get its credentials at https://auth.bootic.net/dev/apps or the relevant auth app for your environment"
         invoke :setup, []
       end
 
