@@ -36,7 +36,7 @@ module BooticCli
 
     def needs_upgrade?
       transaction do
-        store['version'].to_i < VERSION && store[DEFAULT_NAMESPACE].nil?
+        store['version'].to_i < VERSION
       end
     end
 
@@ -55,7 +55,7 @@ module BooticCli
           self[k] = v
         end
 
-        self['version'] = VERSION
+        store['version'] = VERSION
       end
     end
 

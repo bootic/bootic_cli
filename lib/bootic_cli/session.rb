@@ -6,6 +6,7 @@ module BooticCli
   class Session
     def initialize(store)
       @store = store
+      upgrade!
     end
 
     def needs_upgrade?
@@ -14,6 +15,7 @@ module BooticCli
 
     def upgrade!
       store.upgrade!
+      self
     end
 
     def setup?
@@ -31,8 +33,6 @@ module BooticCli
     end
 
     def setup(client_id, client_secret, auth_host: nil, api_root: nil)
-      upgrade!
-
       store.transaction do
         store['client_id'] = client_id
         store['client_secret'] = client_secret
