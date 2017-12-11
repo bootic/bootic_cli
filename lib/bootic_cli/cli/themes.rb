@@ -7,6 +7,8 @@ require_relative './themes/theme_diff'
 module BooticCli
   module Commands
     class Themes < BooticCli::Command
+      ASSETS_DIR = 'assets'
+
       desc 'pull [shop] [dir]', 'Pull latest theme changes in [shop] into directory [dir] (current by default)'
       option :destroy, banner: '<true|false>', default: 'true'
       def pull(subdomain = nil, dir = '.')
@@ -26,7 +28,7 @@ module BooticCli
             interactive: true
           }
 
-          assets_dir = File.join(dir, 'assets')
+          assets_dir = File.join(dir, ASSETS_DIR)
           FileUtils.mkdir_p assets_dir
 
           notice 'Updating local templates...'
@@ -73,7 +75,7 @@ module BooticCli
           else
             notice 'Removing remote files that were removed locally...'
             diff.remote_templates_not_in_dir.each { |f| delete theme, File.join(dir, f.file_name) }
-            diff.remote_assets_not_in_dir.each { |f| delete theme, File.join(dir, 'assets', f.file_name) }
+            diff.remote_assets_not_in_dir.each { |f| delete theme, File.join(dir, ASSETS_DIR, f.file_name) }
           end
         end
       end
@@ -92,7 +94,7 @@ module BooticCli
             interactive: false
           }
 
-          assets_dir = File.join(dir, 'assets')
+          assets_dir = File.join(dir, ASSETS_DIR)
           FileUtils.mkdir_p assets_dir
 
           # first, update existing templates in each side
@@ -300,7 +302,7 @@ module BooticCli
       end
 
       def upsert(theme, path)
-        if path =~ /assets/
+        if path =~ ThemeDiff::ASSETS_DIR_EXP
           upsert_asset theme, path
         else
           upsert_template theme, path
@@ -313,7 +315,7 @@ module BooticCli
       end
 
       def delete(theme, path)
-        if path =~ /assets/
+        if path =~ ThemeDiff::ASSETS_DIR_EXP
           delete_asset theme, path
         else
           delete_template theme, path
