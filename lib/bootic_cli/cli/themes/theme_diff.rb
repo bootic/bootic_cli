@@ -105,7 +105,6 @@ module BooticCli
       set1.map do |f|
         other_file = by_filename[f.file_name]
         if other_file.nil?
-          # puts "File not found in set1: #{f.file_name}"
           next
         end
 
@@ -116,7 +115,6 @@ module BooticCli
         original_time = Time.parse f.updated_on
         updated_time  = Time.parse other_file[:updated_on]
 
-        # puts " -- #{f.file_name}\n#{original_time}\n#{updated_time}"
         if !force_update && updated_time <= original_time
           next
         end
