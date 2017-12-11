@@ -149,191 +149,200 @@ module BooticCli
       desc 'pull [shop] [dir]', 'Pull latest theme changes in [shop] into directory [dir] (current by default)'
       option :destroy, banner: '<true|false>', default: 'true'
       def pull(subdomain = nil, dir = '.')
-        # if theme wasn't specified and no theme exists
-        # then set clone/download location to subdomain name
-        if subdomain and dir == '.' and !theme_exists?(dir)
-          dir = subdomain
+        logged_in_action do
+          # if theme wasn't specified and no theme exists
+          # then set clone/download location to subdomain name
+          if subdomain and dir == '.' and !theme_exists?(dir)
+            dir = subdomain
+          end
+
+          theme = current_theme(dir, subdomain)
+          diff = ThemeDiff.new(dir, theme, true)
+          check_dupes!(diff.local_assets)
+
+          download_opts = {
+            overwrite: false,
+            interactive: true
+          }
+
+          assets_dir = File.join(dir, 'assets')
+          FileUtils.mkdir_p assets_dir
+
+          notice 'Updating local templates...'
+          maybe_update(dir, diff.templates_updated_in_remote, 'remote', 'local') do |t, path|
+            write_local(path, t.new_body)
+          end
+
+          if options['destroy'] == 'false'
+            notice 'Not removing local files that were removed on remote.'
+          else
+            notice 'Removing local files that were removed on remote...'
+            diff.local_templates_not_in_remote.each { |f| delete_file File.expand_path(f.path) }
+            diff.local_assets_not_in_remote.each { |f| delete_file File.expand_path(f.path) }
+          end
+
+          notice 'Pulling missing files from remote...'
+          download_templates(dir, theme.templates, download_opts)
+          download_assets(assets_dir, theme.assets, download_opts)
         end
-
-        theme = current_theme(dir, subdomain)
-        diff = ThemeDiff.new(dir, theme, true)
-        check_dupes!(diff.local_assets)
-
-        download_opts = {
-          overwrite: false,
-          interactive: true
-        }
-
-        assets_dir = File.join(dir, 'assets')
-        FileUtils.mkdir_p assets_dir
-
-        notice 'Updating local templates...'
-        maybe_update(dir, diff.templates_updated_in_remote, 'remote', 'local') do |t, path|
-          write_local(path, t.new_body)
-        end
-
-        if options['destroy'] == 'false'
-          notice 'Not removing local files that were removed on remote.'
-        else
-          notice 'Removing local files that were removed on remote...'
-          diff.local_templates_not_in_remote.each { |f| delete_file File.expand_path(f.path) }
-          diff.local_assets_not_in_remote.each { |f| delete_file File.expand_path(f.path) }
-        end
-
-        notice 'Pulling missing files from remote...'
-        download_templates(dir, theme.templates, download_opts)
-        download_assets(assets_dir, theme.assets, download_opts)
       end
 
       desc 'push [shop] [dir]', 'Push all local theme files in [dir] to remote shop [shop]'
       option :destroy, banner: '<true|false>', default: 'true'
       def push(subdomain = nil, dir = '.')
-        theme = current_theme(dir, subdomain)
-        notice 'Pushing local changes to remote...'
+        logged_in_action do
+          theme = current_theme(dir, subdomain)
+          notice 'Pushing local changes to remote...'
 
-        diff = ThemeDiff.new(dir, theme, true)
-        check_dupes!(diff.local_assets)
+          diff = ThemeDiff.new(dir, theme, true)
+          check_dupes!(diff.local_assets)
 
-        # update existing templates
-        notice 'Updating remote templates...'
-        maybe_update(dir, diff.templates_updated_locally, 'local', 'remote') do |t, path|
-          upsert_template(theme, path)
-        end
+          # update existing templates
+          notice 'Updating remote templates...'
+          maybe_update(dir, diff.templates_updated_locally, 'local', 'remote') do |t, path|
+            upsert_template(theme, path)
+          end
 
-        notice 'Pushing files that are missing in remote...'
-        diff.local_templates_not_in_remote.each { |f| upsert theme, File.expand_path(f.path) }
-        diff.local_assets_not_in_remote.each { |f| upsert theme, File.expand_path(f.path) }
+          notice 'Pushing files that are missing in remote...'
+          diff.local_templates_not_in_remote.each { |f| upsert theme, File.expand_path(f.path) }
+          diff.local_assets_not_in_remote.each { |f| upsert theme, File.expand_path(f.path) }
 
-        if options['destroy'] == 'false'
-          notice 'Not removing remote files that were removed locally.'
-        else
-          notice 'Removing remote files that were removed locally...'
-          diff.remote_templates_not_in_dir.each { |f| delete theme, File.join(dir, f.file_name) }
-          diff.remote_assets_not_in_dir.each { |f| delete theme, File.join(dir, 'assets', f.file_name) }
+          if options['destroy'] == 'false'
+            notice 'Not removing remote files that were removed locally.'
+          else
+            notice 'Removing remote files that were removed locally...'
+            diff.remote_templates_not_in_dir.each { |f| delete theme, File.join(dir, f.file_name) }
+            diff.remote_assets_not_in_dir.each { |f| delete theme, File.join(dir, 'assets', f.file_name) }
+          end
         end
       end
 
       desc 'sync [shop] [dir]', 'Sync local theme copy in [dir] with remote [shop]'
       def sync(subdomain = nil, dir = '.')
-        theme = current_theme(dir, subdomain)
-        notice 'Syncing local copy with remote...'
+        logged_in_action do
+          theme = current_theme(dir, subdomain)
+          notice 'Syncing local copy with remote...'
 
-        diff = ThemeDiff.new(dir, theme)
-        check_dupes!(diff.local_assets)
+          diff = ThemeDiff.new(dir, theme)
+          check_dupes!(diff.local_assets)
 
-        download_opts = {
-          overwrite: false,
-          interactive: false
-        }
+          download_opts = {
+            overwrite: false,
+            interactive: false
+          }
 
-        assets_dir = File.join(dir, 'assets')
-        FileUtils.mkdir_p assets_dir
+          assets_dir = File.join(dir, 'assets')
+          FileUtils.mkdir_p assets_dir
 
-        # first, update existing templates in each side
-        notice 'Updating local templates...'
-        maybe_update(dir, diff.templates_updated_in_remote, 'remote', 'local') do |t, path|
-          write_local(path, t.new_body)
+          # first, update existing templates in each side
+          notice 'Updating local templates...'
+          maybe_update(dir, diff.templates_updated_in_remote, 'remote', 'local') do |t, path|
+            write_local(path, t.new_body)
+          end
+
+          notice 'Updating remote templates...'
+          maybe_update(dir, diff.templates_updated_locally, 'local', 'remote') do |t, path|
+            upsert_template(theme, path)
+          end
+
+          # now, download missing files on local end
+          notice 'Downloading missing local templates & assets...'
+          download_templates(dir, theme.templates, download_opts)
+          download_assets(assets_dir, theme.assets, download_opts)
+
+          # now, upload missing files on remote
+          notice 'Uploading missing remote templates & assets...'
+          diff.local_templates_not_in_remote.each { |f| upsert_template(theme, f.path) }
+          diff.local_assets_not_in_remote.each { |f| upsert_asset(theme, f.path) }
         end
-
-        notice 'Updating remote templates...'
-        maybe_update(dir, diff.templates_updated_locally, 'local', 'remote') do |t, path|
-          upsert_template(theme, path)
-        end
-
-        # now, download missing files on local end
-        notice 'Downloading missing local templates & assets...'
-        download_templates(dir, theme.templates, download_opts)
-        download_assets(assets_dir, theme.assets, download_opts)
-
-        # now, upload missing files on remote
-        notice 'Uploading missing remote templates & assets...'
-        diff.local_templates_not_in_remote.each { |f| upsert_template(theme, f.path) }
-        diff.local_assets_not_in_remote.each { |f| upsert_asset(theme, f.path) }
       end
 
       desc 'compare [shop] [dir]', 'Show differences between local and remote copies'
       def compare(subdomain = nil, dir = '.')
+        logged_in_action do
+          notice 'Comparing local and remote copies of theme...'
+          theme = current_theme(dir, subdomain)
+          diff = ThemeDiff.new(dir, theme)
 
-        notice 'Comparing local and remote copies of theme...'
-        theme = current_theme(dir, subdomain)
-        diff = ThemeDiff.new(dir, theme)
+          notice "Local <--- Remote"
 
-        notice "Local <--- Remote"
+          diff.templates_updated_in_remote.each do |t|
+            puts "Updated in remote: #{t.file_name}"
+          end
 
-        diff.templates_updated_in_remote.each do |t|
-          puts "Updated in remote: #{t.file_name}"
-        end
+          diff.remote_templates_not_in_dir.each do |t|
+            puts "Remote template not in local dir: #{t.file_name}"
+          end
 
-        diff.remote_templates_not_in_dir.each do |t|
-          puts "Remote template not in local dir: #{t.file_name}"
-        end
+          diff.remote_assets_not_in_dir.each do |t|
+            puts "Remote asset not in local dir: #{t.file_name}"
+          end
 
-        diff.remote_assets_not_in_dir.each do |t|
-          puts "Remote asset not in local dir: #{t.file_name}"
-        end
+          notice "Local ---> Remote"
 
-        notice "Local ---> Remote"
+          diff.templates_updated_locally.each do |t|
+            puts "Updated locally: #{t.file_name}"
+          end
 
-        diff.templates_updated_locally.each do |t|
-          puts "Updated locally: #{t.file_name}"
-        end
+          diff.local_templates_not_in_remote.each do |f|
+            puts "Local template not in remote: #{f.file_name}"
+          end
 
-        diff.local_templates_not_in_remote.each do |f|
-          puts "Local template not in remote: #{f.file_name}"
-        end
-
-        diff.local_assets_not_in_remote.each do |f|
-          puts "Local asset not in remote: #{f.file_name}"
+          diff.local_assets_not_in_remote.each do |f|
+            puts "Local asset not in remote: #{f.file_name}"
+          end
         end
       end
 
       desc 'watch [shop] [dir]', 'Watch theme directory at [dir] and create/update/delete the one in [shop] when changed'
       def watch(subdomain = nil, dir = '.')
-        theme = current_theme(dir, subdomain)
+        logged_in_action do
+          theme = current_theme(dir, subdomain)
 
-        unless File.exist?(File.join(dir, 'theme.yml'))
-          input = ask("Couldn't find a theme.yml file in the #{dir} directory. Should we create one? [y]")
-          unless ['', 'y'].include?(input.downcase)
-            abort("Sure, no problem. You're the boss.")
+          unless File.exist?(File.join(dir, 'theme.yml'))
+            input = ask("Couldn't find a theme.yml file in the #{dir} directory. Should we create one? [y]")
+            unless ['', 'y'].include?(input.downcase)
+              abort("Sure, no problem. You're the boss.")
+            end
+
+            write_theme_yaml(dir)
           end
 
-          write_theme_yaml(dir)
+          listener = Listen.to(dir) do |modified, added, removed|
+            if modified.any?
+              modified.each do |path|
+                upsert theme, path
+              end
+            end
+
+            if added.any?
+              added.each do |path|
+                upsert theme, path
+              end
+            end
+
+            if removed.any?
+              removed.each do |path|
+                delete theme, path
+              end
+            end
+
+            # update local cache
+            theme = theme.self
+          end
+
+          notice "Watching #{File.expand_path(dir)} for changes..."
+          listener.start
+
+          # ctrl-c
+          Signal.trap('INT') {
+            listener.stop
+            puts 'See you in another lifetime, brotha.'
+            exit
+          }
+
+          sleep
         end
-
-        listener = Listen.to(dir) do |modified, added, removed|
-          if modified.any?
-            modified.each do |path|
-              upsert theme, path
-            end
-          end
-
-          if added.any?
-            added.each do |path|
-              upsert theme, path
-            end
-          end
-
-          if removed.any?
-            removed.each do |path|
-              delete theme, path
-            end
-          end
-
-          # update local cache
-          theme = theme.self
-        end
-
-        notice "Watching #{File.expand_path(dir)} for changes..."
-        listener.start
-
-        # ctrl-c
-        Signal.trap('INT') {
-          listener.stop
-          puts 'See you in another lifetime, brotha.'
-          exit
-        }
-
-        sleep
       end
 
       private
