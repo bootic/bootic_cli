@@ -67,22 +67,25 @@ module BooticCli
     private
     attr_reader :local_files, :theme, :force_update
 
+    # This works as a theme template and theme asset
+    # ThemeTemplate #file_name, #body
+    # ThemeAsset #file_name, #file
     class LocalFile
-      attr_reader :file_name, :path
+      attr_reader :file_name, :file, :path
       attr_accessor :diff
 
       def initialize(path)
         @path = path
         @file_name = File.basename(path)
-        @io = File.new(path)
+        @file = File.new(path)
       end
 
       def body
-        @body ||= @io.read
+        @body ||= @file.read
       end
 
       def updated_on
-        @io.mtime.utc.iso8601
+        @file.mtime.utc.iso8601
       end
     end
 
