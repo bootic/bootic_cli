@@ -1,13 +1,17 @@
+require 'fileutils'
+
 module BooticCli
   class FSTheme
-    Template = Struct.new(:file_name, :body)
-    ThemeAsset = Struct.new(:file_name, :file)
+    Template = Struct.new(:file_name, :body, :updated_on)
+    ThemeAsset = Struct.new(:file_name, :file, :updated_on)
 
     ASSETS_DIR = 'assets'.freeze
     TEMPLATE_PATTERNS = ['*.liquid', '*.html', '*.css', '*.js', 'theme.yml'].freeze
     ASSET_PATTERNS = [File.join(ASSETS_DIR, '*')].freeze
 
     def initialize(dir)
+      FileUtils.mkdir_p dir
+      FileUtils.mkdir_p File.join(dir, ASSETS_DIR)
       @dir = dir
     end
 
@@ -15,7 +19,8 @@ module BooticCli
       @templates ||= (
         paths_for(TEMPLATE_PATTERNS).sort.map do |path|
           name = File.basename(path)
-          Template.new(name, File.read(path))
+          file = File.new(path)
+          Template.new(name, file.read, file.mtime.utc)
         end
       )
     end
@@ -24,7 +29,8 @@ module BooticCli
       @assets ||= (
         paths_for(ASSET_PATTERNS).sort.map do |path|
           fname = File.basename(path)
-          ThemeAsset.new(fname, File.new(path))
+          file = File.new(path)
+          ThemeAsset.new(fname, file, file.mtime.utc)
         end
       )
     end

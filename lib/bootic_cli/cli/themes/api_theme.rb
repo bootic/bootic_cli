@@ -1,15 +1,23 @@
+require 'time'
+
 module BooticCli
+  class ItemWithTime < SimpleDelegator
+    def updated_on
+      Time.parse(super)
+    end
+  end
+
   class APITheme
     def initialize(theme)
       @theme = theme
     end
 
     def templates
-      theme.templates
+      @templates ||= theme.templates.map{|t| ItemWithTime.new(t) }
     end
 
     def assets
-      theme.assets
+      @assets ||= theme.assets.map{|t| ItemWithTime.new(t) }
     end
 
     def add_template(file_name, body)

@@ -6,16 +6,20 @@ describe BooticCli::APITheme do
   subject { described_class.new(theme) }
 
   it "responds to #templates and #assets" do
-    allow(theme).to receive(:assets).and_return [double('API asset', file_name: 'script.js')]
+    allow(theme).to receive(:assets).and_return([
+      double('API asset', file_name: 'script.js', updated_on: '2017-02-03T12:12:12Z')
+    ])
     allow(theme).to receive(:templates).and_return([
-      double('API template', file_name: 'layout.html'),
-      double('API template', file_name: 'master.css'),
+      double('API template', file_name: 'layout.html', updated_on: '2017-01-02T00:10:10Z'),
+      double('API template', file_name: 'master.css', updated_on: '2017-02-02T11:11:11Z'),
     ])
 
     expect(subject.assets.size).to eq 1
+    expect(subject.assets.first.updated_on.iso8601).to eq '2017-02-03T12:12:12Z'
     it_is_an_asset(subject.assets.first, file_name: 'script.js')
 
     expect(subject.templates.size).to eq 2
+    expect(subject.templates.first.updated_on.iso8601).to eq '2017-01-02T00:10:10Z'
     it_is_a_template(subject.templates.first, file_name: 'layout.html')
     it_is_a_template(subject.templates.last, file_name: 'master.css')
   end

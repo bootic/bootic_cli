@@ -16,11 +16,13 @@ describe BooticCli::FSTheme do
   it "#add_template" do
     subject.add_template 'foo.html', 'Hello!'
 
-    tpl = File.new('./spec/fixtures/theme/foo.html')
-    expect(tpl.read).to eq 'Hello!'
+    file = File.new('./spec/fixtures/theme/foo.html')
+    expect(file.read).to eq 'Hello!'
 
     expect(subject.templates.size).to eq 3
     expect(subject.templates.map(&:file_name).sort).to eq ['foo.html', 'layout.html', 'master.css']
+    tpl = subject.templates.find{|t| t.file_name == 'foo.html' }
+    expect(tpl.updated_on).to eq file.mtime.utc
 
     subject.remove_template 'foo.html'
   end
@@ -43,6 +45,8 @@ describe BooticCli::FSTheme do
 
     expect(subject.assets.size).to eq 2
     expect(subject.assets.map(&:file_name).sort).to eq ['foo.js', 'script.js']
+    asset = subject.assets.find{|t| t.file_name == 'foo.js' }
+    expect(asset.updated_on).to eq file.mtime.utc
 
     subject.remove_asset 'foo.js'
   end
