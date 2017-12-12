@@ -1,7 +1,7 @@
 module BooticCli
   class FSTheme
     Template = Struct.new(:file_name, :body)
-    GalleryThemeAsset = Struct.new(:file_name, :file)
+    ThemeAsset = Struct.new(:file_name, :file)
 
     ASSETS_DIR = 'assets'.freeze
     TEMPLATE_PATTERNS = ['*.liquid', '*.html', '*.css', '*.js', 'theme.yml'].freeze
@@ -24,7 +24,7 @@ module BooticCli
       @assets ||= (
         paths_for(ASSET_PATTERNS).sort.map do |path|
           fname = File.basename(path)
-          GalleryThemeAsset.new(fname, File.new(path))
+          ThemeAsset.new(fname, File.new(path))
         end
       )
     end

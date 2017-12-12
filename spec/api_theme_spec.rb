@@ -1,0 +1,68 @@
+require 'spec_helper'
+require 'bootic_cli/cli/themes/api_theme'
+
+describe BooticCli::APITheme do
+  let(:theme) { double("API Theme") }
+  subject { described_class.new(theme) }
+
+  it "responds to #templates and #assets" do
+    allow(theme).to receive(:assets).and_return [double('API asset', file_name: 'script.js')]
+    allow(theme).to receive(:templates).and_return([
+      double('API template', file_name: 'layout.html'),
+      double('API template', file_name: 'master.css'),
+    ])
+
+    expect(subject.assets.size).to eq 1
+    it_is_an_asset(subject.assets.first, file_name: 'script.js')
+
+    expect(subject.templates.size).to eq 2
+    it_is_a_template(subject.templates.first, file_name: 'layout.html')
+    it_is_a_template(subject.templates.last, file_name: 'master.css')
+  end
+
+  it "#add_template" do
+    api_template = double('API Template', file_name: 'foo.html', has?: false)
+    expect(theme).to receive(:create_template).with(
+      file_name: 'foo.html',
+      body: 'Hello!'
+    ).and_return api_template
+
+    expect(subject.add_template('foo.html', 'Hello!')).to eq api_template
+  end
+
+  it "#remove_template" do
+    api_template = double('API template', file_name: 'foo.html', can?: true)
+    allow(theme).to receive(:templates).and_return([
+      api_template
+    ])
+    expect(api_template).to receive(:delete_template).and_return(double('API response', has?: false))
+    subject.remove_template 'foo.html'
+  end
+
+  it "#add_asset" do
+    api_asset = double('API Asset', file_name: 'foo.js', has?: false)
+    expect(theme).to receive(:create_theme_asset) do |opts|
+      expect(opts[:file_name]).to eq 'foo.js'
+      expect(opts[:data]).to be_a StringIO
+    end.and_return api_asset
+
+    expect(subject.add_asset('foo.js', StringIO.new("var a = 2"))).to eq api_asset
+  end
+
+  it "#remove_asset" do
+    api_asset = double('API Asset', file_name: 'foo.js', can?: true)
+    allow(theme).to receive(:assets).and_return([
+      api_asset
+    ])
+    expect(api_asset).to receive(:delete_theme_asset).and_return(double('API response', has?: false))
+    subject.remove_asset 'foo.js'
+  end
+
+  def it_is_an_asset(asset, file_name: nil)
+    expect(asset.file_name).to eq file_name
+  end
+
+  def it_is_a_template(tpl, file_name: nil)
+    expect(tpl.file_name).to eq file_name
+  end
+end

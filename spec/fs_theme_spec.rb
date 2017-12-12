@@ -2,63 +2,56 @@ require 'spec_helper'
 require 'bootic_cli/cli/themes/fs_theme'
 
 describe BooticCli::FSTheme do
-  it "responds to #templates and #assets" do
-    fs = described_class.new('./spec/fixtures/theme')
-    expect(fs.assets.size).to eq 1
-    it_is_an_asset(fs.assets.first, file_name: 'script.js')
+  subject { described_class.new('./spec/fixtures/theme') }
 
-    expect(fs.templates.size).to eq 2
-    it_is_a_template(fs.templates.first, file_name: 'layout.html')
-    it_is_a_template(fs.templates.last, file_name: 'master.css')
+  it "responds to #templates and #assets" do
+    expect(subject.assets.size).to eq 1
+    it_is_an_asset(subject.assets.first, file_name: 'script.js')
+
+    expect(subject.templates.size).to eq 2
+    it_is_a_template(subject.templates.first, file_name: 'layout.html')
+    it_is_a_template(subject.templates.last, file_name: 'master.css')
   end
 
   it "#add_template" do
-    fs = described_class.new('./spec/fixtures/theme')
-
-    fs.add_template 'foo.html', 'Hello!'
+    subject.add_template 'foo.html', 'Hello!'
 
     tpl = File.new('./spec/fixtures/theme/foo.html')
     expect(tpl.read).to eq 'Hello!'
 
-    expect(fs.templates.size).to eq 3
-    expect(fs.templates.map(&:file_name).sort).to eq ['foo.html', 'layout.html', 'master.css']
+    expect(subject.templates.size).to eq 3
+    expect(subject.templates.map(&:file_name).sort).to eq ['foo.html', 'layout.html', 'master.css']
 
-    fs.remove_template 'foo.html'
+    subject.remove_template 'foo.html'
   end
 
   it "#remove_template" do
-    fs = described_class.new('./spec/fixtures/theme')
+    subject.add_template 'foo.html', 'Hello!'
+    subject.remove_template 'foo.html'
 
-    fs.add_template 'foo.html', 'Hello!'
-    fs.remove_template 'foo.html'
-
-    expect(fs.templates.size).to eq 2
+    expect(subject.templates.size).to eq 2
     expect(File.exists?('./spec/fixtures/theme/foo.html')).to be false
   end
 
   it "#add_asset" do
-    fs = described_class.new('./spec/fixtures/theme')
+    expect(subject.assets.size).to eq 1
 
-    expect(fs.assets.size).to eq 1
-
-    fs.add_asset 'foo.js', StringIO.new("var a = 2")
+    subject.add_asset 'foo.js', StringIO.new("var a = 2")
 
     file = File.new('./spec/fixtures/theme/assets/foo.js')
     expect(file.read).to eq "var a = 2"
 
-    expect(fs.assets.size).to eq 2
-    expect(fs.assets.map(&:file_name).sort).to eq ['foo.js', 'script.js']
+    expect(subject.assets.size).to eq 2
+    expect(subject.assets.map(&:file_name).sort).to eq ['foo.js', 'script.js']
 
-    File.unlink './spec/fixtures/theme/assets/foo.js'
+    subject.remove_asset 'foo.js'
   end
 
   it "#remove_asset" do
-    fs = described_class.new('./spec/fixtures/theme')
+    subject.add_asset 'foo.js', StringIO.new("var a = 2")
+    subject.remove_asset 'foo.js'
 
-    fs.add_asset 'foo.js', StringIO.new("var a = 2")
-    fs.remove_asset 'foo.js'
-
-    expect(fs.assets.size).to eq 1
+    expect(subject.assets.size).to eq 1
     expect(File.exists?('./spec/fixtures/theme/assets/foo.js')).to be false
   end
 
