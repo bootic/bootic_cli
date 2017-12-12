@@ -1,12 +1,6 @@
 require 'diffy'
 
 module BooticCli
-  module StringUtils
-    def self.normalize_endings(str)
-      str.to_s.gsub(/\r\n?/, "\n")
-    end
-  end
-
   class ThemeDiff
     ASSETS_DIR_EXP = /assets/
 
@@ -63,8 +57,7 @@ module BooticCli
           next
         end
 
-        # normalize endings when comparing files so we don't have any noise in them
-        diff = Diffy::Diff.new(StringUtils.normalize_endings(f.body), StringUtils.normalize_endings(other_file.body), context: 1)
+        diff = Diffy::Diff.new(f.body, other_file.body, context: 1)
         next if diff.to_s.empty?
 
         if !force_update && other_file.updated_on <= f.updated_on
