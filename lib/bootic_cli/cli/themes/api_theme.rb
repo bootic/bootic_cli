@@ -1,9 +1,16 @@
 require 'time'
+require 'open-uri'
 
 module BooticCli
   class ItemWithTime < SimpleDelegator
     def updated_on
       Time.parse(super)
+    end
+  end
+
+  class APIAsset < ItemWithTime
+    def file
+      @file ||= open(rels[:file].href)
     end
   end
 
@@ -17,7 +24,7 @@ module BooticCli
     end
 
     def assets
-      @assets ||= theme.assets.map{|t| ItemWithTime.new(t) }
+      @assets ||= theme.assets.map{|t| APIAsset.new(t) }
     end
 
     def add_template(file_name, body)
