@@ -28,7 +28,7 @@ describe BooticCli::ThemeDiff do
       expect(subject.templates_updated_in_source.size).to eq 1
       expect(subject.templates_updated_in_source.first.file_name).to eq 'master.css'
       expect(subject.templates_updated_in_source.first.diff).to be_a Diffy::Diff
-      expect(subject.templates_updated_in_source.first.new_body).to eq "body { background: red; }"
+      expect(subject.templates_updated_in_source.first.body).to eq "body { background: red; }"
     end
 
     it "#templates_updated_in_target" do

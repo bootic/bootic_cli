@@ -42,7 +42,7 @@ module BooticCli
     private
     attr_reader :source, :target, :force_update
 
-    ModifiedFile = Struct.new('ModifiedFile', :file_name, :updated_on, :new_body, :diff)
+    ModifiedFile = Struct.new('ModifiedFile', :file_name, :updated_on, :body, :diff)
 
     def find_missing_files(set1, set2)
       file_names = set2.map(&:file_name)
