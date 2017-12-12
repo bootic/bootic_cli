@@ -15,8 +15,8 @@ module BooticCli
       @assets = []
     end
 
-    def add_template(file_name, body)
-      tpl = Template.new(file_name, body, Time.now)
+    def add_template(file_name, body, mtime: Time.now)
+      tpl = Template.new(file_name, body, mtime)
       if idx = templates.index{|t| t.file_name == file_name }
         templates[idx] = tpl
       else
@@ -30,8 +30,8 @@ module BooticCli
       end
     end
 
-    def add_asset(file_name, file)
-      asset = ThemeAsset.new(file_name, file, Time.now)
+    def add_asset(file_name, file, mtime: Time.now)
+      asset = ThemeAsset.new(file_name, file, mtime)
       if idx = assets.index{|t| t.file_name == file_name }
         assets[idx] = asset
       else

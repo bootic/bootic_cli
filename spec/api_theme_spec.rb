@@ -61,12 +61,4 @@ describe BooticCli::APITheme do
     expect(api_asset).to receive(:delete_theme_asset).and_return(double('API response', has?: false))
     subject.remove_asset 'foo.js'
   end
-
-  def it_is_an_asset(asset, file_name: nil)
-    expect(asset.file_name).to eq file_name
-  end
-
-  def it_is_a_template(tpl, file_name: nil)
-    expect(tpl.file_name).to eq file_name
-  end
 end

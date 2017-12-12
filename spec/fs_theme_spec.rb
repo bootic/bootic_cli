@@ -58,12 +58,4 @@ describe BooticCli::FSTheme do
     expect(subject.assets.size).to eq 1
     expect(File.exists?('./spec/fixtures/theme/assets/foo.js')).to be false
   end
-
-  def it_is_an_asset(asset, file_name: nil)
-    expect(asset.file_name).to eq file_name
-  end
-
-  def it_is_a_template(tpl, file_name: nil)
-    expect(tpl.file_name).to eq file_name
-  end
 end
