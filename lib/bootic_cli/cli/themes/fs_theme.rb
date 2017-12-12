@@ -106,17 +106,6 @@ module BooticCli
       patterns.reduce([]) {|m, pattern| m + Dir[File.join(dir, pattern)]}
     end
 
-    def info
-      @info ||= (
-        path = File.join(dir, 'theme.yml')
-        if File.exists?(path)
-          YAML.load_file(path)
-        else
-          {}
-        end
-      )
-    end
-
     def has_dos_line_endings?(path)
       !!IO.read(path)["\r\n"]
     end
