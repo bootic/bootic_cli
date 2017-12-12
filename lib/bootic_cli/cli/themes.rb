@@ -389,6 +389,8 @@ module BooticCli
 
       def copy_templates(from, to, opts = {})
         from.templates.each do |t|
+          target_tpl = to.tamplates.find{ |t| t.file_name == a.file_name }
+          next if target_tpl # exists
           to.add_template t.file_name, t.body
         end
       end
