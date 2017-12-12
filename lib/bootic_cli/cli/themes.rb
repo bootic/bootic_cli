@@ -1,8 +1,9 @@
 require 'fileutils'
-require 'open-uri'
 require 'thread'
 require 'listen'
 require_relative './themes/theme_diff'
+require_relative './themes/api_theme'
+require_relative './themes/fs_theme'
 
 module BooticCli
   module Commands
@@ -13,40 +14,31 @@ module BooticCli
       option :destroy, banner: '<true|false>', default: 'true'
       def pull(subdomain = nil, dir = '.')
         logged_in_action do
-          # if theme wasn't specified and no theme exists
-          # then set clone/download location to subdomain name
-          if subdomain and dir == '.' and !theme_exists?(dir)
-            dir = subdomain
-          end
-
-          theme = current_theme(dir, subdomain)
-          diff = ThemeDiff.new(dir, theme, true)
-          check_dupes!(diff.local_assets)
+          local_theme, remote_theme = select_theme_pair(subdomain, dir)
+          diff = ThemeDiff.new(source: local_theme, target: remote_theme, force_update: true)
+          check_dupes!(local_theme.assets)
 
           download_opts = {
             overwrite: false,
             interactive: true
           }
 
-          assets_dir = File.join(dir, ASSETS_DIR)
-          FileUtils.mkdir_p assets_dir
-
           notice 'Updating local templates...'
-          maybe_update(dir, diff.templates_updated_in_remote, 'remote', 'local') do |t, path|
-            write_local(path, t.new_body)
+          maybe_update(diff.templates_updated_in_target, 'remote', 'local') do |t|
+            local_theme.add_template t.file_name, t.body
           end
 
           if options['destroy'] == 'false'
             notice 'Not removing local files that were removed on remote.'
           else
             notice 'Removing local files that were removed on remote...'
-            diff.local_templates_not_in_remote.each { |f| delete_file File.expand_path(f.path) }
-            diff.local_assets_not_in_remote.each { |f| delete_file File.expand_path(f.path) }
+            diff.source_templates_not_in_target.each { |f| local_theme.remove_template(f.file_name) }
+            diff.source_assets_not_in_target.each { |f| local_theme.remove_asset(f.file_name) }
           end
 
           notice 'Pulling missing files from remote...'
-          download_templates(dir, theme.templates, download_opts)
-          download_assets(assets_dir, theme.assets, download_opts)
+          copy_templates(remote_theme, local_theme, download_opts)
+          copy_assets(remote_theme, local_theme, download_opts)
         end
       end
 
@@ -54,28 +46,28 @@ module BooticCli
       option :destroy, banner: '<true|false>', default: 'true'
       def push(subdomain = nil, dir = '.')
         logged_in_action do
-          theme = current_theme(dir, subdomain)
-          notice 'Pushing local changes to remote...'
+          local_theme, remote_theme = select_theme_pair(subdomain, dir)
+          diff = ThemeDiff.new(source: local_theme, target: remote_theme, force_update: true)
+          check_dupes!(local_theme.assets)
 
-          diff = ThemeDiff.new(dir, theme, true)
-          check_dupes!(diff.local_assets)
+          notice 'Pushing local changes to remote...'
 
           # update existing templates
           notice 'Updating remote templates...'
-          maybe_update(dir, diff.templates_updated_locally, 'local', 'remote') do |t, path|
-            upsert_template(theme, path)
+          maybe_update(diff.templates_updated_in_source, 'local', 'remote') do |t|
+            remote_theme.add_template t.file_name, t.body
           end
 
           notice 'Pushing files that are missing in remote...'
-          diff.local_templates_not_in_remote.each { |f| upsert theme, File.expand_path(f.path) }
-          diff.local_assets_not_in_remote.each { |f| upsert theme, File.expand_path(f.path) }
+          diff.source_templates_not_in_target.each { |f| remote_theme.add_template(f.file_name, f.body) }
+          diff.source_assets_not_in_target.each { |f| remote_theme.add_asset(f.file_name, f.file) }
 
           if options['destroy'] == 'false'
             notice 'Not removing remote files that were removed locally.'
           else
             notice 'Removing remote files that were removed locally...'
-            diff.remote_templates_not_in_dir.each { |f| delete theme, File.join(dir, f.file_name) }
-            diff.remote_assets_not_in_dir.each { |f| delete theme, File.join(dir, ASSETS_DIR, f.file_name) }
+            diff.target_templates_not_in_source.each { |f| remote_theme.remove_template(f.file_name) }
+            diff.target_assets_not_in_source.each { |f| remote_theme.remove_asset(f.file_name) }
           end
         end
       end
@@ -83,75 +75,71 @@ module BooticCli
       desc 'sync [shop] [dir]', 'Sync local theme copy in [dir] with remote [shop]'
       def sync(subdomain = nil, dir = '.')
         logged_in_action do
-          theme = current_theme(dir, subdomain)
+          local_theme, remote_theme = select_theme_pair(subdomain, dir)
+          diff = ThemeDiff.new(source: local_theme, target: remote_theme, force_update: true)
+          check_dupes!(local_theme.assets)
           notice 'Syncing local copy with remote...'
-
-          diff = ThemeDiff.new(dir, theme)
-          check_dupes!(diff.local_assets)
 
           download_opts = {
             overwrite: false,
             interactive: false
           }
 
-          assets_dir = File.join(dir, ASSETS_DIR)
-          FileUtils.mkdir_p assets_dir
-
           # first, update existing templates in each side
           notice 'Updating local templates...'
-          maybe_update(dir, diff.templates_updated_in_remote, 'remote', 'local') do |t, path|
-            write_local(path, t.new_body)
+          maybe_update(diff.templates_updated_in_target, 'remote', 'local') do |t|
+            local_theme.add_template t.file_name, t.body
           end
 
           notice 'Updating remote templates...'
-          maybe_update(dir, diff.templates_updated_locally, 'local', 'remote') do |t, path|
-            upsert_template(theme, path)
+          maybe_update(diff.templates_updated_in_source, 'local', 'remote') do |t|
+            remote_theme.add_template t.file_name, t.body
           end
 
           # now, download missing files on local end
           notice 'Downloading missing local templates & assets...'
-          download_templates(dir, theme.templates, download_opts)
-          download_assets(assets_dir, theme.assets, download_opts)
+          copy_templates(remote_theme, local_theme, download_opts)
+          copy_assets(remote_theme, local_theme, download_opts)
 
           # now, upload missing files on remote
           notice 'Uploading missing remote templates & assets...'
-          diff.local_templates_not_in_remote.each { |f| upsert_template(theme, f.path) }
-          diff.local_assets_not_in_remote.each { |f| upsert_asset(theme, f.path) }
+          diff.source_templates_not_in_target.each { |f| remote_theme.add_template(f.file_name, f.body) }
+          diff.source_assets_not_in_target.each { |f| remote_theme.add_asset(f.file_name, f.file) }
         end
       end
 
       desc 'compare [shop] [dir]', 'Show differences between local and remote copies'
       def compare(subdomain = nil, dir = '.')
         logged_in_action do
+          local_theme, remote_theme = select_theme_pair(subdomain, dir)
+          diff = ThemeDiff.new(source: local_theme, target: remote_theme, force_update: false)
           notice 'Comparing local and remote copies of theme...'
-          theme = current_theme(dir, subdomain)
-          diff = ThemeDiff.new(dir, theme)
 
           notice "Local <--- Remote"
 
-          diff.templates_updated_in_remote.each do |t|
+          diff.templates_updated_in_target.each do |t|
             puts "Updated in remote: #{t.file_name}"
           end
 
-          diff.remote_templates_not_in_dir.each do |t|
+          diff.target_templates_not_in_source.each do |t|
             puts "Remote template not in local dir: #{t.file_name}"
           end
 
-          diff.remote_assets_not_in_dir.each do |t|
+          diff.target_assets_not_in_source.each do |t|
             puts "Remote asset not in local dir: #{t.file_name}"
           end
 
           notice "Local ---> Remote"
 
-          diff.templates_updated_locally.each do |t|
+          diff.templates_updated_in_source.each do |t|
             puts "Updated locally: #{t.file_name}"
           end
 
-          diff.local_templates_not_in_remote.each do |f|
+          diff.source_templates_not_in_target.each do |f|
             puts "Local template not in remote: #{f.file_name}"
           end
 
-          diff.local_assets_not_in_remote.each do |f|
+          diff.source_assets_not_in_target.each do |f|
             puts "Local asset not in remote: #{f.file_name}"
           end
         end
@@ -160,38 +148,29 @@ module BooticCli
       desc 'watch [shop] [dir]', 'Watch theme directory at [dir] and create/update/delete the one in [shop] when changed'
       def watch(subdomain = nil, dir = '.')
         logged_in_action do
-          theme = current_theme(dir, subdomain)
-
-          unless File.exist?(File.join(dir, 'theme.yml'))
-            input = ask("Couldn't find a theme.yml file in the #{dir} directory. Should we create one? [y]")
-            unless ['', 'y'].include?(input.downcase)
-              abort("Sure, no problem. You're the boss.")
-            end
-
-            write_theme_yaml(dir)
-          end
+          _, remote_theme = select_theme_pair(subdomain, dir)
 
           listener = Listen.to(dir) do |modified, added, removed|
             if modified.any?
               modified.each do |path|
-                upsert theme, path
+                upsert remote_theme, path
               end
             end
 
             if added.any?
               added.each do |path|
-                upsert theme, path
+                upsert remote_theme, path
               end
             end
 
             if removed.any?
               removed.each do |path|
-                delete theme, path
+                delete remote_theme, path
               end
             end
 
             # update local cache
-            theme = theme.self
+            remote_theme.reload!
           end
 
           notice "Watching #{File.expand_path(dir)} for changes..."
@@ -210,51 +189,82 @@ module BooticCli
 
       private
 
-      def current_theme(dir, subdomain)
-        @dirname   = dirname_for(dir)
-
-        @found_shop = if subdomain
-          get_shop(subdomain) or raise "Couldn't find shop with subdomain #{subdomain}"
-        else
-          theme_shop = read_theme_yaml(dir)[:shop]
-
-          # unless subdomain is given, deduce the current shop from the theme.yml file
-          # if none found, then use the dirname, and if still none, then fall back to shops.first
-          get_shop(theme_shop || @dirname) || root.shops.first
-        end
-
-        check_subdomain!(@found_shop.subdomain, @dirname)
-        @found_shop.theme
+      def select_theme_pair(subdomain, dir)
+        shop = select_shop(subdomain)
+        local_theme = select_local_theme(shop.subdomain, dir)
+        remote_theme = select_remote_theme(shop)
+        [local_theme, remote_theme]
       end
 
-      def current_shop
-        @found_shop
-      end
-
-      def get_shop(subdomain = nil)
-        shop = if subdomain
+      def select_shop(subdomain)
+        if subdomain
           if root.has?(:all_shops)
-            root.all_shops(subdomains: subdomain).items.first
+            root.all_shops(subdomains: subdomain).first
           else
-            root.shops.select { |s| s.subdomain == subdomain }.first
+            root.shops.find { |s| s.subdomain == subdomain }
           end
         else
           root.shops.first
         end
       end
 
-      def check_subdomain!(subdomain, dirname)
-        if dirname != subdomain
-          input = ask("Shop #{highlight(subdomain)} doesn't match the current directory name: #{highlight(dirname)}. Is that OK? [y]")
-          unless ['', 'y'].include?(input.downcase)
-            abort 'Thought so.'
-          end
+      def select_local_theme(subdomain, dir)
+        if dir == '.' # current dir
+          BooticCli::FSTheme.new(File.expand_path(dir))
+        else # use subdomain?
+          BooticCli::FSTheme.new(File.expand_path(subdomain))
         end
       end
 
-      def dirname_for(dir)
-        File.basename(File.expand_path(dir))
+      def select_remote_theme(shop)
+        BooticCli::APITheme.new(shop.theme)
       end
+
+      # def current_theme(dir, subdomain)
+      #   @dirname   = dirname_for(dir)
+
+      #   @found_shop = if subdomain
+      #     get_shop(subdomain) or raise "Couldn't find shop with subdomain #{subdomain}"
+      #   else
+      #     theme_shop = read_theme_yaml(dir)[:shop]
+
+      #     # unless subdomain is given, deduce the current shop from the theme.yml file
+      #     # if none found, then use the dirname, and if still none, then fall back to shops.first
+      #     get_shop(theme_shop || @dirname) || root.shops.first
+      #   end
+
+      #   check_subdomain!(@found_shop.subdomain, @dirname)
+      #   @found_shop.theme
+      # end
+
+      # def current_shop
+      #   @found_shop
+      # end
+
+      # def get_shop(subdomain = nil)
+      #   shop = if subdomain
+      #     if root.has?(:all_shops)
+      #       root.all_shops(subdomains: subdomain).items.first
+      #     else
+      #       root.shops.select { |s| s.subdomain == subdomain }.first
+      #     end
+      #   else
+      #     root.shops.first
+      #   end
+      # end
+
+      # def check_subdomain!(subdomain, dirname)
+      #   if dirname != subdomain
+      #     input = ask("Shop #{highlight(subdomain)} doesn't match the current directory name: #{highlight(dirname)}. Is that OK? [y]")
+      #     unless ['', 'y'].include?(input.downcase)
+      #       abort 'Thought so.'
+      #     end
+      #   end
+      # end
+
+      # def dirname_for(dir)
+      #   File.basename(File.expand_path(dir))
+      # end
 
       def check_dupes!(list)
         names = list.map { |f| f.file_name.downcase }
@@ -271,23 +281,23 @@ module BooticCli
         end
       end
 
-      def theme_exists?(dir)
-        File.exist?(File.join(dir, 'layout.html'))
-      end
+      # def theme_exists?(dir)
+      #   File.exist?(File.join(dir, 'layout.html'))
+      # end
 
-      def read_theme_yaml(dir)
-        YAML.load_file(File.join(dir, 'theme.yml'))
-      rescue Errno::ENOENT => e
-        {}
-      end
+      # def read_theme_yaml(dir)
+      #   YAML.load_file(File.join(dir, 'theme.yml'))
+      # rescue Errno::ENOENT => e
+      #   {}
+      # end
 
-      def write_theme_yaml(dir)
-        path = File.join(dir, 'theme.yml')
-        obj  = { title: @found_shop.subdomain, description: 'Theme for #{@found_shop.subdomain}' }
-        File.open(path, 'w') { |f| f.write(YAML.dump(obj)) }
-      end
+      # def write_theme_yaml(dir)
+      #   path = File.join(dir, 'theme.yml')
+      #   obj  = { title: @found_shop.subdomain, description: 'Theme for #{@found_shop.subdomain}' }
+      #   File.open(path, 'w') { |f| f.write(YAML.dump(obj)) }
+      # end
 
-      def maybe_update(dir, modified_templates, source_name, target_name, &block)
+      def maybe_update(modified_templates, source_name, target_name, &block)
         modified_templates.each do |t|
           puts "---------"
           puts "#{source_name} #{t.file_name} was modified at #{t.updated_on} (more recent than #{target_name}):"
@@ -297,108 +307,106 @@ module BooticCli
           input = ask("\nUpdate #{target_name} #{t.file_name}? [y]")
           next unless input == '' or input.strip.downcase == 'y'
 
-          yield(t, File.join(dir, t.file_name))
+          yield t
         end
       end
 
       def upsert(theme, path)
-        if path =~ ThemeDiff::ASSETS_DIR_EXP
-          upsert_asset theme, path
-        else
-          upsert_template theme, path
+        item, type = FSTheme.resolve_file(path)
+        case type
+        when :template
+          theme.add_template item.file_name, item.body
+        when :asset
+          theme.add_asset item.file_name, item.file
         end
-      end
-
-      def delete_file(path)
-        File.unlink path
-        puts "Deleted local file: #{path}"
+        puts "Uploaded #{type}: #{item.file_name}"
       end
 
       def delete(theme, path)
-        if path =~ ThemeDiff::ASSETS_DIR_EXP
-          delete_asset theme, path
-        else
-          delete_template theme, path
+        type = FSTheme.resolve_type(path)
+        file_name = File.basename(path)
+        case type
+        when :template
+          theme.remove_template file_name
+        when :asset
+          theme.remove_asset file_name
+        end
+        puts "Deleted remote #{type}: #{file_name}"
+      end
+
+      # def delete_file(path)
+      #   File.unlink path
+      #   puts "Deleted local file: #{path}"
+      # end
+
+      # def delete_template(theme, path)
+      #   fname = File.basename(path)
+      #   tpl = theme.templates.find{|t| t.file_name == fname}
+      #   return unless tpl
+
+      #   if tpl.has?(:delete_template)
+      #     puts "Deleting remote template: #{path}"
+      #     tpl.delete_template
+      #   else
+      #     puts 'Template cannot be deleted. Re-fetching...'
+      #     write_local(path, tpl.body)
+      #   end
+      # end
+
+      # def delete_asset(theme, path)
+      #   fname = File.basename(path)
+      #   asset = theme.assets.find { |t| t.file_name == fname }
+      #   return unless asset
+      #   puts "Deleting remote asset: #{path}"
+      #   asset.delete_theme_asset
+      # end
+
+      # def upsert_template(theme, path)
+      #   confirm_upload(theme.create_template(
+      #     file_name: File.basename(path),
+      #     body: File.read(path)
+      #   ), path)
+      # end
+
+      # def upsert_asset(theme, path)
+      #   puts "Upserting asset: #{path}"
+      #   confirm_upload(theme.create_theme_asset(
+      #     file_name: File.basename(path),
+      #     data: File.new(path)
+      #   ), path)
+      # end
+
+      # def confirm_upload(entity, path)
+      #   if entity.has?(:errors)
+      #     puts "File has errors: #{File.basename(path)}"
+      #     entity.errors.each do |e|
+      #       puts [" --> ", e.field, e.messages.join(', ')].join(' ')
+      #     end
+      #   else
+      #     puts "Uploaded file: #{File.basename(path)}"
+      #   end
+      # end
+
+      def copy_templates(from, to, opts = {})
+        from.templates.each do |t|
+          to.add_template t.file_name, t.body
         end
       end
 
-      def delete_template(theme, path)
-        fname = File.basename(path)
-        tpl = theme.templates.find{|t| t.file_name == fname}
-        return unless tpl
-
-        if tpl.has?(:delete_template)
-          puts "Deleting remote template: #{path}"
-          tpl.delete_template
-        else
-          puts 'Template cannot be deleted. Re-fetching...'
-          write_local(path, tpl.body)
-        end
-      end
-
-      def delete_asset(theme, path)
-        fname = File.basename(path)
-        asset = theme.assets.find { |t| t.file_name == fname }
-        return unless asset
-        puts "Deleting remote asset: #{path}"
-        asset.delete_theme_asset
-      end
-
-      def upsert_template(theme, path)
-        confirm_upload(theme.create_template(
-          file_name: File.basename(path),
-          body: File.read(path)
-        ), path)
-      end
-
-      def upsert_asset(theme, path)
-        puts "Upserting asset: #{path}"
-        confirm_upload(theme.create_theme_asset(
-          file_name: File.basename(path),
-          data: File.new(path)
-        ), path)
-      end
-
-      def confirm_upload(entity, path)
-        if entity.has?(:errors)
-          puts "File has errors: #{File.basename(path)}"
-          entity.errors.each do |e|
-            puts [" --> ", e.field, e.messages.join(', ')].join(' ')
-          end
-        else
-          puts "Uploaded file: #{File.basename(path)}"
-        end
-      end
-
-      def download_templates(dir, templates, opts = {})
-        templates.each do |t|
-          path = File.join(dir, t.file_name)
-
-          if File.exist?(path)
-            next # our modified templates will take care of this
-
-            # input = ask('Template exists: #{t.file_name}. Overwrite? [n]')
-            # next if input == '' or input.strip.downcase == 'n'
-          end
-          write_local(path, t.body)
-        end
-      end
-
-      def download_assets(dir, assets, opts = {})
+      def copy_assets(from, to, opts = {})
         queue = Queue.new
 
-        threads = assets.map do |a|
-          path = File.join(dir, a.file_name)
-
-          if File.exist?(path) && !opts[:overwrite]
+        threads = from.assets.map do |a|
+          target_asset = to.assets.find{ |t| t.file_name == a.file_name }
+          if target_asset && !opts[:overwrite]
             next unless opts[:interactive]
             input = ask("Asset exists: #{a.file_name}. Overwrite? [n]")
             next if input == '' or input.strip.downcase == 'n'
           end
 
           Thread.new do
-            file = open(a.rels[:file].href)
-            queue << write_local(path, file.read, 'wb')
+            to.add_asset a.file_name, a.file
+            queue << a.file_name
           end
         end.compact
 
@@ -413,26 +421,26 @@ module BooticCli
         printer.join
       end
 
-      def has_dos_line_endings?(path)
-        !!IO.read(path)["\r\n"]
-      end
+      # def has_dos_line_endings?(path)
+      #   !!IO.read(path)["\r\n"]
+      # end
 
-      def write_local(path, content, mode = 'w')
-        if mode == 'w'
-          # remove DOS line endings for new templates
-          # or for existing ones that don't have any.
-          if !File.exist?(path) or !has_dos_line_endings?(path)
-            content = StringUtils.normalize_endings(content)
-          end
-        end
+      # def write_local(path, content, mode = 'w')
+      #   if mode == 'w'
+      #     # remove DOS line endings for new templates
+      #     # or for existing ones that don't have any.
+      #     if !File.exist?(path) or !has_dos_line_endings?(path)
+      #       content = StringUtils.normalize_endings(content)
+      #     end
+      #   end
 
-        File.open(path, mode) do |io|
-          io.write(content)
-        end
+      #   File.open(path, mode) do |io|
+      #     io.write(content)
+      #   end
 
-        puts "Wrote #{File.basename(path)}"
-        path
-      end
+      #   puts "Wrote #{File.basename(path)}"
+      #   path
+      # end
 
       COLORS = {
         black:        '30',
