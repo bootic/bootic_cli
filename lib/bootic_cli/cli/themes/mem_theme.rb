@@ -3,9 +3,14 @@ module BooticCli
     Template = Struct.new(:file_name, :body, :updated_on)
     ThemeAsset = Struct.new(:file_name, :file, :updated_on)
 
+    def initialize
+      reload!
+    end
+
+    # Implement generic Theme interface
     attr_reader :templates, :assets
 
-    def initialize
+    def reload!
       @templates = []
       @assets = []
     end

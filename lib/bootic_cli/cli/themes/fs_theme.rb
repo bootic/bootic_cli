@@ -28,10 +28,17 @@ module BooticCli
 
       [item, type]
     end
+
     def initialize(dir)
       FileUtils.mkdir_p dir
       FileUtils.mkdir_p File.join(dir, ASSETS_DIR)
       @dir = dir
+    end
+
+    # Implement generic Theme interface
+    def reload!
+      @templates = nil
+      @assets = nil
     end
 
     def templates

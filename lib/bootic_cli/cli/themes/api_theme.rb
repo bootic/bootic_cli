@@ -19,6 +19,13 @@ module BooticCli
       @theme = theme
     end
 
+    # Implement generic Theme interface
+    def reload!
+      @templates = nil
+      @assets = nil
+      @theme = theme.self
+    end
+
     def templates
       @templates ||= theme.templates.map{|t| ItemWithTime.new(t) }
     end
