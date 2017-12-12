@@ -1,68 +1,90 @@
 require 'spec_helper'
 require 'time'
+require 'bootic_cli/cli/themes/mem_theme'
 require 'bootic_cli/cli/themes/theme_diff'
 
 describe BooticCli::ThemeDiff do
-  before do
-    local_layout = local_file('layout.html')
-    local_css = local_file('master.css')
-    templates = [
-      double('Template', file_name: 'layout.html', body: '<h1>nuevo!</h1>', updated_on: (local_layout.mtime + 10).iso8601),
-      double('Template', file_name: 'master.css', body: 'body {}', updated_on: (local_css.mtime - 10).iso8601),
-      double('Template', file_name: 'product.html', body: 'Hi!', updated_on: (local_css.mtime + 10).iso8601),
-    ]
-    assets = [
-      double('Asset', file_name: 'logo.gif')
-    ]
+  let(:source_theme) { BooticCli::MemTheme.new }
+  let(:target_theme) { BooticCli::MemTheme.new }
 
-    @theme = double('Theme', templates: templates, assets: assets)
-  end
+  subject { described_class.new(source: source_theme, target: target_theme) }
 
-  subject { described_class.new('./spec/fixtures/theme', @theme) }
+  context "updated templates" do
+    it "#templates_updated_in_source" do
+      # these 2 are the same
+      Timecop.freeze Time.local(2017) do
+        source_theme.add_template 'layout.html', "aaa"
+        target_theme.add_template 'layout.html', "aaa"
+      end
 
-  describe "#templates_updated_in_remote" do
-    it "lists updated remote templates" do
-      expect(subject.templates_updated_in_remote.size).to eq 1
-      expect(subject.templates_updated_in_remote.first.file_name).to eq 'layout.html'
+      # this one is newest in source
+      Timecop.freeze Time.local(2017, 12, 12, 0, 0, 1) do
+        source_theme.add_template 'master.css', "body { background: red; }"
+      end
+      Timecop.freeze Time.local(2017, 12, 12, 0, 0, 0) do
+        target_theme.add_template 'master.css', "body { background: green;}"
+      end
+
+      expect(subject.templates_updated_in_source.size).to eq 1
+      expect(subject.templates_updated_in_source.first.file_name).to eq 'master.css'
+      expect(subject.templates_updated_in_source.first.diff).to be_a Diffy::Diff
+      expect(subject.templates_updated_in_source.first.new_body).to eq "body { background: red; }"
+    end
+
+    it "#templates_updated_in_target" do
+      # this one is newest in target
+      Timecop.freeze Time.local(2017, 12, 12, 0, 0, 1) do
+        target_theme.add_template 'foo.css', "body { background: red; }"
+      end
+      Timecop.freeze Time.local(2017, 12, 12, 0, 0, 0) do
+        source_theme.add_template 'foo.css', "body { background: green;}"
+      end
+
+      expect(subject.templates_updated_in_target.first.file_name).to eq 'foo.css'
     end
   end
 
-  describe "#templates_updated_locally" do
-    it "lists updated local templates" do
-      expect(subject.templates_updated_locally.size).to eq 1
-      expect(subject.templates_updated_locally.first.file_name).to eq 'master.css'
+  context "missing templates" do
+    before do
+      source_theme.add_template 'foo.css', "body { background: green;}"
+      source_theme.add_template 'layout.html', "hello"
+      source_theme.add_template 'common.html', "bye"
+
+      target_theme.add_template 'common.html', "bye"
+      target_theme.add_template 'targetonly.html', "wat"
+    end
+
+    it "#source_templates_not_in_target" do
+      expect(subject.source_templates_not_in_target.size).to eq 2
+      expect(subject.source_templates_not_in_target.first.file_name).to eq 'foo.css'
+      expect(subject.source_templates_not_in_target.last.file_name).to eq 'layout.html'
+    end
+
+    it "#target_templates_not_in_source" do
+      expect(subject.target_templates_not_in_source.size).to eq 1
+      expect(subject.target_templates_not_in_source.first.file_name).to eq 'targetonly.html'
     end
   end
 
-  describe "#remote_templates_not_in_dir" do
-    it "list remote remplates not in local dir" do
-      expect(subject.remote_templates_not_in_dir.size).to eq 1
-      expect(subject.remote_templates_not_in_dir.first.file_name).to eq 'product.html'
-    end
-  end
+  context "missing assets" do
+    before do
+      source_theme.add_asset 'foo.css', StringIO.new("body { background: green;}")
+      source_theme.add_asset 'layout.html', StringIO.new("hello")
+      source_theme.add_asset 'common.html', StringIO.new("bye")
 
-  describe "#remote_assets_not_in_dir" do
-    it "list remote assets not in local dir" do
-      expect(subject.remote_assets_not_in_dir.size).to eq 1
-      expect(subject.remote_assets_not_in_dir.first.file_name).to eq 'logo.gif'
+      target_theme.add_asset 'common.html', StringIO.new("bye")
+      target_theme.add_asset 'targetonly.html', StringIO.new("wat")
     end
-  end
 
-  describe "#local_templates" do
-    it "lists local templates" do
-      expect(subject.local_templates.size).to eq 2
-      expect(subject.local_templates.map(&:file_name)).to eq ['layout.html', 'master.css']
+    it "#source_assets_not_in_target" do
+      expect(subject.source_assets_not_in_target.size).to eq 2
+      expect(subject.source_assets_not_in_target.first.file_name).to eq 'foo.css'
+      expect(subject.source_assets_not_in_target.last.file_name).to eq 'layout.html'
     end
-  end
 
-  describe "#local_assets" do
-    it "lists local assets" do
-      expect(subject.local_assets.size).to eq 1
-      expect(subject.local_assets.map(&:file_name)).to eq ['script.js']
+    it "#target_assets_not_in_source" do
+      expect(subject.target_assets_not_in_source.size).to eq 1
+      expect(subject.target_assets_not_in_source.first.file_name).to eq 'targetonly.html'
     end
-  end
-
-  def local_file(name)
-    File.new(File.join('.', 'spec', 'fixtures', 'theme', name))
   end
 end
