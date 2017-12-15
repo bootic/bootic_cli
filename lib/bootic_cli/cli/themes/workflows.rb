@@ -16,7 +16,7 @@ module BooticCli
     end
   end
 
-  class Operations
+  class Workflows
     def initialize(prompt: NullPrompt)
       @prompt = prompt
     end
@@ -53,6 +53,33 @@ module BooticCli
       copy_templates(new_files_in_remote, local_theme, download_opts)
       # lets copy all of them and let user decide to overwrite existing
       copy_assets(remote_theme, local_theme, download_opts)
+    end
+
+    def push(local_theme, remote_theme, destroy: true)
+      updated_in_local = BooticCli::UpdatedTheme.new(source: local_theme, target: remote_theme)
+      removed_in_local = BooticCli::MissingItemsTheme.new(source: remote_theme, target: local_theme)
+      new_files_in_local = BooticCli::MissingItemsTheme.new(source: local_theme, target: remote_theme)
+
+      check_dupes!(local_theme.assets)
+
+      notice 'Pushing local changes to remote...'
+
+      # update existing templates
+      notice 'Updating remote templates...'
+      maybe_update(updated_in_local.templates, 'local', 'remote') do |t|
+        remote_theme.add_template t.file_name, t.body
+      end
+
+      notice 'Pushing files that are missing in remote...'
+      copy_assets(new_files_in_local, remote_theme, overwrite: true)
+      copy_templates(new_files_in_local, remote_theme)
+
+      if destroy
+        notice 'Removing remote files that were removed locally...'
+        remove_all(removed_in_local, remote_theme)
+      else
+        notice 'Not removing remote files that were removed locally.'
+      end
     end
 
     private

@@ -1,15 +1,14 @@
 require 'spec_helper'
 require 'bootic_cli/cli/themes/mem_theme'
-require 'bootic_cli/cli/themes/operations'
+require 'bootic_cli/cli/themes/workflows'
 
-describe BooticCli::Operations do
+describe BooticCli::Workflows do
   let(:local_theme) { BooticCli::MemTheme.new }
   let(:remote_theme) { BooticCli::MemTheme.new }
   let(:prompt) { double('Prompt', yes_or_no?: true, notice: '', puts: '') }
+  subject { described_class.new(prompt: prompt) }
 
   describe '#pull' do
-    subject { described_class.new(prompt: prompt) }
-
     it "copies new remote files into local theme" do
       remote_theme.add_template('layout.html', 'aaa')
       remote_theme.add_template('master.css', 'bbb')
@@ -35,7 +34,7 @@ describe BooticCli::Operations do
 
       it "does not update if declined by user" do
         expect(prompt).to receive(:yes_or_no?).with("Update local layout.html?", true).and_return false
-        expect(local_theme).not_to receive(:add_template).with("layout.html", "bbb\n")
+        expect(local_theme).not_to receive(:add_template).with("layout.html", String)
         subject.pull(local_theme, remote_theme)
       end
     end
@@ -113,6 +112,40 @@ describe BooticCli::Operations do
         expect(local_theme).to receive(:add_asset).with('logo.gif', StringIO)
 
         subject.pull(local_theme, remote_theme)
+      end
+    end
+  end
+
+  describe '#push' do
+    it "copies new local files into remote theme" do
+      local_theme.add_template('layout.html', 'aaa')
+      local_theme.add_template('master.css', 'bbb')
+      local_theme.add_asset('icon.gif', StringIO.new('icon'))
+      remote_theme.add_template('removed.css', 'bbb')
+      remote_theme.add_asset('removed.gif', StringIO.new('removed'))
+
+      subject.push(local_theme, remote_theme)
+
+      expect(remote_theme.templates.map(&:file_name)).to eq ['layout.html', 'master.css']
+      expect(remote_theme.assets.map(&:file_name)).to eq ['icon.gif']
+    end
+
+    context 'updating templates updated in local' do
+      before do
+        remote_theme.add_template('layout.html', "aaa\n", mtime: Time.local(2016))
+        local_theme.add_template('layout.html', "bbb\n", mtime: Time.local(2017))
+        local_theme.add_template('master.css', 'bbb')
+      end
+
+      it "updates templates updated in local, removes others" do
+        subject.push(local_theme, remote_theme)
+        expect(remote_theme.templates.map(&:file_name)).to eq ['layout.html', 'master.css']
+      end
+
+      it "does not update if declined by user" do
+        expect(prompt).to receive(:yes_or_no?).with("Update remote layout.html?", true).and_return false
+        expect(remote_theme).not_to receive(:add_template).with("layout.html", String)
+        subject.push(local_theme, remote_theme)
       end
     end
   end
