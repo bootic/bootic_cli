@@ -149,4 +149,37 @@ describe BooticCli::Workflows do
       end
     end
   end
+
+  describe "#sync" do
+    before do
+      # new in local
+      local_theme.add_template('layout.html', 'aaa')
+      local_theme.add_template('master.css', 'bbb')
+      local_theme.add_asset('logo.gif', StringIO.new('icon'))
+      # new in remote
+      remote_theme.add_template('styles.css', 'bbb')
+      remote_theme.add_asset('icon.gif', StringIO.new('icon'))
+      # updated in local
+      remote_theme.add_template('product.html', "aaa\n", mtime: Time.local(2016))
+      local_theme.add_template('product.html', "bbb\n", mtime: Time.local(2017))
+      # updated in remote
+      local_theme.add_template('collection.html', "aaa\n", mtime: Time.local(2016))
+      remote_theme.add_template('collection.html', "bbb\n", mtime: Time.local(2017))
+    end
+
+    it "syncs up local and remote themes" do
+      subject.sync(local_theme, remote_theme)
+
+      remote_templates = remote_theme.templates.map(&:file_name).sort
+      local_templates = local_theme.templates.map(&:file_name).sort
+      remote_assets = remote_theme.assets.map(&:file_name).sort
+      local_assets = local_theme.assets.map(&:file_name).sort
+
+      expect(remote_templates).to eq local_templates
+      expect(remote_assets).to eq local_assets
+
+      expect(remote_templates).to eq ['layout.html', 'master.css', 'styles.css', 'product.html', 'collection.html'].sort
+      expect(remote_assets).to eq ['icon.gif', 'logo.gif']
+    end
+  end
 end

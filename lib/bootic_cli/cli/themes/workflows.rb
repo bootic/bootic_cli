@@ -82,6 +82,42 @@ module BooticCli
       end
     end
 
+    def sync(local_theme, remote_theme)
+      updated_in_local = BooticCli::UpdatedTheme.new(source: local_theme, target: remote_theme)
+      updated_in_remote = BooticCli::UpdatedTheme.new(source: remote_theme, target: local_theme)
+      new_files_in_local = BooticCli::MissingItemsTheme.new(source: local_theme, target: remote_theme)
+      new_files_in_remote = BooticCli::MissingItemsTheme.new(source: remote_theme, target: local_theme)
+
+      check_dupes!(local_theme.assets)
+      notice 'Syncing local copy with remote...'
+
+      download_opts = {
+        overwrite: false,
+        interactive: false
+      }
+
+      # first, update existing templates in each side
+      notice 'Updating local templates...'
+      maybe_update(updated_in_remote.templates, 'remote', 'local') do |t|
+        local_theme.add_template t.file_name, t.body
+      end
+
+      notice 'Updating remote templates...'
+      maybe_update(updated_in_local.templates, 'local', 'remote') do |t|
+        remote_theme.add_template t.file_name, t.body
+      end
+
+      # now, download missing files on local end
+      notice 'Downloading missing local templates & assets...'
+      copy_templates(new_files_in_remote, local_theme, download_opts)
+      copy_assets(new_files_in_remote, local_theme, overwrite: true)
+
+      # now, upload missing files on remote
+      notice 'Uploading missing remote templates & assets...'
+      copy_templates(new_files_in_local, remote_theme, download_opts)
+      copy_assets(new_files_in_local, remote_theme, overwrite: true)
+    end
+
     private
     attr_reader :prompt
 
