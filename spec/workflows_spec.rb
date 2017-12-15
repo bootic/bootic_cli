@@ -182,4 +182,33 @@ describe BooticCli::Workflows do
       expect(remote_assets).to eq ['icon.gif', 'logo.gif']
     end
   end
+
+  describe "#compare" do
+    before do
+      # new in local
+      local_theme.add_template('layout.html', 'aaa')
+      local_theme.add_template('master.css', 'bbb')
+      local_theme.add_asset('logo.gif', StringIO.new('icon'))
+      # new in remote
+      remote_theme.add_template('styles.css', 'bbb')
+      remote_theme.add_asset('icon.gif', StringIO.new('icon'))
+      # updated in local
+      remote_theme.add_template('product.html', "aaa\n", mtime: Time.local(2016))
+      local_theme.add_template('product.html', "bbb\n", mtime: Time.local(2017))
+      # updated in remote
+      local_theme.add_template('collection.html', "aaa\n", mtime: Time.local(2016))
+      remote_theme.add_template('collection.html', "bbb\n", mtime: Time.local(2017))
+    end
+
+    it "compares" do
+      expect(prompt).to receive(:puts).with("Updated in remote: collection.html")
+      expect(prompt).to receive(:puts).with("Remote template not in local dir: styles.css")
+      expect(prompt).to receive(:puts).with("Remote asset not in local dir: icon.gif")
+      expect(prompt).to receive(:puts).with("Updated locally: product.html")
+      expect(prompt).to receive(:puts).with("Local template not in remote: master.css")
+      expect(prompt).to receive(:puts).with("Local asset not in remote: logo.gif")
+
+      subject.compare(local_theme, remote_theme)
+    end
+  end
 end

@@ -1,5 +1,6 @@
 require 'bootic_cli/cli/themes/updated_theme'
 require 'bootic_cli/cli/themes/missing_items_theme'
+require 'bootic_cli/cli/themes/theme_diff'
 
 module BooticCli
   class NullPrompt
@@ -116,6 +117,39 @@ module BooticCli
       notice 'Uploading missing remote templates & assets...'
       copy_templates(new_files_in_local, remote_theme, download_opts)
       copy_assets(new_files_in_local, remote_theme, overwrite: true)
+    end
+
+    def compare(local_theme, remote_theme)
+      diff = ThemeDiff.new(source: local_theme, target: remote_theme, force_update: false)
+      notice 'Comparing local and remote copies of theme...'
+
+      notice "Local <--- Remote"
+
+      diff.templates_updated_in_target.each do |t|
+        puts "Updated in remote: #{t.file_name}"
+      end
+
+      diff.target_templates_not_in_source.each do |t|
+        puts "Remote template not in local dir: #{t.file_name}"
+      end
+
+      diff.target_assets_not_in_source.each do |t|
+        puts "Remote asset not in local dir: #{t.file_name}"
+      end
+
+      notice "Local ---> Remote"
+
+      diff.templates_updated_in_source.each do |t|
+        puts "Updated locally: #{t.file_name}"
+      end
+
+      diff.source_templates_not_in_target.each do |f|
+        puts "Local template not in remote: #{f.file_name}"
+      end
+
+      diff.source_assets_not_in_target.each do |f|
+        puts "Local asset not in remote: #{f.file_name}"
+      end
     end
 
     private
