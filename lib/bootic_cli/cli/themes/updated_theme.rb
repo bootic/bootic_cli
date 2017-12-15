@@ -13,7 +13,7 @@ module BooticCli
 
     def templates
       @templates ||= map_pair(source.templates, target.templates) do |a, b|
-        diff = Diffy::Diff.new(b.body, a.body, context: 1)
+        diff = Diffy::Diff.new(normalize_endings(b.body), normalize_endings(a.body), context: 1)
         if more_recent?(a, b) && !diff.to_s.empty?
           c = TemplateWithDiff.new(a.file_name, a.body, a.updated_on, diff)
           [true, c]
@@ -51,6 +51,10 @@ module BooticCli
           arr << item if valid
         end
       end
+    end
+
+    def normalize_endings(str)
+      str.to_s.gsub(/\r\n?/, "\n")
     end
   end
 end

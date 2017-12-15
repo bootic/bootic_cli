@@ -64,10 +64,6 @@ module BooticCli
     def add_template(file_name, body)
       path = File.join(dir, file_name)
 
-      if !File.exist?(path) or !has_dos_line_endings?(path)
-        body = normalize_endings(body)
-      end
-
       File.open(path, 'w') do |io|
         io.write body
       end
@@ -104,14 +100,6 @@ module BooticCli
 
     def paths_for(patterns)
       patterns.reduce([]) {|m, pattern| m + Dir[File.join(dir, pattern)]}
-    end
-
-    def has_dos_line_endings?(path)
-      !!IO.read(path)["\r\n"]
-    end
-
-    def normalize_endings(str)
-      str.to_s.gsub(/\r\n?/, "\n")
     end
   end
 end
