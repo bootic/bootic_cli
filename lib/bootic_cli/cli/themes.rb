@@ -43,7 +43,6 @@ module BooticCli
       def watch(subdomain = nil, dir = '.')
         logged_in_action do
           _, remote_theme = select_theme_pair(subdomain, dir)
-
           workflows.watch(dir, remote_theme)
 
           sleep

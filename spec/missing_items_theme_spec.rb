@@ -26,7 +26,6 @@ describe BooticCli::MissingItemsTheme do
   describe "#templates" do
     it "returns templates in source that are missing in target" do
       theme = described_class.new(source: source, target: target)
-
       expect(theme.templates.map(&:file_name)).to eq ['layout.html', 'product.html']
     end
   end
@@ -34,7 +33,6 @@ describe BooticCli::MissingItemsTheme do
   describe "#assets" do
     it "returns assets in source that are missing in target" do
       theme = described_class.new(source: source, target: target)
-
       expect(theme.assets.map(&:file_name)).to eq ['icon.gif']
     end
   end
