@@ -1,6 +1,7 @@
-require 'bootic_cli/cli/themes/updated_theme'
-require 'bootic_cli/cli/themes/missing_items_theme'
+require 'listen'
+require 'thread'
 require 'bootic_cli/cli/themes/theme_diff'
+require 'bootic_cli/cli/themes/fs_theme'
 
 module BooticCli
   class NullPrompt
@@ -9,6 +10,10 @@ module BooticCli
     end
 
     def self.notice(str)
+
+    end
+
+    def self.highlight(str)
 
     end
 
@@ -23,14 +28,7 @@ module BooticCli
     end
 
     def pull(local_theme, remote_theme, destroy: true)
-      # tpls and assets present locally that have been updated remotely
-      updated_in_remote = BooticCli::UpdatedTheme.new(source: remote_theme, target: local_theme)
-      # tpls and assets that were removed remotely
-      removed_in_remote = BooticCli::MissingItemsTheme.new(source: local_theme, target: remote_theme)
-      # tpls and assets present in remote that are not in local
-      new_files_in_remote = BooticCli::MissingItemsTheme.new(source: remote_theme, target: local_theme)
-
-      # diff = ThemeDiff.new(source: local_theme, target: remote_theme, force_update: true)
+      diff = ThemeDiff.new(source: local_theme, target: remote_theme)
       check_dupes!(local_theme.assets)
 
       download_opts = {
@@ -39,56 +37,49 @@ module BooticCli
       }
 
       notice 'Updating local templates...'
-      maybe_update(updated_in_remote.templates, 'remote', 'local') do |t|
+      maybe_update(diff.updated_in_target.templates, 'remote', 'local') do |t|
         local_theme.add_template t.file_name, t.body
       end
 
       if destroy
         notice 'Removing local files that were removed on remote...'
-        remove_all(removed_in_remote, local_theme)
+        remove_all(diff.missing_in_target, local_theme)
       else
         notice 'Not removing local files that were removed on remote.'
       end
 
       notice 'Pulling missing files from remote...'
-      copy_templates(new_files_in_remote, local_theme, download_opts)
+      copy_templates(diff.missing_in_source, local_theme, download_opts)
       # lets copy all of them and let user decide to overwrite existing
       copy_assets(remote_theme, local_theme, download_opts)
     end
 
     def push(local_theme, remote_theme, destroy: true)
-      updated_in_local = BooticCli::UpdatedTheme.new(source: local_theme, target: remote_theme)
-      removed_in_local = BooticCli::MissingItemsTheme.new(source: remote_theme, target: local_theme)
-      new_files_in_local = BooticCli::MissingItemsTheme.new(source: local_theme, target: remote_theme)
-
+      diff = ThemeDiff.new(source: local_theme, target: remote_theme)
       check_dupes!(local_theme.assets)
 
       notice 'Pushing local changes to remote...'
 
       # update existing templates
       notice 'Updating remote templates...'
-      maybe_update(updated_in_local.templates, 'local', 'remote') do |t|
+      maybe_update(diff.updated_in_source.templates, 'local', 'remote') do |t|
         remote_theme.add_template t.file_name, t.body
       end
 
       notice 'Pushing files that are missing in remote...'
-      copy_assets(new_files_in_local, remote_theme, overwrite: true)
-      copy_templates(new_files_in_local, remote_theme)
+      copy_assets(diff.missing_in_target, remote_theme, overwrite: true)
+      copy_templates(diff.missing_in_target, remote_theme)
 
       if destroy
         notice 'Removing remote files that were removed locally...'
-        remove_all(removed_in_local, remote_theme)
+        remove_all(diff.missing_in_source, remote_theme)
       else
         notice 'Not removing remote files that were removed locally.'
       end
     end
 
     def sync(local_theme, remote_theme)
-      updated_in_local = BooticCli::UpdatedTheme.new(source: local_theme, target: remote_theme)
-      updated_in_remote = BooticCli::UpdatedTheme.new(source: remote_theme, target: local_theme)
-      new_files_in_local = BooticCli::MissingItemsTheme.new(source: local_theme, target: remote_theme)
-      new_files_in_remote = BooticCli::MissingItemsTheme.new(source: remote_theme, target: local_theme)
-
+      diff = ThemeDiff.new(source: local_theme, target: remote_theme)
       check_dupes!(local_theme.assets)
       notice 'Syncing local copy with remote...'
 
@@ -99,57 +90,92 @@ module BooticCli
 
       # first, update existing templates in each side
       notice 'Updating local templates...'
-      maybe_update(updated_in_remote.templates, 'remote', 'local') do |t|
+      maybe_update(diff.updated_in_target.templates, 'remote', 'local') do |t|
         local_theme.add_template t.file_name, t.body
       end
 
       notice 'Updating remote templates...'
-      maybe_update(updated_in_local.templates, 'local', 'remote') do |t|
+      maybe_update(diff.updated_in_source.templates, 'local', 'remote') do |t|
         remote_theme.add_template t.file_name, t.body
       end
 
       # now, download missing files on local end
       notice 'Downloading missing local templates & assets...'
-      copy_templates(new_files_in_remote, local_theme, download_opts)
-      copy_assets(new_files_in_remote, local_theme, overwrite: true)
+      copy_templates(diff.missing_in_source, local_theme, download_opts)
+      copy_assets(diff.missing_in_source, local_theme, overwrite: true)
 
       # now, upload missing files on remote
       notice 'Uploading missing remote templates & assets...'
-      copy_templates(new_files_in_local, remote_theme, download_opts)
-      copy_assets(new_files_in_local, remote_theme, overwrite: true)
+      copy_templates(diff.missing_in_target, remote_theme, download_opts)
+      copy_assets(diff.missing_in_target, remote_theme, overwrite: true)
     end
 
     def compare(local_theme, remote_theme)
-      diff = ThemeDiff.new(source: local_theme, target: remote_theme, force_update: false)
+      diff = ThemeDiff.new(source: local_theme, target: remote_theme)
       notice 'Comparing local and remote copies of theme...'
 
       notice "Local <--- Remote"
 
-      diff.templates_updated_in_target.each do |t|
+      diff.updated_in_target.templates.each do |t|
         puts "Updated in remote: #{t.file_name}"
       end
 
-      diff.target_templates_not_in_source.each do |t|
+      diff.missing_in_source.templates.each do |t|
         puts "Remote template not in local dir: #{t.file_name}"
       end
 
-      diff.target_assets_not_in_source.each do |t|
+      diff.missing_in_source.assets.each do |t|
         puts "Remote asset not in local dir: #{t.file_name}"
       end
 
       notice "Local ---> Remote"
 
-      diff.templates_updated_in_source.each do |t|
+      diff.updated_in_source.templates.each do |t|
         puts "Updated locally: #{t.file_name}"
       end
 
-      diff.source_templates_not_in_target.each do |f|
+      diff.missing_in_target.templates.each do |f|
         puts "Local template not in remote: #{f.file_name}"
       end
 
-      diff.source_assets_not_in_target.each do |f|
+      diff.missing_in_target.assets.each do |f|
         puts "Local asset not in remote: #{f.file_name}"
       end
+    end
+
+    def watch(dir, remote_theme, watcher: Listen)
+      listener = watcher.to(dir) do |modified, added, removed|
+        if modified.any?
+          modified.each do |path|
+            upsert_file remote_theme, path
+          end
+        end
+
+        if added.any?
+          added.each do |path|
+            upsert_file remote_theme, path
+          end
+        end
+
+        if removed.any?
+          removed.each do |path|
+            delete_file remote_theme, path
+          end
+        end
+
+        # update local cache
+        remote_theme.reload!
+      end
+
+      notice "Watching #{File.expand_path(dir)} for changes..."
+      listener.start
+
+      # ctrl-c
+      Signal.trap('INT') {
+        listener.stop
+        puts 'See you in another lifetime, brotha.'
+        exit
+      }
     end
 
     private
@@ -178,8 +204,6 @@ module BooticCli
         puts t.diff.to_s(:color)
 
         yield(t) if prompt.yes_or_no?("Update #{target_name} #{t.file_name}?", true)
-        # input = ask("\nUpdate #{target_name} #{t.file_name}? [y]")
-        # next unless input == '' or input.strip.downcase == 'y'
       end
     end
 
@@ -189,6 +213,10 @@ module BooticCli
 
     def puts(*args)
       prompt.puts *args
+    end
+
+    def highlight(str)
+      prompt.highlight str
     end
 
     def remove_all(from, to)
@@ -210,8 +238,6 @@ module BooticCli
         if target_asset && !opts[:overwrite]
           next unless opts[:interactive]
           next unless prompt.yes_or_no?("Asset exists: #{a.file_name}. Overwrite?", false)
-          # input = ask("Asset exists: #{a.file_name}. Overwrite? [n]")
-          # next if input == '' or input.strip.downcase == 'n'
         end
 
         Thread.new do
@@ -229,6 +255,29 @@ module BooticCli
       threads.map &:join
       queue << false
       printer.join
+    end
+
+    def upsert_file(theme, path)
+      item, type = FSTheme.resolve_file(path)
+      case type
+      when :template
+        theme.add_template item.file_name, item.body
+      when :asset
+        theme.add_asset item.file_name, item.file
+      end
+      puts "Uploaded #{type}: #{item.file_name}"
+    end
+
+    def delete_file(theme, path)
+      type = FSTheme.resolve_type(path)
+      file_name = File.basename(path)
+      case type
+      when :template
+        theme.remove_template file_name
+      when :asset
+        theme.remove_asset file_name
+      end
+      puts "Deleted remote #{type}: #{file_name}"
     end
   end
 end

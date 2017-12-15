@@ -211,4 +211,52 @@ describe BooticCli::Workflows do
       subject.compare(local_theme, remote_theme)
     end
   end
+
+  describe "#watch" do
+    it "watches" do
+      remote_theme.add_template('collection.html', "aa")
+      remote_theme.add_template('product.html', "bb")
+      remote_theme.add_asset('icon.gif', StringIO.new("icon"))
+      remote_theme.add_asset('logo.gif', StringIO.new("logo"))
+
+      fake_listen = Class.new do
+        attr_accessor :block
+        def initialize(modified, added, removed)
+          @parts = [modified, added, removed]
+        end
+
+        def to(dir, &block)
+          self.block = block
+          self
+        end
+
+        def run(modified, added, removed)
+          self.block.call(modified, added, removed)
+        end
+
+        def start
+          self.block.call(*@parts)
+        end
+
+        def stop;end
+      end
+
+      watcher = fake_listen.new(
+        # modified
+        ['./spec/fixtures/theme/layout.html'],
+        # added
+        ['./spec/fixtures/theme/master.css', './spec/fixtures/theme/assets/script.js'],
+        # removed
+        ['./spec/fixtures/theme/product.html'],
+      )
+
+      dir = "./spec/fixtures/theme"
+
+      # silence reloading
+      expect(remote_theme).to receive(:reload!).and_return true
+      subject.watch(dir, remote_theme, watcher: watcher)
+
+      expect(remote_theme.templates.map(&:file_name)).to eq ['collection.html', 'layout.html', 'master.css']
+    end
+  end
 end

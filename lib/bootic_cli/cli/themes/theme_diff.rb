@@ -1,71 +1,29 @@
-require 'diffy'
+require 'bootic_cli/cli/themes/updated_theme'
+require 'bootic_cli/cli/themes/missing_items_theme'
 
 module BooticCli
   class ThemeDiff
-    ASSETS_DIR_EXP = /assets/
-
-    def initialize(source:, target:, force_update: false)
+    def initialize(source:, target:)
       @source, @target = source, target
-      @force_update = force_update
     end
 
-    def templates_updated_in_source
-      find_modified_files(target.templates, source.templates)
+    def updated_in_source
+      @updated_in_source ||= UpdatedTheme.new(source: source, target: target)
     end
 
-    def templates_updated_in_target
-      find_modified_files(source.templates, target.templates)
+    def updated_in_target
+      @updated_in_target ||= UpdatedTheme.new(source: target, target: source)
     end
 
-    def source_templates_not_in_target
-      find_missing_files(source.templates, target.templates)
+    def missing_in_target
+      @missing_in_target ||= MissingItemsTheme.new(source: source, target: target)
     end
 
-    def target_templates_not_in_source
-      find_missing_files(target.templates, source.templates)
-    end
-
-    def source_assets_not_in_target
-      find_missing_files(source.assets, target.assets)
-    end
-
-    def target_assets_not_in_source
-      find_missing_files(target.assets, source.assets)
+    def missing_in_source
+      @missing_in_source ||= MissingItemsTheme.new(source: target, target: source)
     end
 
     private
-    attr_reader :source, :target, :force_update
-
-    ModifiedFile = Struct.new('ModifiedFile', :file_name, :updated_on, :body, :diff)
-
-    def find_missing_files(set1, set2)
-      file_names = set2.map(&:file_name)
-      set1.select do |f|
-        !file_names.include?(f.file_name)
-      end
-    end
-
-    # returns list of items from set1 that have a more recent timestamp in set2
-    def find_modified_files(set1, set2)
-      by_filename = set2.each_with_object({}) do |f, lookup|
-        lookup[f.file_name] = f
-      end
-
-      set1.map do |f|
-        other_file = by_filename[f.file_name]
-        if other_file.nil?
-          next
-        end
-
-        diff = Diffy::Diff.new(f.body, other_file.body, context: 1)
-        next if diff.to_s.empty?
-
-        if !force_update && other_file.updated_on <= f.updated_on
-          next
-        end
-
-        ModifiedFile.new(f.file_name, other_file.updated_on, other_file.body, diff)
-      end.compact
-    end
+    attr_reader :source, :target
   end
 end
