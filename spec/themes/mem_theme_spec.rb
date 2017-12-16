@@ -1,7 +1,7 @@
 require 'spec_helper'
-require 'bootic_cli/cli/themes/mem_theme'
+require 'bootic_cli/themes/mem_theme'
 
-describe BooticCli::MemTheme do
+describe BooticCli::Themes::MemTheme do
   subject { described_class.new }
 
   it "implements the generic Theme interface" do

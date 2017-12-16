@@ -1,10 +1,10 @@
 require 'spec_helper'
-require 'bootic_cli/cli/themes/mem_theme'
-require 'bootic_cli/cli/themes/updated_theme'
+require 'bootic_cli/themes/mem_theme'
+require 'bootic_cli/themes/updated_theme'
 
-describe BooticCli::UpdatedTheme do
-  let(:source) { BooticCli::MemTheme.new }
-  let(:target) { BooticCli::MemTheme.new }
+describe BooticCli::Themes::UpdatedTheme do
+  let(:source) { BooticCli::Themes::MemTheme.new }
+  let(:target) { BooticCli::Themes::MemTheme.new }
 
   before do
     # newer in source

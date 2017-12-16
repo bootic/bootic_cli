@@ -1,6 +1,6 @@
-require_relative './themes/api_theme'
-require_relative './themes/fs_theme'
-require_relative './themes/workflows'
+require 'bootic_cli/themes/api_theme'
+require 'bootic_cli/themes/fs_theme'
+require 'bootic_cli/themes/workflows'
 
 module BooticCli
   module Commands
@@ -52,7 +52,7 @@ module BooticCli
       private
 
       def workflows
-        Workflows.new(prompt: Prompt.new)
+        BooticCli::Themes::Workflows.new(prompt: Prompt.new)
       end
 
       def select_theme_pair(subdomain, dir)
@@ -139,14 +139,14 @@ module BooticCli
 
         def select_local_theme(subdomain, dir)
           if dir == '.' # current dir
-            BooticCli::FSTheme.new(File.expand_path(dir))
+            BooticCli::Themes::FSTheme.new(File.expand_path(dir))
           else # use subdomain?
-            BooticCli::FSTheme.new(File.expand_path(subdomain))
+            BooticCli::Themes::FSTheme.new(File.expand_path(subdomain))
           end
         end
 
         def select_remote_theme(shop)
-          BooticCli::APITheme.new(shop.theme)
+          BooticCli::Themes::APITheme.new(shop.theme)
         end
 
         private

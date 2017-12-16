@@ -1,7 +1,7 @@
 require 'spec_helper'
-require 'bootic_cli/cli/themes/fs_theme'
+require 'bootic_cli/themes/fs_theme'
 
-describe BooticCli::FSTheme do
+describe BooticCli::Themes::FSTheme do
   subject { described_class.new('./spec/fixtures/theme') }
 
   it "responds to #templates and #assets" do

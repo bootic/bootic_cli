@@ -1,7 +1,7 @@
 require 'spec_helper'
-require 'bootic_cli/cli/themes/api_theme'
+require 'bootic_cli/themes/api_theme'
 
-describe BooticCli::APITheme do
+describe BooticCli::Themes::APITheme do
   let(:theme) { double("API Theme") }
   subject { described_class.new(theme) }
 

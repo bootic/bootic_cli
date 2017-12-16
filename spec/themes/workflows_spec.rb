@@ -1,10 +1,10 @@
 require 'spec_helper'
-require 'bootic_cli/cli/themes/mem_theme'
-require 'bootic_cli/cli/themes/workflows'
+require 'bootic_cli/themes/mem_theme'
+require 'bootic_cli/themes/workflows'
 
-describe BooticCli::Workflows do
-  let(:local_theme) { BooticCli::MemTheme.new }
-  let(:remote_theme) { BooticCli::MemTheme.new }
+describe BooticCli::Themes::Workflows do
+  let(:local_theme) { BooticCli::Themes::MemTheme.new }
+  let(:remote_theme) { BooticCli::Themes::MemTheme.new }
   let(:prompt) { double('Prompt', yes_or_no?: true, notice: '', puts: '') }
   subject { described_class.new(prompt: prompt) }
 

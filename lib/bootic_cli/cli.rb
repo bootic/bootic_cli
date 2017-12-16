@@ -137,7 +137,7 @@ module BooticCli
 
     require "bootic_cli/command"
 
-    Dir[File.join(File.dirname(__FILE__), 'cli', '*.rb')].each do |f|
+    Dir[File.join(File.dirname(__FILE__), 'commands', '*.rb')].each do |f|
       load_file f
     end
 
