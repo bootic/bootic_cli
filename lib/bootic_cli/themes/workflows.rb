@@ -230,6 +230,7 @@ module BooticCli
       def copy_templates(from, to, opts = {})
         from.templates.each do |t|
           to.add_template t.file_name, t.body
+          puts "Copied #{t.file_name}"
         end
       end
 
