@@ -1,6 +1,5 @@
-require 'bootic_cli/themes/api_theme'
-require 'bootic_cli/themes/fs_theme'
 require 'bootic_cli/themes/workflows'
+require 'bootic_cli/themes/theme_selector'
 
 module BooticCli
   module Commands
@@ -54,7 +53,7 @@ module BooticCli
       end
 
       def select_theme_pair(subdomain, dir)
-        ThemeSelector.select_theme_pair(subdomain, dir, root)
+        BooticCli::Themes::ThemeSelector.select_theme_pair(subdomain, dir, root)
       end
 
       class Prompt
@@ -105,50 +104,6 @@ module BooticCli
 
         private
         attr_reader :shell
-      end
-
-      class ThemeSelector
-        def self.select_theme_pair(subdomain, dir, root)
-          new(root).select_theme_pair(subdomain, dir)
-        end
-
-        def initialize(root)
-          @root = root
-        end
-
-        def select_theme_pair(subdomain, dir)
-          shop = select_shop(subdomain)
-          local_theme = select_local_theme(shop.subdomain, dir)
-          remote_theme = select_remote_theme(shop)
-          [local_theme, remote_theme]
-        end
-
-        def select_shop(subdomain)
-          if subdomain
-            if root.has?(:all_shops)
-              root.all_shops(subdomains: subdomain).first
-            else
-              root.shops.find { |s| s.subdomain == subdomain }
-            end
-          else
-            root.shops.first
-          end
-        end
-
-        def select_local_theme(subdomain, dir)
-          if dir == '.' # current dir
-            BooticCli::Themes::FSTheme.new(File.expand_path(dir))
-          else # use subdomain?
-            BooticCli::Themes::FSTheme.new(File.expand_path(subdomain))
-          end
-        end
-
-        def select_remote_theme(shop)
-          BooticCli::Themes::APITheme.new(shop.theme)
-        end
-
-        private
-        attr_reader :root
       end
 
       declare self, 'manage shop themes'

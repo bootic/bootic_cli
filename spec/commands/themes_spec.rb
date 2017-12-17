@@ -13,7 +13,7 @@ describe BooticCli::Commands::Themes do
   before do
     allow(BooticCli::Session).to receive(:new).and_return session
 
-    allow(BooticCli::Commands::Themes::ThemeSelector)
+    allow(BooticCli::Themes::ThemeSelector)
       .to receive(:select_theme_pair)
       .with('foo', 'bar', root)
       .and_return([local_theme, remote_theme])
