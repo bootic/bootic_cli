@@ -177,6 +177,8 @@ module BooticCli
           puts 'See you in another lifetime, brotha.'
           exit
         }
+
+        Kernel.sleep
       end
 
       private

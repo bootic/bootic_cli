@@ -254,6 +254,7 @@ describe BooticCli::Themes::Workflows do
 
       # silence reloading
       expect(remote_theme).to receive(:reload!).and_return true
+      expect(Kernel).to receive(:sleep)
       subject.watch(dir, remote_theme, watcher: watcher)
 
       expect(remote_theme.templates.map(&:file_name)).to eq ['collection.html', 'layout.html', 'master.css']
