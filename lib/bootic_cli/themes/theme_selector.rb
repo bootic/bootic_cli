@@ -39,18 +39,13 @@ module BooticCli
       end
 
       def resolve_shop(subdomain, dir)
-        if subdomain
-          if root.has?(:all_shops)
-            root.all_shops(subdomains: subdomain).first
-          else
-            root.shops.find { |s| s.subdomain == subdomain }
-          end
+        shop = if subdomain
+          find_remote_shop(subdomain)
         elsif dir
           subdomain = File.basename(dir)
-          resolve_shop subdomain, dir
-        else
-          root.shops.first
+          find_remote_shop(subdomain)
         end
+        shop || root.shops.first
       end
 
       private

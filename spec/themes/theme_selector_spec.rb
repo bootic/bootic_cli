@@ -44,6 +44,16 @@ describe BooticCli::Themes::ThemeSelector do
       it_is_local_theme a
       it_is_remote_theme b
     end
+
+    it "defaults to user main shop if no subdomain and dirname doesn't match" do
+      expect(root).to receive(:has?).with(:all_shops).and_return false
+      expect(root).to receive(:shops).and_return [shop]
+
+      a, b = described_class.select_theme_pair(nil, './spec/fixtures/theme', root)
+
+      it_is_local_theme a
+      it_is_remote_theme b
+    end
   end
 
   def it_is_local_theme(theme)
