@@ -9,10 +9,11 @@ describe BooticCli::Commands::Themes do
   let(:client) { double('client', root: root) }
   let(:session) { double('session', client: client, needs_upgrade?: false, setup?: true, logged_in?: true) }
   let(:workflows) { double('workflows', pull: true, push: true, sync: true, compare: true, watch: true) }
+  let(:selector) { instance_double(BooticCli::Themes::ThemeSelector, select_theme_pair: [local_theme, remote_theme]) }
 
   before do
+    allow(BooticCli::Themes::ThemeSelector).to receive(:new).and_return selector
     allow(BooticCli::Session).to receive(:new).and_return session
-    allow(BooticCli::Themes::ThemeSelector).to receive(:select_theme_pair).and_return([local_theme, remote_theme])
     allow(BooticCli::Themes::Workflows).to receive(:new).and_return workflows
   end
 
@@ -77,19 +78,24 @@ describe BooticCli::Commands::Themes do
     end
   end
 
+  describe '#publish' do
+    it "pushes local changes to dev and switches dev to production" do
+      expect(workflows).to receive(:publish).with(local_theme, remote_theme)
+      described_class.start(%w(publish foo bar))
+    end
+  end
+
   def it_selects_dev_theme
-    expect(BooticCli::Themes::ThemeSelector).to receive(:select_theme_pair) do |from, to, prompt:, production:|
+    expect(selector).to receive(:select_theme_pair) do |from, to, production|
       expect(from).to eq 'foo'
       expect(to).to eq 'bar'
-      expect(prompt).to be_a described_class::Prompt
       expect(production).to be false
     end.and_return [local_theme, remote_theme]
   end
 
   def it_selects_production_theme
-    expect(BooticCli::Themes::ThemeSelector).to receive(:select_theme_pair) do |from, to, prompt:, production:|
+    expect(selector).to receive(:select_theme_pair) do |from, to, production|
       expect(production).to be true
     end.and_return [local_theme, remote_theme]
   end
-
 end

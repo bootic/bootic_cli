@@ -5,36 +5,40 @@ require 'bootic_cli/themes/fs_theme'
 module BooticCli
   module Themes
     class ThemeSelector
-      def self.select_theme_pair(subdomain, dir, root, prompt:, production: false)
-        new(root, prompt: prompt, production: production).select_theme_pair(subdomain, dir)
-      end
-
-      def initialize(root, prompt:, production: false)
+      def initialize(root, prompt:)
         @root = root
         @prompt = prompt
-        @production = production
       end
 
-      def select_theme_pair(subdomain, dir)
-        local_theme = FSTheme.new(File.expand_path(dir))
+      def select_theme_pair(subdomain, dir, production = false)
+        st = YAML::Store.new(File.join(File.expand_path(dir), '.state'))
+        shop = resolve_and_store_shop(subdomain, dir)
+        remote_theme = resolve_remote_theme(shop, production)
+        prompt.say "Preview remote theme at #{remote_theme.rels[:theme_preview].href}", :yellow
+        [select_local_theme(dir), APITheme.new(remote_theme)]
+      end
+
+      def select_local_theme(dir)
+        FSTheme.new(File.expand_path(dir))
+      end
+
+      def resolve_and_store_shop(subdomain, dir)
         st = YAML::Store.new(File.join(File.expand_path(dir), '.state'))
         st.transaction do
           sub = st['subdomain']
           if sub
             shop = find_remote_shop(sub)
             raise "No shop could be resolved with subdomain: #{subdomain} and dir: #{dir}" unless shop
-            remote_theme = resolve_remote_theme(shop)
-            prompt.say "Preview remote theme at #{remote_theme.rels[:theme_preview].href}", :yellow
-            [local_theme, APITheme.new(remote_theme)]
+            shop
           else # no subdomain stored yet. Resolve and store.
-            shop = resolve_shop(subdomain, dir)
+            shop = resolve_shop_from_subdomain_or_dir(subdomain, dir)
             st['subdomain'] = shop.subdomain
-            remote_theme = resolve_remote_theme(shop)
-            prompt.say "Preview remote theme at #{remote_theme.rels[:theme_preview].href}", :yellow
-            [local_theme, APITheme.new(remote_theme)]
+            shop
           end
         end
       end
+
+      private
 
       def find_remote_shop(subdomain)
         if root.has?(:all_shops)
@@ -44,7 +48,7 @@ module BooticCli
         end
       end
 
-      def resolve_shop(subdomain, dir)
+      def resolve_shop_from_subdomain_or_dir(subdomain, dir)
         shop = if subdomain
           find_remote_shop(subdomain)
         elsif dir
@@ -54,7 +58,7 @@ module BooticCli
         shop || root.shops.first
       end
 
-      def resolve_remote_theme(shop)
+      def resolve_remote_theme(shop, production = false)
         if production
           prompt.say "Working on production theme", :red
           return shop.theme
@@ -73,7 +77,7 @@ module BooticCli
       end
 
       private
-      attr_reader :root, :prompt, :production
+      attr_reader :root, :prompt
     end
   end
 end
