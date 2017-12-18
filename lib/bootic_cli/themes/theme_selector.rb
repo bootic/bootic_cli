@@ -5,13 +5,14 @@ require 'bootic_cli/themes/fs_theme'
 module BooticCli
   module Themes
     class ThemeSelector
-      def self.select_theme_pair(subdomain, dir, root, prompt:)
-        new(root, prompt: prompt).select_theme_pair(subdomain, dir)
+      def self.select_theme_pair(subdomain, dir, root, prompt:, production: false)
+        new(root, prompt: prompt, production: production).select_theme_pair(subdomain, dir)
       end
 
-      def initialize(root, prompt:)
+      def initialize(root, prompt:, production: false)
         @root = root
         @prompt = prompt
+        @production = production
       end
 
       def select_theme_pair(subdomain, dir)
@@ -54,6 +55,12 @@ module BooticCli
       end
 
       def resolve_remote_theme(shop)
+        if production
+          prompt.say "Working on production theme", :red
+          return shop.theme
+        end
+
+        prompt.say "Working on development theme", :green
         themes = shop.themes
         if themes.has?(:dev_theme)
           themes.dev_theme
@@ -66,7 +73,7 @@ module BooticCli
       end
 
       private
-      attr_reader :root, :prompt
+      attr_reader :root, :prompt, :production
     end
   end
 end
