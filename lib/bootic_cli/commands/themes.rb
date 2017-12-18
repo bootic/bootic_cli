@@ -48,12 +48,21 @@ module BooticCli
 
       private
 
+      def prompt
+        @prompt ||= Prompt.new
+      end
+
       def workflows
-        BooticCli::Themes::Workflows.new(prompt: Prompt.new)
+        BooticCli::Themes::Workflows.new(prompt: prompt)
       end
 
       def select_theme_pair(subdomain, dir)
-        BooticCli::Themes::ThemeSelector.select_theme_pair(subdomain, dir, root)
+        BooticCli::Themes::ThemeSelector.select_theme_pair(
+          subdomain,
+          dir,
+          root,
+          prompt: prompt
+        )
       end
 
       class Prompt
