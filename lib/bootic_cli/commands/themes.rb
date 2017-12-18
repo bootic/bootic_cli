@@ -1,3 +1,4 @@
+require 'launchy'
 require 'bootic_cli/themes/workflows'
 require 'bootic_cli/themes/theme_selector'
 
@@ -56,6 +57,15 @@ module BooticCli
         logged_in_action do
           local_theme, remote_theme = theme_selector.select_theme_pair(subdomain, dir, false)
           workflows.publish(local_theme, remote_theme)
+        end
+      end
+
+      desc 'open [shop] [dir]', 'Open theme in a browser'
+      option :production, banner: '<true|false>', type: :boolean, default: false, aliases: '-p'
+      def open(subdomain = nil, dir = '.')
+        logged_in_action do
+          _, remote_theme = theme_selector.select_theme_pair(subdomain, dir, options['production'])
+          Launchy.open remote_theme.href
         end
       end
 
