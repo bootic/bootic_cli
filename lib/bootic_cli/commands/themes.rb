@@ -55,7 +55,6 @@ module BooticCli
       def publish(subdomain = nil, dir = '.')
         logged_in_action do
           local_theme, remote_theme = theme_selector.select_theme_pair(subdomain, dir, false)
-
           workflows.publish(local_theme, remote_theme)
         end
       end
