@@ -95,6 +95,21 @@ describe BooticCli::Commands::Themes do
     end
   end
 
+  describe "#open" do
+    it "opens the remote theme URL" do
+      expect(remote_theme).to receive(:href).and_return 'https://acme.bootic.net/preview/dev'
+      expect(Launchy).to receive(:open).with 'https://acme.bootic.net/preview/dev'
+      described_class.start(%w(open foo bar))
+    end
+
+    it "uses production theme if -p option present" do
+      it_selects_production_theme
+      expect(remote_theme).to receive(:href).and_return 'https://acme.bootic.net'
+      expect(Launchy).to receive(:open).with 'https://acme.bootic.net'
+      described_class.start(%w(open -p foo bar))
+    end
+  end
+
   def it_selects_dev_theme
     expect(selector).to receive(:select_theme_pair) do |from, to, production|
       expect(from).to eq 'foo'
