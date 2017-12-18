@@ -11,11 +11,12 @@ module BooticCli
       end
 
       def select_theme_pair(subdomain, dir, production = false)
+        local_theme = select_local_theme(dir)
         st = YAML::Store.new(File.join(File.expand_path(dir), '.state'))
         shop = resolve_and_store_shop(subdomain, dir)
         remote_theme = resolve_remote_theme(shop, production)
         prompt.say "Preview remote theme at #{remote_theme.rels[:theme_preview].href}", :yellow
-        [select_local_theme(dir), APITheme.new(remote_theme)]
+        [local_theme, APITheme.new(remote_theme)]
       end
 
       def select_local_theme(dir)
