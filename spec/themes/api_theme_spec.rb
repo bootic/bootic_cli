@@ -61,4 +61,22 @@ describe BooticCli::Themes::APITheme do
     expect(api_asset).to receive(:delete_theme_asset).and_return(double('API response', has?: false))
     subject.remove_asset 'foo.js'
   end
+
+  describe "#publish (not part of Theme interface" do
+    it "publishes if API theme supports it" do
+      expect(theme).to receive(:can?).with(:publish_theme).and_return true
+      expect(theme).to receive(:publish_theme).and_return theme
+      expect(theme).not_to receive(:create_dev_theme)
+
+      expect(subject.publish).to be_a described_class
+    end
+
+    it "also recreates dev theme if asked to" do
+      expect(theme).to receive(:can?).with(:publish_theme).and_return true
+      expect(theme).to receive(:publish_theme).and_return theme
+      expect(theme).to receive(:create_dev_theme).and_return theme
+
+      expect(subject.publish(true)).to be_a described_class
+    end
+  end
 end
