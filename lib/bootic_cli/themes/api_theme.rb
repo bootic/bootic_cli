@@ -20,11 +20,25 @@ module BooticCli
         @theme = theme
       end
 
+      # this is unique to API themes
+      def publish(clone = false)
+        if theme.can?(:publish_theme)
+          @theme = theme.publish_theme
+          @theme = @theme.create_dev_theme if clone
+          reload!(false)
+        end
+      end
+
+      def href
+        theme.rels[:theme_preview].href
+      end
+
       # Implement generic Theme interface
-      def reload!
+      def reload!(refetch = true)
         @templates = nil
         @assets = nil
-        @theme = theme.self
+        @theme = theme.self if refetch
+        self
       end
 
       def templates
