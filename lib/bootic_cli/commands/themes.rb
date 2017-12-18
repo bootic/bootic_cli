@@ -5,43 +5,48 @@ module BooticCli
   module Commands
     class Themes < BooticCli::Command
       desc 'pull [shop] [dir]', 'Pull latest theme changes in [shop] into directory [dir] (current by default)'
-      option :destroy, banner: '<true|false>', default: 'true'
+      option :destroy, banner: '<true|false>', type: :boolean, default: true
+      option :production, banner: '<true|false>', type: :boolean, default: false, aliases: '-p'
       def pull(subdomain = nil, dir = '.')
         logged_in_action do
-          local_theme, remote_theme = select_theme_pair(subdomain, dir)
-          workflows.pull(local_theme, remote_theme, destroy: options['destroy'] == 'true')
+          local_theme, remote_theme = select_theme_pair(subdomain, dir, production: options[:production])
+          workflows.pull(local_theme, remote_theme, destroy: options['destroy'])
         end
       end
 
       desc 'push [shop] [dir]', 'Push all local theme files in [dir] to remote shop [shop]'
-      option :destroy, banner: '<true|false>', default: 'true'
+      option :production, banner: '<true|false>', type: :boolean, default: false, aliases: '-p'
+      option :destroy, banner: '<true|false>', type: :boolean, default: true
       def push(subdomain = nil, dir = '.')
         logged_in_action do
-          local_theme, remote_theme = select_theme_pair(subdomain, dir)
-          workflows.push(local_theme, remote_theme, destroy: options['destroy'] == 'true')
+          local_theme, remote_theme = select_theme_pair(subdomain, dir, production: options['production'])
+          workflows.push(local_theme, remote_theme, destroy: options['destroy'])
         end
       end
 
       desc 'sync [shop] [dir]', 'Sync local theme copy in [dir] with remote [shop]'
+      option :production, banner: '<true|false>', type: :boolean, default: false, aliases: '-p'
       def sync(subdomain = nil, dir = '.')
         logged_in_action do
-          local_theme, remote_theme = select_theme_pair(subdomain, dir)
+          local_theme, remote_theme = select_theme_pair(subdomain, dir, production: options['production'])
           workflows.sync(local_theme, remote_theme)
         end
       end
 
       desc 'compare [shop] [dir]', 'Show differences between local and remote copies'
+      option :production, banner: '<true|false>', type: :boolean, default: false, aliases: '-p'
       def compare(subdomain = nil, dir = '.')
         logged_in_action do
-          local_theme, remote_theme = select_theme_pair(subdomain, dir)
+          local_theme, remote_theme = select_theme_pair(subdomain, dir, production: options['production'])
           workflows.compare(local_theme, remote_theme)
         end
       end
 
       desc 'watch [shop] [dir]', 'Watch theme directory at [dir] and create/update/delete the one in [shop] when changed'
+      option :production, banner: '<true|false>', type: :boolean, default: false, aliases: '-p'
       def watch(subdomain = nil, dir = '.')
         logged_in_action do
-          _, remote_theme = select_theme_pair(subdomain, dir)
+          _, remote_theme = select_theme_pair(subdomain, dir, production: options['production'])
           workflows.watch(dir, remote_theme)
         end
       end
@@ -56,12 +61,13 @@ module BooticCli
         BooticCli::Themes::Workflows.new(prompt: prompt)
       end
 
-      def select_theme_pair(subdomain, dir)
+      def select_theme_pair(subdomain, dir, production: false)
         BooticCli::Themes::ThemeSelector.select_theme_pair(
           subdomain,
           dir,
           root,
-          prompt: prompt
+          prompt: prompt,
+          production: production
         )
       end
 

@@ -39,6 +39,12 @@ describe BooticCli::Themes::ThemeSelector do
       it_is_remote_theme b
     end
 
+    it "works directly on production theme if option passed" do
+      expect(shop).to receive(:theme).and_return prod_theme
+      expect(shop).not_to receive(:themes)
+      described_class.select_theme_pair('foo', './spec/fixtures/theme', root, prompt: prompt, production: true)
+    end
+
     it "without subdomain it infers it from dir" do
       expect(root).to receive(:all_shops)
         .with(subdomains: 'theme').and_return [shop]
