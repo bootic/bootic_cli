@@ -264,7 +264,7 @@ module BooticCli
 
         printer = Thread.new do
           while path = queue.pop
-            puts path
+            puts "Copied asset #{path}"
           end
         end
 
