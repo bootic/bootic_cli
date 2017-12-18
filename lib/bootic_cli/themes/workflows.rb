@@ -185,13 +185,13 @@ module BooticCli
       end
 
       def publish(local_theme, remote_theme)
-        keep_old_theme = !prompt.yes_or_no?("Do you want to keep the dev theme as the old production?", false)
+        keep_old_theme = !prompt.yes_or_no?("Do you want to keep the dev theme as the old public one?", false)
         # first push local files to dev theme
         prompt.say "pushing local changes to development theme"
         push local_theme, remote_theme, destroy: true
         # now publish remote dev theme
         # let it fail if remote_theme doesn't respond to #publish
-        prompt.notice "publishing development theme to production"
+        prompt.notice "publishing development theme"
         remote_theme.publish(!keep_old_theme) # swap remote themes
         prompt.highlight "published to #{remote_theme.href}", :yellow
       end
