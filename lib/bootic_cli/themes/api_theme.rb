@@ -24,7 +24,7 @@ module BooticCli
       def publish(clone = false)
         if theme.can?(:publish_theme)
           @theme = theme.publish_theme
-          @theme = @theme.create_dev_theme if clone
+          @theme.create_dev_theme if clone
           reload!(false)
         end
       end
