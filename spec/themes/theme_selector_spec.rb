@@ -8,6 +8,7 @@ describe BooticCli::Themes::ThemeSelector do
   let(:shop) { double('Shop', subdomain: 'foo', themes: themes, theme: prod_theme) }
   let(:root) { double('Root', has?: true, shops: [shop]) }
   let(:prompt) { double('Prompt', say: true) }
+  subject { described_class.new(root, prompt: prompt) }
 
   around do |ex|
     ex.run
@@ -23,7 +24,7 @@ describe BooticCli::Themes::ThemeSelector do
   describe ".select_theme_pair" do
     it "with subdomain and valid shop" do
       expect(themes).not_to receive(:create_dev_theme)
-      a, b = described_class.select_theme_pair('foo', './spec/fixtures/theme', root, prompt: prompt)
+      a, b = subject.select_theme_pair('foo', './spec/fixtures/theme')
 
       it_is_local_theme a
       it_is_remote_theme b
@@ -33,7 +34,7 @@ describe BooticCli::Themes::ThemeSelector do
       expect(themes).to receive(:has?).with(:dev_theme).and_return false
       expect(themes).to receive(:can?).with(:create_dev_theme).and_return true
       expect(themes).to receive(:create_dev_theme).and_return dev_theme
-      a, b = described_class.select_theme_pair('foo', './spec/fixtures/theme', root, prompt: prompt)
+      a, b = subject.select_theme_pair('foo', './spec/fixtures/theme')
 
       it_is_local_theme a
       it_is_remote_theme b
@@ -42,25 +43,25 @@ describe BooticCli::Themes::ThemeSelector do
     it "works directly on production theme if option passed" do
       expect(shop).to receive(:theme).and_return prod_theme
       expect(shop).not_to receive(:themes)
-      described_class.select_theme_pair('foo', './spec/fixtures/theme', root, prompt: prompt, production: true)
+      subject.select_theme_pair('foo', './spec/fixtures/theme', true)
     end
 
     it "without subdomain it infers it from dir" do
       expect(root).to receive(:all_shops)
         .with(subdomains: 'theme').and_return [shop]
 
-      a, b = described_class.select_theme_pair(nil, './spec/fixtures/theme', root, prompt: prompt)
+      a, b = subject.select_theme_pair(nil, './spec/fixtures/theme')
 
       it_is_local_theme a
       it_is_remote_theme b
     end
 
     it "stores subdomain in local state the first time" do
-      described_class.select_theme_pair('foo', './spec/fixtures/theme', root, prompt: prompt)
+      subject.select_theme_pair('foo', './spec/fixtures/theme')
       expect(root).to receive(:all_shops)
         .with(subdomains: 'foo').and_return [shop]
 
-      a, b = described_class.select_theme_pair(nil, './spec/fixtures/theme', root, prompt: prompt)
+      a, b = subject.select_theme_pair(nil, './spec/fixtures/theme')
 
       it_is_local_theme a
       it_is_remote_theme b
@@ -70,7 +71,7 @@ describe BooticCli::Themes::ThemeSelector do
       expect(root).to receive(:has?).with(:all_shops).and_return false
       expect(root).to receive(:shops).and_return [shop]
 
-      a, b = described_class.select_theme_pair(nil, './spec/fixtures/theme', root, prompt: prompt)
+      a, b = subject.select_theme_pair(nil, './spec/fixtures/theme')
 
       it_is_local_theme a
       it_is_remote_theme b

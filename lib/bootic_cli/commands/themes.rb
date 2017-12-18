@@ -9,7 +9,7 @@ module BooticCli
       option :production, banner: '<true|false>', type: :boolean, default: false, aliases: '-p'
       def pull(subdomain = nil, dir = '.')
         logged_in_action do
-          local_theme, remote_theme = select_theme_pair(subdomain, dir, production: options[:production])
+          local_theme, remote_theme = theme_selector.select_theme_pair(subdomain, dir, options['production'])
           workflows.pull(local_theme, remote_theme, destroy: options['destroy'])
         end
       end
@@ -19,7 +19,7 @@ module BooticCli
       option :destroy, banner: '<true|false>', type: :boolean, default: true
       def push(subdomain = nil, dir = '.')
         logged_in_action do
-          local_theme, remote_theme = select_theme_pair(subdomain, dir, production: options['production'])
+          local_theme, remote_theme = theme_selector.select_theme_pair(subdomain, dir, options['production'])
           workflows.push(local_theme, remote_theme, destroy: options['destroy'])
         end
       end
@@ -28,7 +28,7 @@ module BooticCli
       option :production, banner: '<true|false>', type: :boolean, default: false, aliases: '-p'
       def sync(subdomain = nil, dir = '.')
         logged_in_action do
-          local_theme, remote_theme = select_theme_pair(subdomain, dir, production: options['production'])
+          local_theme, remote_theme = theme_selector.select_theme_pair(subdomain, dir, options['production'])
           workflows.sync(local_theme, remote_theme)
         end
       end
@@ -37,7 +37,7 @@ module BooticCli
       option :production, banner: '<true|false>', type: :boolean, default: false, aliases: '-p'
       def compare(subdomain = nil, dir = '.')
         logged_in_action do
-          local_theme, remote_theme = select_theme_pair(subdomain, dir, production: options['production'])
+          local_theme, remote_theme = theme_selector.select_theme_pair(subdomain, dir, options['production'])
           workflows.compare(local_theme, remote_theme)
         end
       end
@@ -46,8 +46,17 @@ module BooticCli
       option :production, banner: '<true|false>', type: :boolean, default: false, aliases: '-p'
       def watch(subdomain = nil, dir = '.')
         logged_in_action do
-          _, remote_theme = select_theme_pair(subdomain, dir, production: options['production'])
+          _, remote_theme = theme_selector.select_theme_pair(subdomain, dir, options['production'])
           workflows.watch(dir, remote_theme)
+        end
+      end
+
+      desc 'publish [shop] [dir]', 'Publish dev files to production theme'
+      def publish(subdomain = nil, dir = '.')
+        logged_in_action do
+          local_theme, remote_theme = theme_selector.select_theme_pair(subdomain, dir, false)
+
+          workflows.publish(local_theme, remote_theme)
         end
       end
 
@@ -61,14 +70,8 @@ module BooticCli
         BooticCli::Themes::Workflows.new(prompt: prompt)
       end
 
-      def select_theme_pair(subdomain, dir, production: false)
-        BooticCli::Themes::ThemeSelector.select_theme_pair(
-          subdomain,
-          dir,
-          root,
-          prompt: prompt,
-          production: production
-        )
+      def theme_selector
+        @theme_selector ||= BooticCli::Themes::ThemeSelector.new(root, prompt: prompt)
       end
 
       class Prompt

@@ -5,7 +5,7 @@ require 'bootic_cli/themes/workflows'
 describe BooticCli::Themes::Workflows do
   let(:local_theme) { BooticCli::Themes::MemTheme.new }
   let(:remote_theme) { BooticCli::Themes::MemTheme.new }
-  let(:prompt) { double('Prompt', yes_or_no?: true, notice: '', say: '') }
+  let(:prompt) { double('Prompt', yes_or_no?: true, notice: '', say: '', highlight: '') }
   subject { described_class.new(prompt: prompt) }
 
   describe '#pull' do
@@ -258,6 +258,22 @@ describe BooticCli::Themes::Workflows do
       subject.watch(dir, remote_theme, watcher: watcher)
 
       expect(remote_theme.templates.map(&:file_name)).to eq ['collection.html', 'layout.html', 'master.css']
+    end
+  end
+
+  describe "#publish" do
+    it "copies new local files into remote theme" do
+      local_theme.add_template('layout.html', 'aaa')
+      local_theme.add_template('master.css', 'bbb')
+      local_theme.add_asset('icon.gif', StringIO.new('icon'))
+
+      allow(remote_theme).to receive(:href).and_return 'https://acme.bootic.net'
+      expect(prompt).to receive(:highlight).with("published to https://acme.bootic.net", :yellow)
+      expect(remote_theme).to receive(:publish).with(true).and_return remote_theme
+      subject.publish(local_theme, remote_theme)
+
+      expect(remote_theme.templates.map(&:file_name)).to eq ['layout.html', 'master.css']
+      expect(remote_theme.assets.map(&:file_name)).to eq ['icon.gif']
     end
   end
 end
