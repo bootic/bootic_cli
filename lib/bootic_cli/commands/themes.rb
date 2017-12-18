@@ -61,10 +61,10 @@ module BooticCli
       end
 
       desc 'open [shop] [dir]', 'Open theme in a browser'
-      option :production, banner: '<true|false>', type: :boolean, default: false, aliases: '-p'
+      option :public, banner: '<true|false>', type: :boolean, default: false, aliases: '-p'
       def open(subdomain = nil, dir = '.')
         logged_in_action do
-          _, remote_theme = theme_selector.select_theme_pair(subdomain, dir, options['production'])
+          _, remote_theme = theme_selector.select_theme_pair(subdomain, dir, options['public'])
           Launchy.open remote_theme.href
         end
       end
