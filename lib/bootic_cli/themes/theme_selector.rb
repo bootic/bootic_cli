@@ -78,7 +78,7 @@ module BooticCli
       end
 
       private
-      attr_reader :root, :prompt, :production
+      attr_reader :root, :prompt
     end
   end
 end
