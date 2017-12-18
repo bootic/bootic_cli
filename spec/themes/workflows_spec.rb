@@ -5,7 +5,7 @@ require 'bootic_cli/themes/workflows'
 describe BooticCli::Themes::Workflows do
   let(:local_theme) { BooticCli::Themes::MemTheme.new }
   let(:remote_theme) { BooticCli::Themes::MemTheme.new }
-  let(:prompt) { double('Prompt', yes_or_no?: true, notice: '', puts: '') }
+  let(:prompt) { double('Prompt', yes_or_no?: true, notice: '', say: '') }
   subject { described_class.new(prompt: prompt) }
 
   describe '#pull' do
@@ -201,12 +201,12 @@ describe BooticCli::Themes::Workflows do
     end
 
     it "compares" do
-      expect(prompt).to receive(:puts).with("Updated in remote: collection.html")
-      expect(prompt).to receive(:puts).with("Remote template not in local dir: styles.css")
-      expect(prompt).to receive(:puts).with("Remote asset not in local dir: icon.gif")
-      expect(prompt).to receive(:puts).with("Updated locally: product.html")
-      expect(prompt).to receive(:puts).with("Local template not in remote: master.css")
-      expect(prompt).to receive(:puts).with("Local asset not in remote: logo.gif")
+      expect(prompt).to receive(:say).with("Updated in remote: collection.html")
+      expect(prompt).to receive(:say).with("Remote template not in local dir: styles.css")
+      expect(prompt).to receive(:say).with("Remote asset not in local dir: icon.gif")
+      expect(prompt).to receive(:say).with("Updated locally: product.html")
+      expect(prompt).to receive(:say).with("Local template not in remote: master.css")
+      expect(prompt).to receive(:say).with("Local asset not in remote: logo.gif")
 
       subject.compare(local_theme, remote_theme)
     end

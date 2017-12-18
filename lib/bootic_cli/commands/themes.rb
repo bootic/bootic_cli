@@ -57,29 +57,8 @@ module BooticCli
       end
 
       class Prompt
-        COLORS = {
-          black:        '30',
-          dark_gray:    '1;30',
-          red:          '31',
-          light_red:    '1;31',
-          green:        '32',
-          light_green:  '1;32',
-          brown:        '33',
-          yellow:       '1;33',
-          blue:         '34',
-          light_blue:   '1;34',
-          purple:       '35',
-          light_purple: '1;35',
-          cyan:         '36',
-          light_cyan:   '1;36',
-          light_gray:   '37',
-          white:        '1;37',
-          bold:         '1',
-          gray:         '90'
-        }
-
         def initialize
-          @shell = Thor::Shell::Basic.new
+          @shell = Thor::Shell::Color.new
         end
 
         def yes_or_no?(question, default_answer)
@@ -90,15 +69,15 @@ module BooticCli
 
         def notice(str)
           parts = [" --->", str]
-          puts highlight(parts.join(" "), :bold)
+          highlight parts.join(' ')
         end
 
         def highlight(str, color = :bold)
-          ["\033[", COLORS[color], 'm', str, "\033[0m"].join('')
+          say str, color
         end
 
-        def puts(str)
-          shell.say str
+        def say(str, color = nil)
+          shell.say str, color
         end
 
         private

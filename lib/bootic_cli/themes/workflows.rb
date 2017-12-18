@@ -18,7 +18,7 @@ module BooticCli
 
       end
 
-      def self.puts(*_)
+      def self.say(*_)
 
       end
     end
@@ -190,11 +190,11 @@ module BooticCli
 
         dupes.each do |downcased|
           arr = list.select { |f| f.file_name.downcase == downcased }
-          puts highlight(" --> Name clash between files: " + arr.map(&:file_name).join(', '), :red)
+          highlight(" --> Name clash between files: " + arr.map(&:file_name).join(', '), :red)
         end
 
         if dupes.any?
-          puts highlight("Please ensure there are no name clashes before continuing. Thanks!")
+          highlight("Please ensure there are no name clashes before continuing. Thanks!")
           abort
         end
       end
@@ -214,8 +214,8 @@ module BooticCli
         prompt.notice str
       end
 
-      def puts(*args)
-        prompt.puts *args
+      def puts(str)
+        prompt.say str
       end
 
       def highlight(str)
