@@ -90,7 +90,6 @@ module BooticCli
 
         def notice(str)
           parts = [" --->", str]
-          parts.insert(1, "[#{@dirname}]") if @dirname
           puts highlight(parts.join(" "), :bold)
         end
 
