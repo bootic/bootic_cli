@@ -5,12 +5,13 @@ require 'bootic_cli/themes/fs_theme'
 module BooticCli
   module Themes
     class ThemeSelector
-      def self.select_theme_pair(subdomain, dir, root)
-        new(root).select_theme_pair(subdomain, dir)
+      def self.select_theme_pair(subdomain, dir, root, prompt:)
+        new(root, prompt: prompt).select_theme_pair(subdomain, dir)
       end
 
-      def initialize(root)
+      def initialize(root, prompt:)
         @root = root
+        @prompt = prompt
       end
 
       def select_theme_pair(subdomain, dir)
@@ -21,11 +22,15 @@ module BooticCli
           if sub
             shop = find_remote_shop(sub)
             raise "No shop could be resolved with subdomain: #{subdomain} and dir: #{dir}" unless shop
-            [local_theme, APITheme.new(shop.theme)]
+            remote_theme = resolve_remote_theme(shop)
+            prompt.say "Preview remote theme at #{remote_theme.rels[:theme_preview].href}", :yellow
+            [local_theme, APITheme.new(remote_theme)]
           else # no subdomain stored yet. Resolve and store.
             shop = resolve_shop(subdomain, dir)
             st['subdomain'] = shop.subdomain
-            [local_theme, APITheme.new(shop.theme)]
+            remote_theme = resolve_remote_theme(shop)
+            prompt.say "Preview remote theme at #{remote_theme.rels[:theme_preview].href}", :yellow
+            [local_theme, APITheme.new(remote_theme)]
           end
         end
       end
@@ -48,8 +53,20 @@ module BooticCli
         shop || root.shops.first
       end
 
+      def resolve_remote_theme(shop)
+        themes = shop.themes
+        if themes.has?(:dev_theme)
+          themes.dev_theme
+        elsif themes.can?(:create_dev_theme)
+          prompt.say "Creating development theme...", :green
+          themes.create_dev_theme
+        else
+          raise "No dev theme available"
+        end
+      end
+
       private
-      attr_reader :root
+      attr_reader :root, :prompt
     end
   end
 end
