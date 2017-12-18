@@ -23,6 +23,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'bootic_client', "~> 0.0.19"
   spec.add_dependency 'diffy', "~> 3.2"
   spec.add_dependency 'listen', "~> 3.1"
+  spec.add_dependency 'launchy'
 
   spec.add_development_dependency "bundler", "~> 1.9"
   spec.add_development_dependency "rake", "~> 10.0"
