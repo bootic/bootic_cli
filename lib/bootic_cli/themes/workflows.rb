@@ -235,30 +235,23 @@ module BooticCli
       end
 
       def copy_assets(from, to, opts = {})
-        queue = Queue.new
-
-        threads = from.assets.map do |a|
-          target_asset = to.assets.find{ |t| t.file_name == a.file_name }
-          if target_asset && !opts[:overwrite]
-            next unless opts[:interactive]
-            next unless prompt.yes_or_no?("Asset exists: #{a.file_name}. Overwrite?", false)
-          end
-
-          Thread.new do
-            to.add_asset a.file_name, a.file
-            queue << a.file_name
-          end
-        end.compact
-
-        printer = Thread.new do
-          while path = queue.pop
-            puts path
+        files = from.assets.find_all do |a|
+          if opts[:overwrite]
+            true
+          else
+            target_asset = to.assets.find{ |t| t.file_name == a.file_name }
+            if target_asset
+              opts[:interactive] && prompt.yes_or_no?("Asset exists: #{a.file_name}. Overwrite?", false)
+            else
+              true
+            end
           end
         end
 
-        threads.map &:join
-        queue << false
-        printer.join
+        files.each do |a|
+          to.add_asset a.file_name, a.file
+          puts "Copied asset #{a.file_name}"
+        end
       end
 
       def upsert_file(theme, path)
