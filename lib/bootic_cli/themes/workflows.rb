@@ -2,6 +2,7 @@ require 'listen'
 require 'thread'
 require 'bootic_cli/themes/theme_diff'
 require 'bootic_cli/themes/fs_theme'
+require 'bootic_cli/worker_pool'
 
 module BooticCli
   module Themes
@@ -24,6 +25,8 @@ module BooticCli
     end
 
     class Workflows
+      CONCURRENCY = 10
+
       def initialize(prompt: NullPrompt)
         @prompt = prompt
       end
@@ -248,10 +251,16 @@ module BooticCli
           end
         end
 
+        pool = BooticCli::WorkerPool.new(CONCURRENCY)
+
         files.each do |a|
-          to.add_asset a.file_name, a.file
-          puts "Copied asset #{a.file_name}"
+          pool.schedule do
+            to.add_asset a.file_name, a.file
+            puts "Copied asset #{a.file_name}"
+          end
         end
+
+        pool.start
       end
 
       def upsert_file(theme, path)
