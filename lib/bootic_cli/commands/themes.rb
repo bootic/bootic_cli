@@ -64,7 +64,8 @@ module BooticCli
         def yes_or_no?(question, default_answer)
           default_char = default_answer ? 'y' : 'n'
           input = shell.ask("\n#{question} [#{default_char}]").strip
-          input == '' || input.downcase == default_char
+          return default_answer if input == '' || input.downcase == default_char
+          !default_answer
         end
 
         def notice(str)
