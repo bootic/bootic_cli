@@ -1,5 +1,5 @@
 require 'time'
-require 'open-uri'
+require 'net/http'
 
 module BooticCli
   module Themes
@@ -11,7 +11,10 @@ module BooticCli
 
     class APIAsset < ItemWithTime
       def file
-        @file ||= open(rels[:file].href)
+        @file ||= (
+          data = Net::HTTP.get(URI.parse(rels[:file].href))
+          StringIO.new(data)
+        )
       end
     end
 
