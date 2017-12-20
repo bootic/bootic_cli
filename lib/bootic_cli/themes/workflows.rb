@@ -185,7 +185,7 @@ module BooticCli
       end
 
       def publish(local_theme, remote_theme)
-        keep_old_theme = !prompt.yes_or_no?("Do you want to keep the dev theme as the old public one?", false)
+        keep_old_theme = prompt.yes_or_no?("Do you want to keep the dev theme as the old public one?", false)
         # first push local files to dev theme
         prompt.say "pushing local changes to development theme"
         push local_theme, remote_theme, destroy: true
