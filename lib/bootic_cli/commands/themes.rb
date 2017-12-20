@@ -57,8 +57,8 @@ module BooticCli
       end
 
       class Prompt
-        def initialize
-          @shell = Thor::Shell::Color.new
+        def initialize(shell = Thor::Shell::Color.new)
+          @shell = shell
         end
 
         def yes_or_no?(question, default_answer)

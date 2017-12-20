@@ -55,4 +55,14 @@ describe BooticCli::Commands::Themes do
       described_class.start(%w(watch foo bar))
     end
   end
+
+  describe BooticCli::Commands::Themes::Prompt do
+    it "#yes_or_no?" do
+      shell = double('Thor Shell')
+      prompt = described_class.new(shell)
+
+      expect(shell).to receive(:ask).with("\nfoo? [n]").and_return ''
+      expect(prompt.yes_or_no?("foo?", false)).to be false
+    end
+  end
 end
