@@ -269,6 +269,7 @@ describe BooticCli::Themes::Workflows do
 
       allow(remote_theme).to receive(:href).and_return 'https://acme.bootic.net'
       expect(prompt).to receive(:highlight).with("published to https://acme.bootic.net", :yellow)
+      expect(prompt).to receive(:yes_or_no?).and_return false
       expect(remote_theme).to receive(:publish).with(true).and_return remote_theme
       subject.publish(local_theme, remote_theme)
 
