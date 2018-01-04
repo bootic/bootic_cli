@@ -31,9 +31,8 @@ module BooticCli
       end
 
       def initialize(dir)
-        FileUtils.mkdir_p dir
-        FileUtils.mkdir_p File.join(dir, ASSETS_DIR)
         @dir = dir
+        @setup = false
       end
 
       # Implement generic Theme interface
@@ -63,6 +62,7 @@ module BooticCli
       end
 
       def add_template(file_name, body)
+        setup
         path = File.join(dir, file_name)
 
         File.open(path, 'w') do |io|
@@ -79,6 +79,7 @@ module BooticCli
       end
 
       def add_asset(file_name, file)
+        setup
         path = File.join(dir, ASSETS_DIR, file_name)
         File.open(path, 'wb') do |io|
           io.write file.read
@@ -101,6 +102,14 @@ module BooticCli
 
       def paths_for(patterns)
         patterns.reduce([]) {|m, pattern| m + Dir[File.join(dir, pattern)]}
+      end
+
+      def setup
+        return self if @setup
+        FileUtils.mkdir_p dir
+        FileUtils.mkdir_p File.join(dir, ASSETS_DIR)
+        @setup = true
+        self
       end
     end
   end
