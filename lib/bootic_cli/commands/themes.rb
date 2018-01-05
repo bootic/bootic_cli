@@ -11,7 +11,17 @@ module BooticCli
       def clone(subdomain = nil, dir = nil)
         logged_in_action do
           local_theme, remote_theme = theme_selector.setup_theme_pair(subdomain, dir, options['public'])
-          workflows.clone(local_theme, remote_theme, destroy: options['destroy'])
+          workflows.pull(local_theme, remote_theme, destroy: options['destroy'])
+        end
+      end
+
+      desc 'pull', 'Pull remote changes into current theme directory'
+      option :public, banner: '<true|false>', type: :boolean, default: false, aliases: '-p'
+      option :destroy, banner: '<true|false>', type: :boolean, default: true
+      def pull(subdomain = nil, dir = '.')
+        logged_in_action do
+          local_theme, remote_theme = theme_selector.select_theme_pair(subdomain, dir, options['public'])
+          workflows.pull(local_theme, remote_theme, destroy: options['destroy'])
         end
       end
 

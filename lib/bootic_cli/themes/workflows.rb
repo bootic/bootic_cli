@@ -31,7 +31,7 @@ module BooticCli
         @prompt = prompt
       end
 
-      def clone(local_theme, remote_theme, destroy: true)
+      def pull(local_theme, remote_theme, destroy: true)
         diff = ThemeDiff.new(source: local_theme, target: remote_theme)
         check_dupes!(local_theme.assets)
 

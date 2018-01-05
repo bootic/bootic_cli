@@ -8,7 +8,7 @@ describe BooticCli::Commands::Themes do
   let(:root) { double('root') }
   let(:client) { double('client', root: root) }
   let(:session) { double('session', client: client, needs_upgrade?: false, setup?: true, logged_in?: true) }
-  let(:workflows) { double('workflows', clone: true, push: true, sync: true, compare: true, watch: true) }
+  let(:workflows) { double('workflows', pull: true, push: true, sync: true, compare: true, watch: true) }
   let(:selector) { instance_double(BooticCli::Themes::ThemeSelector, select_theme_pair: [local_theme, remote_theme]) }
 
   before do
@@ -18,15 +18,28 @@ describe BooticCli::Commands::Themes do
   end
 
   describe '#clone' do
-    it "invokes clone workflow, delegates to ThemeSelector correctly" do
+    it "invokes pull workflow, delegates to ThemeSelector correctly" do
       it_setsup_dev_theme
-      expect(workflows).to receive(:clone).with(local_theme, remote_theme, destroy: true)
+      expect(workflows).to receive(:pull).with(local_theme, remote_theme, destroy: true)
       described_class.start(%w(clone foo bar))
     end
 
     it "uses production theme if -p option present" do
       it_setsup_production_theme
       described_class.start(%w(clone -p foo bar))
+    end
+  end
+
+  describe '#pull' do
+    it "invokes pull workflow, delegates to ThemeSelector correctly" do
+      it_selects_dev_theme
+      expect(workflows).to receive(:pull).with(local_theme, remote_theme, destroy: true)
+      described_class.start(%w(pull foo bar))
+    end
+
+    it "uses production theme if -p option present" do
+      it_selects_production_theme
+      described_class.start(%w(pull -p foo bar))
     end
   end
 
