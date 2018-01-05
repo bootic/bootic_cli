@@ -10,15 +10,31 @@ describe BooticCli::Themes::ThemeSelector do
   let(:prompt) { double('Prompt', say: true) }
   subject { described_class.new(root, prompt: prompt) }
 
-  around do |ex|
-    ex.run
-    File.unlink File.expand_path('./spec/fixtures/theme/.state')
-  end
-
   before do
     allow(root).to receive(:all_shops)
       .with(subdomains: 'foo').and_return [shop]
     allow(themes).to receive(:has?).with(:dev_theme).and_return true
+  end
+
+  describe ".setup_theme_pair" do
+    it "selects default shop when no subdomain" do
+      expect(root).to receive(:shops).and_return [shop]
+
+      a, b = subject.setup_theme_pair(nil, './spec/fixtures/theme')
+
+      expect(a.path).to eq File.expand_path('./spec/fixtures/theme')
+      it_is_local_theme a
+      it_is_remote_theme b
+    end
+
+    it "sets up new dir after shop subdomain if no dir passed" do
+      expect(root).to receive(:shops).and_return [shop]
+
+      a, b = subject.setup_theme_pair(nil, nil)
+
+      expect(a.path).to eq File.expand_path(shop.subdomain)
+      it_is_remote_theme b
+    end
   end
 
   describe ".select_theme_pair" do
@@ -44,37 +60,6 @@ describe BooticCli::Themes::ThemeSelector do
       expect(shop).to receive(:theme).and_return prod_theme
       expect(shop).not_to receive(:themes)
       subject.select_theme_pair('foo', './spec/fixtures/theme', true)
-    end
-
-    it "without subdomain it infers it from dir" do
-      expect(root).to receive(:all_shops)
-        .with(subdomains: 'theme').and_return [shop]
-
-      a, b = subject.select_theme_pair(nil, './spec/fixtures/theme')
-
-      it_is_local_theme a
-      it_is_remote_theme b
-    end
-
-    it "stores subdomain in local state the first time" do
-      subject.select_theme_pair('foo', './spec/fixtures/theme')
-      expect(root).to receive(:all_shops)
-        .with(subdomains: 'foo').and_return [shop]
-
-      a, b = subject.select_theme_pair(nil, './spec/fixtures/theme')
-
-      it_is_local_theme a
-      it_is_remote_theme b
-    end
-
-    it "defaults to user main shop if no subdomain and dirname doesn't match" do
-      expect(root).to receive(:has?).with(:all_shops).and_return false
-      expect(root).to receive(:shops).and_return [shop]
-
-      a, b = subject.select_theme_pair(nil, './spec/fixtures/theme')
-
-      it_is_local_theme a
-      it_is_remote_theme b
     end
   end
 

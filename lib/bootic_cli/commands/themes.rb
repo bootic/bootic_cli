@@ -5,13 +5,13 @@ require 'bootic_cli/themes/theme_selector'
 module BooticCli
   module Commands
     class Themes < BooticCli::Command
-      desc 'pull [shop] [dir]', 'Pull latest theme changes in [shop] into directory [dir] (current by default)'
+      desc 'clone [shop] [dir]', 'Clone remote [shop] theme into directory [dir] (shop subdomain by default)'
       option :destroy, banner: '<true|false>', type: :boolean, default: true
       option :public, banner: '<true|false>', type: :boolean, default: false, aliases: '-p'
-      def pull(subdomain = nil, dir = '.')
+      def clone(subdomain = nil, dir = nil)
         logged_in_action do
-          local_theme, remote_theme = theme_selector.select_theme_pair(subdomain, dir, options['public'])
-          workflows.pull(local_theme, remote_theme, destroy: options['destroy'])
+          local_theme, remote_theme = theme_selector.setup_theme_pair(subdomain, dir, options['public'])
+          workflows.clone(local_theme, remote_theme, destroy: options['destroy'])
         end
       end
 

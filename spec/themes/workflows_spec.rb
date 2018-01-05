@@ -8,13 +8,13 @@ describe BooticCli::Themes::Workflows do
   let(:prompt) { double('Prompt', yes_or_no?: true, notice: '', say: '', highlight: '') }
   subject { described_class.new(prompt: prompt) }
 
-  describe '#pull' do
+  describe '#clone' do
     it "copies new remote files into local theme" do
       remote_theme.add_template('layout.html', 'aaa')
       remote_theme.add_template('master.css', 'bbb')
       remote_theme.add_asset('icon.gif', StringIO.new('icon'))
 
-      subject.pull(local_theme, remote_theme)
+      subject.clone(local_theme, remote_theme)
 
       expect(local_theme.templates.map(&:file_name)).to eq ['layout.html', 'master.css']
       expect(local_theme.assets.map(&:file_name)).to eq ['icon.gif']
@@ -28,14 +28,14 @@ describe BooticCli::Themes::Workflows do
       end
 
       it "updates templates updated in remote" do
-        subject.pull(local_theme, remote_theme)
+        subject.clone(local_theme, remote_theme)
         expect(local_theme.templates.map(&:file_name)).to eq ['layout.html', 'master.css']
       end
 
       it "does not update if declined by user" do
         expect(prompt).to receive(:yes_or_no?).with("Update local layout.html?", true).and_return false
         expect(local_theme).not_to receive(:add_template).with("layout.html", String)
-        subject.pull(local_theme, remote_theme)
+        subject.clone(local_theme, remote_theme)
       end
     end
 
@@ -53,14 +53,14 @@ describe BooticCli::Themes::Workflows do
       end
 
       it "removes templates and assets absent in remote" do
-        subject.pull(local_theme, remote_theme)
+        subject.clone(local_theme, remote_theme)
 
         expect(local_theme.templates.map(&:file_name)).to eq ['layout.html']
         expect(local_theme.assets.map(&:file_name)).to eq ['icon.gif']
       end
 
       it "does not remove if destroy: false" do
-        subject.pull(local_theme, remote_theme, destroy: false)
+        subject.clone(local_theme, remote_theme, destroy: false)
 
         expect(local_theme.templates.map(&:file_name)).to eq ['layout.html', 'master.css', 'product.html']
         expect(local_theme.assets.map(&:file_name)).to eq ['icon.gif', 'logo.gif']
@@ -74,7 +74,7 @@ describe BooticCli::Themes::Workflows do
       end
 
       it "adds new remote templates and assets" do
-        subject.pull(local_theme, remote_theme)
+        subject.clone(local_theme, remote_theme)
 
         expect(local_theme.templates.map(&:file_name)).to eq ['layout.html']
         expect(local_theme.assets.map(&:file_name)).to eq ['icon.gif']
@@ -103,7 +103,7 @@ describe BooticCli::Themes::Workflows do
         expect(local_theme).not_to receive(:add_asset).with('icon.gif', StringIO)
         expect(local_theme).to receive(:add_asset).with('logo.gif', StringIO)
 
-        subject.pull(local_theme, remote_theme)
+        subject.clone(local_theme, remote_theme)
       end
 
       it "does overwrite existing assets if user confirms" do
@@ -111,7 +111,7 @@ describe BooticCli::Themes::Workflows do
         expect(local_theme).to receive(:add_asset).with('icon.gif', StringIO)
         expect(local_theme).to receive(:add_asset).with('logo.gif', StringIO)
 
-        subject.pull(local_theme, remote_theme)
+        subject.clone(local_theme, remote_theme)
       end
     end
   end

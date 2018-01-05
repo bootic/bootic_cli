@@ -2,8 +2,12 @@ require 'spec_helper'
 require 'bootic_cli/themes/api_theme'
 
 describe BooticCli::Themes::APITheme do
-  let(:theme) { double("API Theme") }
+  let(:theme) { double("API Theme", rels: {theme_preview: double(href: 'http://www.foo.bar')}) }
   subject { described_class.new(theme) }
+
+  it "#path" do
+    expect(subject.path).to eq 'http://www.foo.bar'
+  end
 
   it "responds to #templates and #assets" do
     allow(theme).to receive(:assets).and_return([

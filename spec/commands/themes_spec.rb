@@ -8,7 +8,7 @@ describe BooticCli::Commands::Themes do
   let(:root) { double('root') }
   let(:client) { double('client', root: root) }
   let(:session) { double('session', client: client, needs_upgrade?: false, setup?: true, logged_in?: true) }
-  let(:workflows) { double('workflows', pull: true, push: true, sync: true, compare: true, watch: true) }
+  let(:workflows) { double('workflows', clone: true, push: true, sync: true, compare: true, watch: true) }
   let(:selector) { instance_double(BooticCli::Themes::ThemeSelector, select_theme_pair: [local_theme, remote_theme]) }
 
   before do
@@ -17,16 +17,16 @@ describe BooticCli::Commands::Themes do
     allow(BooticCli::Themes::Workflows).to receive(:new).and_return workflows
   end
 
-  describe '#pull' do
-    it "invokes pull workflow, delegates to ThemeSelector correctly" do
-      it_selects_dev_theme
-      expect(workflows).to receive(:pull).with(local_theme, remote_theme, destroy: true)
-      described_class.start(%w(pull foo bar))
+  describe '#clone' do
+    it "invokes clone workflow, delegates to ThemeSelector correctly" do
+      it_setsup_dev_theme
+      expect(workflows).to receive(:clone).with(local_theme, remote_theme, destroy: true)
+      described_class.start(%w(clone foo bar))
     end
 
     it "uses production theme if -p option present" do
-      it_selects_production_theme
-      described_class.start(%w(pull -p foo bar))
+      it_setsup_production_theme
+      described_class.start(%w(clone -p foo bar))
     end
   end
 
@@ -108,6 +108,20 @@ describe BooticCli::Commands::Themes do
       expect(Launchy).to receive(:open).with 'https://acme.bootic.net'
       described_class.start(%w(open -p foo bar))
     end
+  end
+
+  def it_setsup_dev_theme
+    expect(selector).to receive(:setup_theme_pair) do |from, to, production|
+      expect(from).to eq 'foo'
+      expect(to).to eq 'bar'
+      expect(production).to be false
+    end.and_return [local_theme, remote_theme]
+  end
+
+  def it_setsup_production_theme
+    expect(selector).to receive(:setup_theme_pair) do |from, to, production|
+      expect(production).to be true
+    end.and_return [local_theme, remote_theme]
   end
 
   def it_selects_dev_theme

@@ -4,6 +4,27 @@ require 'bootic_cli/themes/fs_theme'
 describe BooticCli::Themes::FSTheme do
   subject { described_class.new('./spec/fixtures/theme') }
 
+  before :all do
+    path = File.expand_path('./spec/fixtures/theme/.state')
+    File.unlink path if File.exists?(path)
+  end
+
+  describe "#subdomain" do
+    it "is nil by default" do
+      expect(subject.subdomain).to eq nil
+    end
+
+    it "can be initialized and persisted" do
+      theme = described_class.new('./spec/fixtures/theme2', subdomain: 'foo')
+      expect(theme.subdomain).to eq 'foo'
+
+      theme2 = described_class.new('./spec/fixtures/theme2')
+      expect(theme2.subdomain).to eq 'foo'
+
+      theme2.reset!
+    end
+  end
+
   it "responds to #templates and #assets" do
     expect(subject.assets.size).to eq 1
     it_is_an_asset(subject.assets.first, file_name: 'script.js')

@@ -1,4 +1,5 @@
 require 'fileutils'
+require 'yaml/store'
 
 module BooticCli
   module Themes
@@ -30,9 +31,21 @@ module BooticCli
         [item, type]
       end
 
-      def initialize(dir)
+      attr_reader :subdomain
+
+      def initialize(dir, subdomain: nil)
         @dir = dir
         @setup = false
+        @subdomain = subdomain ? write_subdomain(subdomain) : read_subdomain
+      end
+
+      def reset!
+        return false unless @setup
+        FileUtils.rm_rf dir
+      end
+
+      def path
+        File.expand_path(dir)
       end
 
       # Implement generic Theme interface
@@ -110,6 +123,24 @@ module BooticCli
         FileUtils.mkdir_p File.join(dir, ASSETS_DIR)
         @setup = true
         self
+      end
+
+      def store
+        @store ||= (
+          setup
+          YAML::Store.new(File.join(path, '.state'))
+        )
+      end
+
+      def write_subdomain(sub)
+        store.transaction do
+          store['subdomain'] = sub
+        end
+        sub
+      end
+
+      def read_subdomain
+        store.transaction{ store['subdomain'] }
       end
     end
   end

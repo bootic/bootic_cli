@@ -32,7 +32,7 @@ module BooticCli
         end
       end
 
-      def href
+      def path
         theme.rels[:theme_preview].href
       end
 
