@@ -75,7 +75,7 @@ module BooticCli
       def open(subdomain = nil, dir = '.')
         logged_in_action do
           _, remote_theme = theme_selector.select_theme_pair(subdomain, dir, options['public'])
-          Launchy.open remote_theme.href
+          Launchy.open remote_theme.path
         end
       end
 
