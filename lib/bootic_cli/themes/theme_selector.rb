@@ -32,6 +32,12 @@ module BooticCli
         [local_theme, remote_theme]
       end
 
+      def pair(subdomain, dir)
+        shop = find_remote_shop(subdomain)
+        raise "no shop with subdomain #{subdomain}" unless shop
+        select_local_theme(dir, subdomain)
+      end
+
       def select_local_theme(dir, subdomain = nil)
         FSTheme.new(File.expand_path(dir), subdomain: subdomain)
       end

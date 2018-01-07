@@ -123,6 +123,22 @@ describe BooticCli::Commands::Themes do
     end
   end
 
+  describe "#pair" do
+    let(:theme) { double('LocalTheme', path: './foo') }
+
+    it "delgates to ThemeSelector" do
+      expect(selector).to receive(:pair).with('foo', '.').and_return theme
+
+      described_class.start(%w(pair foo))
+    end
+
+    it "accepts optional dir" do
+      expect(selector).to receive(:pair).with('foo', 'bar').and_return theme
+
+      described_class.start(%w(pair foo bar))
+    end
+  end
+
   def it_setsup_dev_theme
     expect(selector).to receive(:setup_theme_pair) do |from, to, production|
       expect(from).to eq 'foo'

@@ -79,6 +79,14 @@ module BooticCli
         end
       end
 
+      desc 'pair [shop]', 'Pair this directory to remote [shop]'
+      def pair(subdomain, dir = '.')
+        logged_in_action do
+          local_theme = theme_selector.pair(subdomain, dir)
+          say "Directory #{local_theme.path} paired with shop #{subdomain}", :yellow
+        end
+      end
+
       private
 
       def prompt

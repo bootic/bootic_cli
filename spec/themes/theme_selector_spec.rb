@@ -16,7 +16,7 @@ describe BooticCli::Themes::ThemeSelector do
     allow(themes).to receive(:has?).with(:dev_theme).and_return true
   end
 
-  describe ".setup_theme_pair" do
+  describe "#setup_theme_pair" do
     it "selects default shop when no subdomain" do
       expect(root).to receive(:shops).and_return [shop]
 
@@ -37,7 +37,7 @@ describe BooticCli::Themes::ThemeSelector do
     end
   end
 
-  describe ".select_theme_pair" do
+  describe "#select_theme_pair" do
     it "with subdomain and valid shop" do
       expect(themes).not_to receive(:create_dev_theme)
       a, b = subject.select_theme_pair('foo', './spec/fixtures/theme')
@@ -60,6 +60,26 @@ describe BooticCli::Themes::ThemeSelector do
       expect(shop).to receive(:theme).and_return prod_theme
       expect(shop).not_to receive(:themes)
       subject.select_theme_pair('foo', './spec/fixtures/theme', true)
+    end
+  end
+
+  describe "#pair" do
+    it "pairs local dir to shop subdomain" do
+      dir = "./spec/fixtures/theme"
+      theme = instance_double(BooticCli::Themes::FSTheme)
+      expect(BooticCli::Themes::FSTheme).
+        to receive(:new).
+        with(File.expand_path(dir), subdomain: "foo").
+        and_return(theme)
+
+      expect(subject.pair("foo", dir)).to eq theme
+    end
+
+    it "raises if no shop found" do
+      allow(root).to receive(:all_shops).with(subdomains: 'foo').and_return []
+      expect{
+        subject.pair("foo", '.')
+      }.to raise_error
     end
   end
 
