@@ -25,7 +25,7 @@ module BooticCli
         end
       end
 
-      desc 'push [shop] [dir]', 'Push all local theme files in [dir] to remote shop [shop]'
+      desc 'push', 'Push all local theme files in current dir to remote shop'
       option :public, banner: '<true|false>', type: :boolean, default: false, aliases: '-p'
       option :destroy, banner: '<true|false>', type: :boolean, default: true
       def push(subdomain = nil, dir = '.')
@@ -35,7 +35,7 @@ module BooticCli
         end
       end
 
-      desc 'sync [shop] [dir]', 'Sync local theme copy in [dir] with remote [shop]'
+      desc 'sync', 'Sync local theme copy in local dir with remote shop'
       option :public, banner: '<true|false>', type: :boolean, default: false, aliases: '-p'
       def sync(subdomain = nil, dir = '.')
         logged_in_action do
@@ -44,7 +44,7 @@ module BooticCli
         end
       end
 
-      desc 'compare [shop] [dir]', 'Show differences between local and remote copies'
+      desc 'compare', 'Show differences between local and remote copies'
       option :public, banner: '<true|false>', type: :boolean, default: false, aliases: '-p'
       def compare(subdomain = nil, dir = '.')
         logged_in_action do
@@ -53,7 +53,7 @@ module BooticCli
         end
       end
 
-      desc 'watch [shop] [dir]', 'Watch theme directory at [dir] and create/update/delete the one in [shop] when changed'
+      desc 'watch', 'Watch theme directory at ./ and create/update/delete the one in remote shop when changed'
       option :public, banner: '<true|false>', type: :boolean, default: false, aliases: '-p'
       def watch(subdomain = nil, dir = '.')
         logged_in_action do
@@ -62,7 +62,7 @@ module BooticCli
         end
       end
 
-      desc 'publish [shop] [dir]', 'Publish dev files to public theme'
+      desc 'publish', 'Publish local files to remote public theme'
       def publish(subdomain = nil, dir = '.')
         logged_in_action do
           local_theme, remote_theme = theme_selector.select_theme_pair(subdomain, dir, false)
@@ -70,7 +70,7 @@ module BooticCli
         end
       end
 
-      desc 'open [shop] [dir]', 'Open theme in a browser'
+      desc 'open', 'Open theme preview URL in a browser'
       option :public, banner: '<true|false>', type: :boolean, default: false, aliases: '-p'
       def open(subdomain = nil, dir = '.')
         logged_in_action do
