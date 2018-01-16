@@ -14,6 +14,7 @@ module BooticCli
 
     desc 'setup', 'Setup OAuth2 application credentials'
     def setup
+      say "Please create an OAuth2 app and get its credentials at https://auth.bootic.net/dev/apps or the relevant auth app for your environment", :yellow
       if options[:environment] != DEFAULT_ENV
         auth_host     = ask("Enter auth endpoint host (#{BooticClient::AUTH_HOST}):").chomp
         api_root      = ask("Enter API root (#{BooticClient::API_ROOT}):").chomp
@@ -31,8 +32,7 @@ module BooticCli
     desc 'login', 'Login to your Bootic account'
     def login(scope = 'admin')
       if !session.setup?
-        say "App not configured for #{options[:environment]} environment. Running setup first. You only need to do this once."
-        say "Please create an OAuth2 app and get its credentials at https://auth.bootic.net/dev/apps or the relevant auth app for your environment"
+        say "App not configured for #{options[:environment]} environment. Running setup first. You only need to do this once.", :red
         invoke :setup, []
       end
 
