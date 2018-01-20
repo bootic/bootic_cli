@@ -1,5 +1,1 @@
-require "bootic_cli/version"
-
-module BooticCli
-end
-
+require "bootic_cli/cli"
