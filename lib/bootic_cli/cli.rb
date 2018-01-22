@@ -4,13 +4,11 @@ require 'bootic_cli/connectivity'
 require 'bootic_cli/formatters'
 
 module BooticCli
-
-  DEFAULT_ENV = 'production'.freeze
-
   class CLI < Thor
     include Thor::Actions
     include BooticCli::Connectivity
 
+    DEFAULT_ENV = 'production'.freeze
     CUSTOM_COMMANDS_DIR = ENV.fetch("BTC_CUSTOM_COMMANDS_PATH") { File.join(ENV["HOME"], "btc") }
 
     # override Thor's help method to print banner and check for keys
@@ -62,7 +60,6 @@ module BooticCli
       client_id     = ask("Enter your application's client_id:", :bold)
       client_secret = ask("Enter your application's client_secret:", :bold)
 
-      session.logout! # ensure existing access tokens are removed
       session.setup(client_id, client_secret, auth_host: auth_host, api_root: api_root)
 
       if current_env == DEFAULT_ENV
@@ -80,7 +77,10 @@ module BooticCli
 
     desc 'login', 'Login to your Bootic account'
     def login(scope = 'admin')
-      check_client_keys!
+      if !session.setup?
+        say "App not configured for #{options[:environment]} environment. Running setup first. You only need to do this once.", :red
+        invoke :setup, []
+      end
 
       if session.logged_in?
         input = ask "Looks like you're already logged in. Do you want to redo this step? [n]", :magenta
@@ -123,7 +123,7 @@ module BooticCli
       end
     end
 
-    desc "erase", "Clear all credentials from this computer"
+    desc "erase", "clear all credentials from this computer"
     def erase
       if session.setup?
         session.erase!
@@ -162,12 +162,10 @@ module BooticCli
       logged_in_action do
         require 'irb'
         require 'irb/completion'
-        require 'irb/ext/multi-irb'
-        require 'bootic_cli/console'
-
         IRB.setup nil
         IRB.conf[:MAIN_CONTEXT] = IRB::Irb.new.context
-
+        require 'irb/ext/multi-irb'
+        require 'bootic_cli/console'
         context = Console.new(session)
         prompt = "/#{shop.subdomain} (#{root.user_name}|#{root.scopes}) $ "
 
@@ -178,7 +176,6 @@ module BooticCli
           :PROMPT_N => prompt,
           :RETURN => "=> %s\n"
         }
-
         IRB.conf[:PROMPT_MODE] = :CUSTOM
         IRB.conf[:AUTO_INDENT] = false
 

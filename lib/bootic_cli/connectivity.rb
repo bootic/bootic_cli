@@ -8,7 +8,7 @@ module BooticCli
 
     def session
       @session ||= (
-        store = BooticCli::Store.new(base_dir: ENV['HOME'], namespace: current_env)
+        store = BooticCli::Store.new(base_dir: ENV['HOME'], namespace: options[:environment])
         BooticCli::Session.new(store)
       )
     end
@@ -19,10 +19,6 @@ module BooticCli
 
     def shop
       root.shops.first
-    end
-
-    def current_env
-      ENV['ENV'] || DEFAULT_ENV
     end
 
     def logged_in_action(&block)
@@ -52,6 +48,12 @@ module BooticCli
         # invoke :setup, []
         exit 1
       end
+
+      yield
+
+    rescue StandardError => e
+      say_status "ERROR", e.message, :red
+      nil
     end
   end
 end

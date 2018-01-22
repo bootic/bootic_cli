@@ -7,17 +7,17 @@ Gem::Specification.new do |spec|
   spec.name          = "bootic_cli"
   spec.version       = BooticCli::VERSION
   spec.authors       = ["Ismael Celis"]
-  spec.email         = ["ismael@bootic.io"]
+  spec.email         = ["ismaelct@gmail.com"]
 
-  spec.summary       = %q{Bootic command-line client.}
-  spec.description   = %q{Bootic command-line client.}
-  spec.homepage      = "http://www.bootic.io"
+  spec.summary       = %q{Bootic command line.}
+  spec.description   = %q{Bootic command line.}
+  spec.homepage      = "http://www.bootic.net"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
-  spec.bindir        = 'bin'
-  spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
-  spec.require_paths = ['lib']
+  spec.bindir        = "exe"
+  spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
+  spec.require_paths = ["lib"]
 
   spec.add_dependency 'thor', '~> 0'
   spec.add_dependency 'bootic_client', "~> 0.0.19"
@@ -31,10 +31,9 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "byebug", "~> 9"
 
   spec.post_install_message = <<-END
-   -------------------------------------------------------------
-    Woot! You've just installed the Bootic command-line client!
-    Please run `bootic setup` to configure your credentials.
-   -------------------------------------------------------------
+Bootic client installed.
+Try running:
+    btc help
 END
 
 end
