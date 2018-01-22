@@ -8,7 +8,7 @@ module BooticCli
 
     def session
       @session ||= (
-        store = BooticCli::Store.new(base_dir: ENV['HOME'], namespace: options[:environment])
+        store = BooticCli::Store.new(base_dir: ENV['HOME'], namespace: current_env)
         BooticCli::Session.new(store)
       )
     end
@@ -45,15 +45,8 @@ module BooticCli
 
       if !session.setup?
         say "CLI not configured yet! Please run `bootic setup`.", :magenta
-        # invoke :setup, []
         exit 1
       end
-
-      yield
-
-    rescue StandardError => e
-      say_status "ERROR", e.message, :red
-      nil
     end
   end
 end
