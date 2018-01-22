@@ -1,4 +1,4 @@
-frequire 'thor'
+require 'thor'
 require 'bootic_cli/version'
 require 'bootic_cli/connectivity'
 require 'bootic_cli/formatters'
@@ -13,7 +13,14 @@ module BooticCli
 
     CUSTOM_COMMANDS_DIR = ENV.fetch("BTC_CUSTOM_COMMANDS_PATH") { File.join(ENV["HOME"], "btc") }
 
-    package_name "Bootic CLI"
+    default_task :cli_banner
+    desc "help", "This message"
+    def cli_banner
+      say "Bootic CLI v#{BooticCli::VERSION}\n\n", :bold
+      help
+
+      check_client_keys!
+    end
 
     map %w[--version -v] => :__print_version
     desc "--version, -v", "Prints package version"
@@ -23,55 +30,95 @@ module BooticCli
 
     desc 'setup', 'Setup OAuth2 application credentials'
     def setup
-      say "Please create a Bootic app and get its credentials at auth.bootic.net/dev/apps", :yellow
+
+      if session.setup?
+        input = ask "Looks like you're already set up. Do you want to re-enter your app's credentials? [n]", :magenta
+        if input != 'y'
+          say 'Thought so. Bye!'
+          exit(1)
+        end
+      else
+        say "\nThis CLI uses the #{bold('Bootic API')} in order to interact with your shop's data."
+        say "This means you need to create a Bootic app at #{bold(apps_host)} to access the API and use the CLI.\n"
+      end
+
+      apps_host   = "auth.bootic.net"
+      apps_url    = "#{apps_host}/dev/apps"
+      new_app_url = "#{apps_host}/dev/cli"
+
+      input = ask "Have you created a Bootic app yet? [n]"
+      if input == 'y'
+        say "Great. Remember you can get the credentials at #{bold(apps_url)}."
+      else
+        say "Please visit https://#{bold(new_app_url)} and hit the 'Create' button."
+        say "(No need to edit the fields, by the way)", :white
+        sleep 2
+        # Launchy.open(apps_url)
+        say ""
+      end
 
       if current_env != DEFAULT_ENV
-        auth_host = ask("Enter auth endpoint host (#{BooticClient::AUTH_HOST}):").chomp
-        api_root  = ask("Enter API root (#{BooticClient::API_ROOT}):").chomp
+        auth_host = ask("Enter auth endpoint host (#{BooticClient::AUTH_HOST}):", :bold).chomp
+        api_root  = ask("Enter API root (#{BooticClient::API_ROOT}):", :bold).chomp
         auth_host = nil if auth_host == ""
         api_root  = nil if api_root == ""
       end
 
-      client_id     = ask("Enter your application's client_id:")
-      client_secret = ask("Enter your application's client_secret:")
+      client_id     = ask("Enter your application's client_id:", :bold)
+      client_secret = ask("Enter your application's client_secret:", :bold)
 
       session.logout! # ensure existing access tokens are removed
       session.setup(client_id, client_secret, auth_host: auth_host, api_root: api_root)
 
       if current_env == DEFAULT_ENV
-        say "Credentials stored (client_id #{client_id})."
+        say "Credentials stored! (client_id #{client_id}).", :magenta
       else
-        say "Credentials stored for #{current_env} env (client_id #{client_id})."
+        say "Credentials stored for #{current_env} env (client_id #{client_id}).", :magenta
       end
+
+      say ""
+      sleep 3
+      login
     end
 
     desc 'login', 'Login to your Bootic account'
     def login(scope = 'admin')
       check_client_keys!
 
-      username  = ask("Enter your Bootic email")
-      pwd       = ask("Enter your Bootic password:", echo: false)
-      say "Loging in as #{username}. Getting access token..."
+      username  = ask("Enter your Bootic email:", :bold)
+      pwd       = ask("Enter your Bootic password:", :bold, echo: false)
+
+      if username.strip == '' or pwd.strip == ''
+        say "\nPlease make sure to enter valid data.", :red
+        exit 1
+      end
+
+      say "\nAlrighty! Getting access token for #{username}...\n", :magenta
 
       begin
         session.login(username, pwd, scope)
-        say "Logged in as #{username} (#{scope})"
-        say "try: btc help"
+        say "Success! Logged in as #{username} (#{scope})", :green
+        say "For help, run `#{bold('bootic help')}`"
       rescue StandardError => e
-        say e.message
+        say e.message, :red
+
+        if e.message['No application with client ID']
+          sleep 2
+          say "\nTry running `bootic setup` again. Or perhaps you missed the ENV variable?", :magenta
+        end
       end
     end
 
     desc 'logout', 'Log out (delete access token)'
     def logout
       session.logout!
-      say_status 'Logged out', 'You are now logged out', :red
+      say 'Done. You are now logged out.', :magenta
     end
 
     desc "erase", "Clear all credentials from this computer"
     def erase
       session.erase!
-      say "Ok mister. All credentials have been erased."
+      say "Ok mister. All credentials have been erased.", :magenta
     end
 
     desc 'info', 'Test API connectivity'
@@ -85,7 +132,7 @@ module BooticCli
           ['custom commands dir', CUSTOM_COMMANDS_DIR]
         ])
 
-        say_status 'OK', 'API connection is working', :green
+        say_status 'OK', 'API connection is working!', :green
       end
     end
 
@@ -133,6 +180,10 @@ module BooticCli
     end
 
     private
+
+    def bold(str)
+      set_color(str, :bold)
+    end
 
     def self.underscore(str)
       str.gsub(/::/, '/').

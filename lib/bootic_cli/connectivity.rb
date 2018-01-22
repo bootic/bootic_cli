@@ -30,25 +30,25 @@ module BooticCli
       check_access_token!
       yield
     rescue StandardError => e
-      say_status "ERROR", e.message, :red
+      say e.message, :red
       nil
     end
 
     def check_access_token!
       if !session.logged_in?
-        say_status "ERROR", "No access token. Run btc login -e #{options[:environment]}", :red
+        say "No access token found! Please run `bootic login`.", :red
         exit 1
       end
     end
 
     def check_client_keys!
       if session.needs_upgrade?
-        say_status "WARNING", "Old store data structure, restructuring to support multiple environments"
+        say "Old store data structure, restructuring to support multiple environments...", :cyan
         session.upgrade!
       end
 
       if !session.setup?
-        say "CLI not configured yet! Please run `bootic setup` first.", :red
+        say "CLI not configured yet! Please run `bootic setup`.", :magenta
         # invoke :setup, []
         exit 1
       end
