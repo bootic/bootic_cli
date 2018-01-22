@@ -1,60 +1,48 @@
-frequire 'thor'
-require 'bootic_cli/version'
+require 'thor'
 require 'bootic_cli/connectivity'
 require 'bootic_cli/formatters'
 
 module BooticCli
-
-  DEFAULT_ENV = 'production'.freeze
-
   class CLI < Thor
     include Thor::Actions
     include BooticCli::Connectivity
 
+    DEFAULT_ENV = 'production'.freeze
     CUSTOM_COMMANDS_DIR = ENV.fetch("BTC_CUSTOM_COMMANDS_PATH") { File.join(ENV["HOME"], "btc") }
 
-    package_name "Bootic CLI"
-
-    map %w[--version -v] => :__print_version
-    desc "--version, -v", "Prints package version"
-    def __print_version
-      puts BooticCli::VERSION
-    end
+    class_option :environment, type: :string, default: DEFAULT_ENV, aliases: :e, banner: '<production>'
 
     desc 'setup', 'Setup OAuth2 application credentials'
     def setup
-      say "Please create a Bootic app and get its credentials at auth.bootic.net/dev/apps", :yellow
-
-      if current_env != DEFAULT_ENV
-        auth_host = ask("Enter auth endpoint host (#{BooticClient::AUTH_HOST}):").chomp
-        api_root  = ask("Enter API root (#{BooticClient::API_ROOT}):").chomp
+      say "Please create an OAuth2 app and get its credentials at https://auth.bootic.net/dev/apps or the relevant auth app for your environment", :yellow
+      if options[:environment] != DEFAULT_ENV
+        auth_host     = ask("Enter auth endpoint host (#{BooticClient::AUTH_HOST}):").chomp
+        api_root      = ask("Enter API root (#{BooticClient::API_ROOT}):").chomp
         auth_host = nil if auth_host == ""
         api_root  = nil if api_root == ""
       end
-
       client_id     = ask("Enter your application's client_id:")
       client_secret = ask("Enter your application's client_secret:")
 
-      session.logout! # ensure existing access tokens are removed
       session.setup(client_id, client_secret, auth_host: auth_host, api_root: api_root)
 
-      if current_env == DEFAULT_ENV
-        say "Credentials stored (client_id #{client_id})."
-      else
-        say "Credentials stored for #{current_env} env (client_id #{client_id})."
-      end
+      say "Credentials stored for #{options[:environment]} environment. client_id: #{client_id}"
     end
 
     desc 'login', 'Login to your Bootic account'
     def login(scope = 'admin')
-      check_client_keys!
+      if !session.setup?
+        say "App not configured for #{options[:environment]} environment. Running setup first. You only need to do this once.", :red
+        invoke :setup, []
+      end
 
       username  = ask("Enter your Bootic email")
       pwd       = ask("Enter your Bootic password:", echo: false)
+
       say "Loging in as #{username}. Getting access token..."
 
       begin
-        session.login(username, pwd, scope)
+        session.login username, pwd, scope
         say "Logged in as #{username} (#{scope})"
         say "try: btc help"
       rescue StandardError => e
@@ -68,10 +56,10 @@ module BooticCli
       say_status 'Logged out', 'You are now logged out', :red
     end
 
-    desc "erase", "Clear all credentials from this computer"
+    desc "erase", "clear all credentials from this computer"
     def erase
       session.erase!
-      say "Ok mister. All credentials have been erased."
+      say "all credentials erased from this computer"
     end
 
     desc 'info', 'Test API connectivity'
@@ -103,12 +91,10 @@ module BooticCli
       logged_in_action do
         require 'irb'
         require 'irb/completion'
-        require 'irb/ext/multi-irb'
-        require 'bootic_cli/console'
-
         IRB.setup nil
         IRB.conf[:MAIN_CONTEXT] = IRB::Irb.new.context
-
+        require 'irb/ext/multi-irb'
+        require 'bootic_cli/console'
         context = Console.new(session)
         prompt = "/#{shop.subdomain} (#{root.user_name}|#{root.scopes}) $ "
 
@@ -119,7 +105,6 @@ module BooticCli
           :PROMPT_N => prompt,
           :RETURN => "=> %s\n"
         }
-
         IRB.conf[:PROMPT_MODE] = :CUSTOM
         IRB.conf[:AUTO_INDENT] = false
 
