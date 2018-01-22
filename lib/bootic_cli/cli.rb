@@ -13,12 +13,10 @@ module BooticCli
 
     CUSTOM_COMMANDS_DIR = ENV.fetch("BTC_CUSTOM_COMMANDS_PATH") { File.join(ENV["HOME"], "btc") }
 
-    default_task :cli_banner
-    desc "help", "This message"
-    def cli_banner
+    # override Thor's help method to print banner and check for keys
+    def help
       say "Bootic CLI v#{BooticCli::VERSION}\n\n", :bold
-      help
-
+      super
       check_client_keys!
     end
 
@@ -30,6 +28,8 @@ module BooticCli
 
     desc 'setup', 'Setup OAuth2 application credentials'
     def setup
+      apps_host   = "auth.bootic.net"
+      dev_app_url = "#{apps_host}/dev/cli"
 
       if session.setup?
         input = ask "Looks like you're already set up. Do you want to re-enter your app's credentials? [n]", :magenta
@@ -38,20 +38,16 @@ module BooticCli
           exit(1)
         end
       else
-        say "\nThis CLI uses the #{bold('Bootic API')} in order to interact with your shop's data."
-        say "This means you need to create a Bootic app at #{bold(apps_host)} to access the API and use the CLI.\n"
+        say "This CLI uses the #{bold('Bootic API')} in order to interact with your shop's data."
+        say "This means you need to create a Bootic app at #{bold(dev_app_url)} to access the API and use the CLI.\n"
       end
 
-      apps_host   = "auth.bootic.net"
-      apps_url    = "#{apps_host}/dev/apps"
-      new_app_url = "#{apps_host}/dev/cli"
 
       input = ask "Have you created a Bootic app yet? [n]"
       if input == 'y'
-        say "Great. Remember you can get the credentials at #{bold(apps_url)}."
+        say "Great. Remember you can get your app's credentials at #{bold(dev_app_url)}."
       else
-        say "Please visit https://#{bold(new_app_url)} and hit the 'Create' button."
-        say "(No need to edit the fields, by the way)", :white
+        say "Please visit https://#{bold(dev_app_url)} and hit the 'Create' button."
         sleep 2
         # Launchy.open(apps_url)
         say ""
@@ -85,6 +81,14 @@ module BooticCli
     def login(scope = 'admin')
       check_client_keys!
 
+      if session.logged_in?
+        input = ask "Looks like you're already logged in. Do you want to redo this step? [n]", :magenta
+        if input != 'y'
+          say 'Thought so. Bye!'
+          exit(1)
+        end
+      end
+
       username  = ask("Enter your Bootic email:", :bold)
       pwd       = ask("Enter your Bootic password:", :bold, echo: false)
 
@@ -93,15 +97,14 @@ module BooticCli
         exit 1
       end
 
-      say "\nAlrighty! Getting access token for #{username}...\n", :magenta
+      say "\n\nAlrighty! Getting access token for #{username}...\n"
 
       begin
         session.login(username, pwd, scope)
-        say "Success! Logged in as #{username} (#{scope})", :green
-        say "For help, run `#{bold('bootic help')}`"
+        say "Great success! You're now logged in as #{username} (#{scope})", :green
+        say "For a list of available commands, run `bootic help`."
       rescue StandardError => e
         say e.message, :red
-
         if e.message['No application with client ID']
           sleep 2
           say "\nTry running `bootic setup` again. Or perhaps you missed the ENV variable?", :magenta
@@ -111,14 +114,22 @@ module BooticCli
 
     desc 'logout', 'Log out (delete access token)'
     def logout
-      session.logout!
-      say 'Done. You are now logged out.', :magenta
+      if session.logged_in?
+        session.logout!
+        say 'Done. You are now logged out.', :magenta
+      else
+        say "You're not logged in. Did you mean `bootic login` perhaps?", :red
+      end
     end
 
     desc "erase", "Clear all credentials from this computer"
     def erase
-      session.erase!
-      say "Ok mister. All credentials have been erased.", :magenta
+      if session.setup?
+        session.erase!
+        say "Ok mister. All credentials have been erased.", :magenta
+      else
+        say "Couldn't find any stored credentials.", :red
+      end
     end
 
     desc 'info', 'Test API connectivity'
@@ -132,7 +143,7 @@ module BooticCli
           ['custom commands dir', CUSTOM_COMMANDS_DIR]
         ])
 
-        say_status 'OK', 'API connection is working!', :green
+        say 'Yup, API connection is working!', :green
       end
     end
 
