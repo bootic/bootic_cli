@@ -75,7 +75,7 @@ module BooticCli
         end
       end
 
-      declare self, "manage orders"
+      declare self, "Manage shop orders"
     end
   end
 end

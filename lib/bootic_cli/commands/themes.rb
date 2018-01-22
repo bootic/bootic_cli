@@ -5,12 +5,19 @@ require 'bootic_cli/themes/theme_selector'
 module BooticCli
   module Commands
     class Themes < BooticCli::Command
-      desc 'clone [shop] [dir]', 'Clone remote [shop] theme into directory [dir] (shop subdomain by default)'
+
+      # def examples
+      #   say "Note: By [shop] we always mean the shop's subdomain. For example:"
+      #   say "bootic themes clone dir --shop=foobar (assuming my shop runs at foobar.bootic.net)"
+      # end
+
+      desc 'clone [dir]', 'Clone remote theme into directory [dir]'
+      option :shop, banner: '<shop_subdomain>', type: :string
       option :destroy, banner: '<true|false>', type: :boolean, default: true
       option :public, banner: '<true|false>', type: :boolean, default: false, aliases: '-p'
-      def clone(subdomain = nil, dir = nil)
+      def clone(dir = nil)
         logged_in_action do
-          local_theme, remote_theme = theme_selector.setup_theme_pair(subdomain, dir, options['public'])
+          local_theme, remote_theme = theme_selector.setup_theme_pair(options['shop'], dir, options['public'])
           workflows.pull(local_theme, remote_theme, destroy: options['destroy'])
         end
       end
@@ -18,9 +25,9 @@ module BooticCli
       desc 'pull', 'Pull remote changes into current theme directory'
       option :public, banner: '<true|false>', type: :boolean, default: false, aliases: '-p'
       option :destroy, banner: '<true|false>', type: :boolean, default: true
-      def pull(subdomain = nil, dir = '.')
-        logged_in_action do
-          local_theme, remote_theme = theme_selector.select_theme_pair(subdomain, dir, options['public'])
+      def pull
+        within_theme do
+          local_theme, remote_theme = theme_selector.select_theme_pair(default_subdomain, current_dir, options['public'])
           workflows.pull(local_theme, remote_theme, destroy: options['destroy'])
         end
       end
@@ -28,66 +35,87 @@ module BooticCli
       desc 'push', 'Push all local theme files in current dir to remote shop'
       option :public, banner: '<true|false>', type: :boolean, default: false, aliases: '-p'
       option :destroy, banner: '<true|false>', type: :boolean, default: true
-      def push(subdomain = nil, dir = '.')
-        logged_in_action do
-          local_theme, remote_theme = theme_selector.select_theme_pair(subdomain, dir, options['public'])
+      def push
+        within_theme do
+          local_theme, remote_theme = theme_selector.select_theme_pair(default_subdomain, current_dir, options['public'])
           workflows.push(local_theme, remote_theme, destroy: options['destroy'])
         end
       end
 
       desc 'sync', 'Sync local theme copy in local dir with remote shop'
       option :public, banner: '<true|false>', type: :boolean, default: false, aliases: '-p'
-      def sync(subdomain = nil, dir = '.')
-        logged_in_action do
-          local_theme, remote_theme = theme_selector.select_theme_pair(subdomain, dir, options['public'])
+      def sync
+        within_theme do
+          local_theme, remote_theme = theme_selector.select_theme_pair(default_subdomain, current_dir, options['public'])
           workflows.sync(local_theme, remote_theme)
         end
       end
 
       desc 'compare', 'Show differences between local and remote copies'
       option :public, banner: '<true|false>', type: :boolean, default: false, aliases: '-p'
-      def compare(subdomain = nil, dir = '.')
-        logged_in_action do
-          local_theme, remote_theme = theme_selector.select_theme_pair(subdomain, dir, options['public'])
+      def compare
+        within_theme do
+          local_theme, remote_theme = theme_selector.select_theme_pair(default_subdomain, current_dir, options['public'])
           workflows.compare(local_theme, remote_theme)
         end
       end
 
-      desc 'watch', 'Watch theme directory at ./ and create/update/delete the one in remote shop when changed'
+      desc 'watch', 'Watch local theme directory and create/update/delete remote one when any file changes'
       option :public, banner: '<true|false>', type: :boolean, default: false, aliases: '-p'
-      def watch(subdomain = nil, dir = '.')
-        logged_in_action do
-          _, remote_theme = theme_selector.select_theme_pair(subdomain, dir, options['public'])
+      def watch
+        within_theme do
+          _, remote_theme = theme_selector.select_theme_pair(default_subdomain, current_dir, options['public'])
           workflows.watch(dir, remote_theme)
         end
       end
 
       desc 'publish', 'Publish local files to remote public theme'
-      def publish(subdomain = nil, dir = '.')
-        logged_in_action do
-          local_theme, remote_theme = theme_selector.select_theme_pair(subdomain, dir, false)
+      def publish
+        within_theme do
+          local_theme, remote_theme = theme_selector.select_theme_pair(default_subdomain, current_dir, false)
           workflows.publish(local_theme, remote_theme)
         end
       end
 
       desc 'open', 'Open theme preview URL in a browser'
       option :public, banner: '<true|false>', type: :boolean, default: false, aliases: '-p'
-      def open(subdomain = nil, dir = '.')
-        logged_in_action do
-          _, remote_theme = theme_selector.select_theme_pair(subdomain, dir, options['public'])
+      def open
+        within_theme do
+          _, remote_theme = theme_selector.select_theme_pair(default_subdomain, current_dir, options['public'])
           Launchy.open remote_theme.path
         end
       end
 
-      desc 'pair [shop]', 'Pair this directory to remote [shop]'
-      def pair(subdomain, dir = '.')
-        logged_in_action do
-          local_theme = theme_selector.pair(subdomain, dir)
-          say "Directory #{local_theme.path} paired with shop #{subdomain}", :yellow
+      desc 'pair', 'Pair this directory to remote [shop]'
+      option :shop, banner: '<shop_subdomain>', type: :string, required: true
+      def pair
+        within_theme do
+          local_theme = theme_selector.pair(options['shop'], current_dir)
+          say "Directory #{local_theme.path} paired with shop #{options['shop']}", :green
         end
       end
 
       private
+
+      def within_theme(&block)
+        dir = File.expand_path(current_dir)
+        unless File.exist?(File.join(dir, 'layout.html'))
+          say "This directory doesn't look like a Bootic theme! (#{dir})", :magenta
+          abort
+        end
+
+        logged_in_action do
+          yield
+        end
+      end
+
+      def current_dir
+        '.'
+      end
+
+      def default_subdomain
+        nil
+      end
 
       def prompt
         @prompt ||= Prompt.new
@@ -108,29 +136,29 @@ module BooticCli
 
         def yes_or_no?(question, default_answer)
           default_char = default_answer ? 'y' : 'n'
-          input = shell.ask("\n#{question} [#{default_char}]").strip
+          input = shell.ask("#{question} [#{default_char}]").strip
           return default_answer if input == '' || input.downcase == default_char
           !default_answer
         end
 
         def notice(str)
           parts = [" --->", str]
-          highlight parts.join(' ')
-        end
-
-        def highlight(str, color = :bold)
-          say str, color
+          puts highlight parts.join(' ')
         end
 
         def say(str, color = nil)
           shell.say str, color
         end
 
+        def highlight(str, color = :bold)
+          shell.set_color str, color
+        end
+
         private
         attr_reader :shell
       end
 
-      declare self, 'manage shop themes'
+      declare self, 'Manage shop themes'
     end
   end
 end

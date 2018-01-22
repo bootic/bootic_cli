@@ -185,15 +185,15 @@ module BooticCli
       end
 
       def publish(local_theme, remote_theme)
-        keep_old_theme = prompt.yes_or_no?("Do you want to keep the dev theme as the old public one?", false)
+        keep_old_theme = prompt.yes_or_no?("Do you want to keep your old public theme as your dev theme?", false)
         # first push local files to dev theme
-        prompt.say "pushing local changes to development theme"
+        prompt.say "Pushing local changes to development theme"
         push local_theme, remote_theme, destroy: true
         # now publish remote dev theme
         # let it fail if remote_theme doesn't respond to #publish
-        prompt.notice "publishing development theme"
+        prompt.notice "Publishing development theme"
         remote_theme.publish(!keep_old_theme) # swap remote themes
-        prompt.highlight "published to #{remote_theme.href}", :yellow
+        prompt.notice "Published to #{remote_theme.href}", :yellow
       end
 
       private
@@ -205,11 +205,11 @@ module BooticCli
 
         dupes.each do |downcased|
           arr = list.select { |f| f.file_name.downcase == downcased }
-          highlight(" --> Name clash between files: " + arr.map(&:file_name).join(', '), :red)
+          prompt.say(" --> Name clash between files: " + arr.map(&:file_name).join(', '), :red)
         end
 
         if dupes.any?
-          highlight("Please ensure there are no name clashes before continuing. Thanks!")
+          prompt.say("Please ensure there are no name clashes before continuing. Thanks!")
           abort
         end
       end
@@ -256,7 +256,7 @@ module BooticCli
           else
             target_asset = to.assets.find{ |t| t.file_name == a.file_name }
             if target_asset
-              opts[:interactive] && prompt.yes_or_no?("Asset exists: #{a.file_name}. Overwrite?", false)
+              opts[:interactive] && prompt.yes_or_no?("Asset exists: #{highlight(a.file_name)}. Overwrite?", false)
             else
               true
             end

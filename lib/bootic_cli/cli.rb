@@ -42,7 +42,6 @@ module BooticCli
         say "This means you need to create a Bootic app at #{bold(dev_app_url)} to access the API and use the CLI.\n"
       end
 
-
       input = ask "Have you created a Bootic app yet? [n]"
       if input == 'y'
         say "Great. Remember you can get your app's credentials at #{bold(dev_app_url)}."
@@ -67,9 +66,9 @@ module BooticCli
       session.setup(client_id, client_secret, auth_host: auth_host, api_root: api_root)
 
       if current_env == DEFAULT_ENV
-        say "Credentials stored! (client_id #{client_id}).", :magenta
+        say "Credentials stored!", :magenta
       else
-        say "Credentials stored for #{current_env} env (client_id #{client_id}).", :magenta
+        say "Credentials stored for #{current_env} env.", :magenta
       end
 
       say ""
