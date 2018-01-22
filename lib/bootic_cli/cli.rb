@@ -26,7 +26,7 @@ module BooticCli
       puts BooticCli::VERSION
     end
 
-    desc 'setup', 'Setup OAuth2 application credentials'
+    desc 'setup', 'Setup Bootic application credentials'
     def setup
       apps_host   = "auth.bootic.net"
       dev_app_url = "#{apps_host}/dev/cli"
@@ -70,6 +70,8 @@ module BooticCli
       else
         say "Credentials stored for #{current_env} env.", :magenta
       end
+
+      return if ENV['nologin']
 
       say ""
       sleep 3

@@ -18,11 +18,13 @@ describe BooticCli::CLI do
   let(:client) { double(:client, root: root) }
 
   def allow_ask(question, response, opts = {})
-    allow(Thor::LineEditor).to receive(:readline).with("#{question} ", opts).and_return response
+    expect(Thor::LineEditor).to receive(:readline).with("#{question} ", opts).and_return response
   end
 
   def assert_login
-    allow_ask("Enter your Bootic email", "joe")
+    allow_ask("Looks like you're already logged in. Do you want to redo this step? [n]", "y")
+
+    allow_ask("Enter your Bootic email:", "joe")
     allow_ask("Enter your Bootic password:", "bloggs", echo: false)
 
     expect(session).to receive(:login).with("joe", "bloggs", "admin")
@@ -32,6 +34,9 @@ describe BooticCli::CLI do
   end
 
   def assert_setup(env = 'production', &block)
+    ENV['nologin'] = '1' # otherwise we'de be testing the two things
+    allow_ask("Looks like you're already set up. Do you want to re-enter your app's credentials? [n]", "y")
+
     auth_host = nil
     api_root = nil
 
@@ -42,14 +47,16 @@ describe BooticCli::CLI do
       allow_ask("Enter API root (https://api.bootic.net/v1):", api_root)
     end
 
+    allow_ask("Have you created a Bootic app yet? [n]", "y")
     allow_ask("Enter your application's client_id:", "abc")
     allow_ask("Enter your application's client_secret:", "xyz")
 
+    expect(session).to receive(:logout!)
     expect(session).to receive(:setup).with("abc", "xyz", auth_host: auth_host, api_root: api_root)
 
     if block_given?
       content = capture(:stdout) { yield }
-      expect(content).to match /Credentials stored for #{env} environment. client_id: abc/
+      expect(content).to match /Credentials stored/
     end
   end
 
@@ -60,11 +67,14 @@ describe BooticCli::CLI do
 
   describe "#setup" do
     it "calls Session#setup(client_id, client_secret)" do
-      assert_setup{ described_class.start(%w(setup)) }
+      assert_setup { described_class.start(%w(setup)) }
     end
 
     it "sets up with custom env" do
-      assert_setup('staging') { described_class.start(%w(setup -e staging)) }
+      assert_setup('staging') {
+        ENV['ENV'] = 'staging'
+        described_class.start(%w(setup))
+      }
     end
   end
 
