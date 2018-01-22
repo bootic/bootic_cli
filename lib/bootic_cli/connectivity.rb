@@ -13,6 +13,10 @@ module BooticCli
       )
     end
 
+    def current_env
+      ENV['ENV'] || DEFAULT_ENV
+    end
+
     def root
       @root ||= session.client.root
     end

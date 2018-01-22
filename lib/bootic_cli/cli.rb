@@ -4,11 +4,13 @@ require 'bootic_cli/connectivity'
 require 'bootic_cli/formatters'
 
 module BooticCli
+
+  DEFAULT_ENV = 'production'.freeze
+
   class CLI < Thor
     include Thor::Actions
     include BooticCli::Connectivity
 
-    DEFAULT_ENV = 'production'.freeze
     CUSTOM_COMMANDS_DIR = ENV.fetch("BTC_CUSTOM_COMMANDS_PATH") { File.join(ENV["HOME"], "btc") }
 
     # override Thor's help method to print banner and check for keys

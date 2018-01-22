@@ -30,12 +30,13 @@ describe BooticCli::CLI do
     expect(session).to receive(:login).with("joe", "bloggs", "admin")
 
     content = capture(:stdout) { described_class.start(%w(login)) }
-    expect(content).to match /Logged in as joe \(admin\)/
+    expect(content).to match /You're now logged in as joe \(admin\)/
   end
 
   def assert_setup(env = 'production', &block)
+    ENV['ENV'] = env
     ENV['nologin'] = '1' # otherwise we'de be testing the two things
-    allow_ask("Looks like you're already set up. Do you want to re-enter your app's credentials? [n]", "y")
+    allow(session).to receive(:setup?).and_return(false)
 
     auth_host = nil
     api_root = nil
@@ -51,7 +52,7 @@ describe BooticCli::CLI do
     allow_ask("Enter your application's client_id:", "abc")
     allow_ask("Enter your application's client_secret:", "xyz")
 
-    expect(session).to receive(:logout!)
+    # allow(session).to receive(:logout!)
     expect(session).to receive(:setup).with("abc", "xyz", auth_host: auth_host, api_root: api_root)
 
     if block_given?
@@ -72,7 +73,6 @@ describe BooticCli::CLI do
 
     it "sets up with custom env" do
       assert_setup('staging') {
-        ENV['ENV'] = 'staging'
         described_class.start(%w(setup))
       }
     end
@@ -101,7 +101,7 @@ describe BooticCli::CLI do
       expect(session).to receive(:logout!)
       content = capture(:stdout) { described_class.start(%w(logout)) }
 
-      expect(content).to match /Logged out/
+      expect(content).to match /Done. You are now logged out/
     end
   end
 
@@ -110,7 +110,7 @@ describe BooticCli::CLI do
       expect(session).to receive(:erase!)
       content = capture(:stdout) { described_class.start(%w(erase)) }
 
-      expect(content).to match /all credentials erased from this computer/
+      expect(content).to match /Ok mister. All credentials have been erased/
     end
   end
 
