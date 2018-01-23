@@ -1,4 +1,4 @@
 #!/usr/bin/env ruby
 
-require "bootic_cli"
+require 'bootic_cli'
 BooticCli::CLI.start
