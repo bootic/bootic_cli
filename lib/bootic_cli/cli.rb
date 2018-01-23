@@ -32,7 +32,7 @@ module BooticCli
       if session.setup?
         input = ask "Looks like you're already set up. Do you want to re-enter your app's credentials? [n]", :magenta
         if input != 'y'
-          say 'Thought so. Bye!'
+          say 'Thought so. You can run `bootic help` for a list of supported commands.'
           exit(1)
         end
       else
@@ -85,24 +85,24 @@ module BooticCli
       if session.logged_in?
         input = ask "Looks like you're already logged in. Do you want to redo this step? [n]", :magenta
         if input != 'y'
-          say 'Thought so. Bye!'
+          say "That's what I thought! Try running `bootic help`."
           exit(1)
         end
       end
 
-      username  = ask("Enter your Bootic email:", :bold)
-      pwd       = ask("Enter your Bootic password:", :bold, echo: false)
+      email = ask("Enter your Bootic email:", :bold)
+      pass  = ask("Enter your Bootic password:", :bold, echo: false)
 
-      if username.strip == '' or pwd.strip == ''
+      if email.strip == '' or email['@'].nil? or pass.strip == ''
         say "\nPlease make sure to enter valid data.", :red
         exit 1
       end
 
-      say "\n\nAlrighty! Getting access token for #{username}...\n"
+      say "\n\nAlrighty! Getting access token for #{email}...\n"
 
       begin
-        session.login(username, pwd, scope)
-        say "Great success! You're now logged in as #{username} (#{scope})", :green
+        session.login(email, pass, scope)
+        say "Great success! You're now logged in as #{email} (#{scope})", :green
         say "For a list of available commands, run `bootic help`."
       rescue StandardError => e
         say e.message, :red
