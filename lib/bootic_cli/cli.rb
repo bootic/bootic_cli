@@ -9,7 +9,7 @@ module BooticCli
     include Thor::Actions
     include BooticCli::Connectivity
 
-    CUSTOM_COMMANDS_DIR = ENV.fetch('BTC_CUSTOM_COMMANDS_PATH') { File.join(ENV['HOME'], '.bootic') }
+    CUSTOM_COMMANDS_DIR = ENV.fetch('BTC_CUSTOM_COMMANDS_PATH') { File.join(ENV['HOME'], 'bootic') }
 
     # override Thor's help method to print banner and check for keys
     def help

@@ -6,7 +6,7 @@ module BooticCli
   class Store
     VERSION = 1
     DEFAULT_NAMESPACE = 'production'.freeze
-    DIRNAME = '.btc'.freeze
+    DIRNAME   = '.bootic'.freeze
     FILE_NAME = 'store.pstore'.freeze
 
     def initialize(base_dir: ENV['HOME'], dir: DIRNAME, namespace: DEFAULT_NAMESPACE)

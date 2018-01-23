@@ -1,1 +1,1 @@
-require "bootic_cli/cli"
+require 'bootic_cli/cli'
