@@ -123,7 +123,7 @@ module BooticCli
       end
     end
 
-    desc "erase", "clear all credentials from this computer"
+    desc 'erase', 'Clear all credentials from this computer'
     def erase
       if session.setup?
         session.erase!
@@ -208,7 +208,7 @@ module BooticCli
       end
     end
 
-    require "bootic_cli/command"
+    require 'bootic_cli/command'
 
     Dir[File.join(File.dirname(__FILE__), 'commands', '*.rb')].each do |f|
       load_file f
