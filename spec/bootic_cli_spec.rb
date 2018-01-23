@@ -24,13 +24,13 @@ describe BooticCli::CLI do
   def assert_login
     allow_ask("Looks like you're already logged in. Do you want to redo this step? [n]", "y")
 
-    allow_ask("Enter your Bootic email:", "joe")
+    allow_ask("Enter your Bootic email:", "joe@gmail.com")
     allow_ask("Enter your Bootic password:", "bloggs", echo: false)
 
-    expect(session).to receive(:login).with("joe", "bloggs", "admin")
+    expect(session).to receive(:login).with("joe@gmail.com", "bloggs", "admin")
 
     content = capture(:stdout) { described_class.start(%w(login)) }
-    expect(content).to match /You're now logged in as joe \(admin\)/
+    expect(content).to match /You're now logged in as joe@gmail.com \(admin\)/
   end
 
   def assert_setup(env = 'production', &block)
