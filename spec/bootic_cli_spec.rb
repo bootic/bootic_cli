@@ -1,6 +1,6 @@
 require 'spec_helper'
-require "bootic_cli/cli"
-require "bootic_cli/file_runner"
+require 'bootic_cli/cli'
+require 'bootic_cli/file_runner'
 
 describe BooticCli::CLI do
   let(:session) { instance_double(BooticCli::Session, needs_upgrade?: false, setup?: true, logged_in?: true) }
@@ -90,7 +90,6 @@ describe BooticCli::CLI do
     context "already setup" do
       it "calls Session#setup(client_id, client_secret)" do
         allow(session).to receive(:setup?).and_return true
-
         assert_login
       end
     end
@@ -114,26 +113,25 @@ describe BooticCli::CLI do
     end
   end
 
-  describe "#info" do
+  describe "#check" do
     context "not logged in" do
       it "asks user to log in first" do
-        allow(session).to receive(:logged_in?).and_return false
-        content = capture(:stdout) { described_class.start(%w(info)) }
-
-        expect(content).to match /No access token. Run btc login/
+        allow(session).to receive(:setup?).and_return(true)
+        allow(session).to receive(:logged_in?).and_return(false)
+        content = capture(:stdout) { described_class.start(%w(check)) }
+        expect(content).to match /No access token found! Please run `bootic login`/
       end
     end
 
     context "logged in" do
       it "prints session info" do
-        content = capture(:stdout) { described_class.start(%w(info)) }
+        allow(session).to receive(:setup?).and_return true
+        allow(session).to receive(:logged_in?).and_return true
+        content = capture(:stdout) { described_class.start(%w(check)) }
 
-        expect(content).to match /username             joe/
-        expect(content).to match /email                joe@bloggs.com/
-        expect(content).to match /scopes               admin,public/
-        expect(content).to match /shop                 acme.bootic.net \(acme\)/
-        expect(content).to match /custom commands dir  #{ENV["HOME"]}\/btc/
-        expect(content).to match /OK/
+        expect(content).to match /Email   joe@bloggs.com/
+        expect(content).to match /Scopes  admin,public/
+        expect(content).to match /Shop    acme.bootic.net \(acme\)/
       end
     end
   end
@@ -145,4 +143,5 @@ describe BooticCli::CLI do
       described_class.start(%w(runner ./foo.rb))
     end
   end
+
 end

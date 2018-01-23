@@ -79,7 +79,7 @@ describe BooticCli::Themes::ThemeSelector do
       allow(root).to receive(:all_shops).with(subdomains: 'foo').and_return []
       expect{
         subject.pair("foo", '.')
-      }.to raise_error
+      }.to raise_error RuntimeError
     end
   end
 

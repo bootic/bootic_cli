@@ -5,8 +5,6 @@ require 'bootic_cli/formatters'
 
 module BooticCli
 
-  DEFAULT_ENV = 'production'.freeze
-
   class CLI < Thor
     include Thor::Actions
     include BooticCli::Connectivity
@@ -17,7 +15,7 @@ module BooticCli
     def help
       say "Bootic CLI v#{BooticCli::VERSION}\n\n", :bold
       super
-      check_client_keys!
+      check_client_keys
     end
 
     map %w[--version -v] => :__print_version
@@ -135,18 +133,16 @@ module BooticCli
       end
     end
 
-    desc 'info', 'Test API connectivity'
-    def info
+    desc 'check', 'Test API connectivity'
+    def check
       logged_in_action do
-        print_table([
-          ['username', root.user_name],
-          ['email', root.email],
-          ['scopes', root.scopes],
-          ['shop', "#{shop.url} (#{shop.subdomain})"],
-          ['custom commands dir', CUSTOM_COMMANDS_DIR]
-        ])
+        say "Yup, API connection is working!\n\n", :green
 
-        say 'Yup, API connection is working!', :green
+        print_table([
+          [bold('Email'), root.email],
+          [bold('Shop'), "#{shop.url} (#{shop.subdomain})"],
+          [bold('Scopes'), root.scopes]
+        ])
       end
     end
 

@@ -65,7 +65,7 @@ module BooticCli
       def watch
         within_theme do
           _, remote_theme = theme_selector.select_theme_pair(default_subdomain, current_dir, options['public'])
-          workflows.watch(dir, remote_theme)
+          workflows.watch(current_dir, remote_theme)
         end
       end
 
@@ -91,7 +91,7 @@ module BooticCli
       def pair
         within_theme do
           local_theme = theme_selector.pair(options['shop'], current_dir)
-          say "Directory #{local_theme.path} paired with shop #{options['shop']}", :green
+          prompt.say "Directory #{local_theme.path} paired with shop #{options['shop']}", :green
         end
       end
 
@@ -100,7 +100,7 @@ module BooticCli
       def within_theme(&block)
         dir = File.expand_path(current_dir)
         unless File.exist?(File.join(dir, 'layout.html'))
-          say "This directory doesn't look like a Bootic theme! (#{dir})", :magenta
+          prompt.say "This directory doesn't look like a Bootic theme! (#{dir})", :magenta
           abort
         end
 

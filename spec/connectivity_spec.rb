@@ -26,12 +26,13 @@ describe BooticCli::Connectivity do
     context "not setup" do
       before do
         allow(session).to receive(:setup?).and_return false
+        # allow(session).to receive(:logged_in?).and_return false
       end
 
       it "returns nil and puts notice" do
         result = "foo"
         content = capture(:stdout) { result = subject.start(%w(number)) }
-        expect(content).to match /No app credentials. Run btc setup/
+        expect(content).to match /CLI not configured yet! Please run `bootic setup`/
         expect(result).to be nil
       end
     end
@@ -45,7 +46,7 @@ describe BooticCli::Connectivity do
       it "returns nil and puts notice" do
         result = "foo"
         content = capture(:stdout) { result = subject.start(%w(number)) }
-        expect(content).to match /No access token. Run btc login/
+        expect(content).to match /No access token found! Please run `bootic login`/
         expect(result).to be nil
       end
     end

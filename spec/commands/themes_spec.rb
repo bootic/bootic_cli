@@ -15,18 +15,26 @@ describe BooticCli::Commands::Themes do
     allow(BooticCli::Themes::ThemeSelector).to receive(:new).and_return selector
     allow(BooticCli::Session).to receive(:new).and_return session
     allow(BooticCli::Themes::Workflows).to receive(:new).and_return workflows
+
+    # assume all commands are run within a valid theme
+    dir = File.expand_path('.')
+    allow(File).to receive(:exist?).with(dir + '/layout.html').and_return(true)
+  end
+
+  def silence_messages
+    allow(BooticCli::Commands::Themes::Prompt).to receive(:new).and_return(double('Prompt', say: ''))
   end
 
   describe '#clone' do
     it "invokes pull workflow, delegates to ThemeSelector correctly" do
-      it_setsup_dev_theme
+      it_sets_up_dev_theme
       expect(workflows).to receive(:pull).with(local_theme, remote_theme, destroy: true)
-      described_class.start(%w(clone foo bar))
+      described_class.start(%w(clone bar))
     end
 
     it "uses production theme if -p option present" do
-      it_setsup_production_theme
-      described_class.start(%w(clone -p foo bar))
+      it_sets_up_production_theme
+      described_class.start(%w(clone -p bar))
     end
   end
 
@@ -103,7 +111,7 @@ describe BooticCli::Commands::Themes do
       shell = double('Thor Shell')
       prompt = described_class.new(shell)
 
-      expect(shell).to receive(:ask).with("\nfoo? [n]").and_return ''
+      expect(shell).to receive(:ask).with("foo? [n]").and_return ''
       expect(prompt.yes_or_no?("foo?", false)).to be false
     end
   end
@@ -127,27 +135,23 @@ describe BooticCli::Commands::Themes do
     let(:theme) { double('LocalTheme', path: './foo') }
 
     it "delgates to ThemeSelector" do
+      silence_messages
       expect(selector).to receive(:pair).with('foo', '.').and_return theme
 
-      described_class.start(%w(pair foo))
+      described_class.start(%w(pair --shop=foo))
     end
 
-    it "accepts optional dir" do
-      expect(selector).to receive(:pair).with('foo', 'bar').and_return theme
-
-      described_class.start(%w(pair foo bar))
-    end
   end
 
-  def it_setsup_dev_theme
+  def it_sets_up_dev_theme
     expect(selector).to receive(:setup_theme_pair) do |from, to, production|
-      expect(from).to eq 'foo'
+      expect(from).to eq nil # 'foo'
       expect(to).to eq 'bar'
       expect(production).to be false
     end.and_return [local_theme, remote_theme]
   end
 
-  def it_setsup_production_theme
+  def it_sets_up_production_theme
     expect(selector).to receive(:setup_theme_pair) do |from, to, production|
       expect(production).to be true
     end.and_return [local_theme, remote_theme]
