@@ -1,6 +1,6 @@
 require 'spec_helper'
-require "bootic_cli/cli"
-require "bootic_cli/file_runner"
+require 'bootic_cli/cli'
+require 'bootic_cli/file_runner'
 
 describe BooticCli::CLI do
   let(:session) { instance_double(BooticCli::Session, needs_upgrade?: false, setup?: true, logged_in?: true) }
@@ -18,20 +18,26 @@ describe BooticCli::CLI do
   let(:client) { double(:client, root: root) }
 
   def allow_ask(question, response, opts = {})
-    allow(Thor::LineEditor).to receive(:readline).with("#{question} ", opts).and_return response
+    expect(Thor::LineEditor).to receive(:readline).with("#{question} ", opts).and_return response
   end
 
   def assert_login
-    allow_ask("Enter your Bootic email", "joe")
+    allow_ask("Looks like you're already logged in. Do you want to redo this step? [n]", "y")
+
+    allow_ask("Enter your Bootic email:", "joe")
     allow_ask("Enter your Bootic password:", "bloggs", echo: false)
 
     expect(session).to receive(:login).with("joe", "bloggs", "admin")
 
     content = capture(:stdout) { described_class.start(%w(login)) }
-    expect(content).to match /Logged in as joe \(admin\)/
+    expect(content).to match /You're now logged in as joe \(admin\)/
   end
 
   def assert_setup(env = 'production', &block)
+    ENV['ENV'] = env
+    ENV['nologin'] = '1' # otherwise we'de be testing the two things
+    allow(session).to receive(:setup?).and_return(false)
+
     auth_host = nil
     api_root = nil
 
@@ -42,14 +48,16 @@ describe BooticCli::CLI do
       allow_ask("Enter API root (https://api.bootic.net/v1):", api_root)
     end
 
+    allow_ask("Have you created a Bootic app yet? [n]", "y")
     allow_ask("Enter your application's client_id:", "abc")
     allow_ask("Enter your application's client_secret:", "xyz")
 
+    # allow(session).to receive(:logout!)
     expect(session).to receive(:setup).with("abc", "xyz", auth_host: auth_host, api_root: api_root)
 
     if block_given?
       content = capture(:stdout) { yield }
-      expect(content).to match /Credentials stored for #{env} environment. client_id: abc/
+      expect(content).to match /Credentials stored/
     end
   end
 
@@ -60,11 +68,13 @@ describe BooticCli::CLI do
 
   describe "#setup" do
     it "calls Session#setup(client_id, client_secret)" do
-      assert_setup{ described_class.start(%w(setup)) }
+      assert_setup { described_class.start(%w(setup)) }
     end
 
     it "sets up with custom env" do
-      assert_setup('staging') { described_class.start(%w(setup -e staging)) }
+      assert_setup('staging') {
+        described_class.start(%w(setup))
+      }
     end
   end
 
@@ -80,7 +90,6 @@ describe BooticCli::CLI do
     context "already setup" do
       it "calls Session#setup(client_id, client_secret)" do
         allow(session).to receive(:setup?).and_return true
-
         assert_login
       end
     end
@@ -91,7 +100,7 @@ describe BooticCli::CLI do
       expect(session).to receive(:logout!)
       content = capture(:stdout) { described_class.start(%w(logout)) }
 
-      expect(content).to match /Logged out/
+      expect(content).to match /Done. You are now logged out/
     end
   end
 
@@ -100,30 +109,29 @@ describe BooticCli::CLI do
       expect(session).to receive(:erase!)
       content = capture(:stdout) { described_class.start(%w(erase)) }
 
-      expect(content).to match /all credentials erased from this computer/
+      expect(content).to match /Ok mister. All credentials have been erased/
     end
   end
 
-  describe "#info" do
+  describe "#check" do
     context "not logged in" do
       it "asks user to log in first" do
-        allow(session).to receive(:logged_in?).and_return false
-        content = capture(:stdout) { described_class.start(%w(info)) }
-
-        expect(content).to match /No access token. Run btc login/
+        allow(session).to receive(:setup?).and_return(true)
+        allow(session).to receive(:logged_in?).and_return(false)
+        content = capture(:stdout) { described_class.start(%w(check)) }
+        expect(content).to match /No access token found! Please run `bootic login`/
       end
     end
 
     context "logged in" do
       it "prints session info" do
-        content = capture(:stdout) { described_class.start(%w(info)) }
+        allow(session).to receive(:setup?).and_return true
+        allow(session).to receive(:logged_in?).and_return true
+        content = capture(:stdout) { described_class.start(%w(check)) }
 
-        expect(content).to match /username             joe/
-        expect(content).to match /email                joe@bloggs.com/
-        expect(content).to match /scopes               admin,public/
-        expect(content).to match /shop                 acme.bootic.net \(acme\)/
-        expect(content).to match /custom commands dir  #{ENV["HOME"]}\/btc/
-        expect(content).to match /OK/
+        expect(content).to match /Email   joe@bloggs.com/
+        expect(content).to match /Scopes  admin,public/
+        expect(content).to match /Shop    acme.bootic.net \(acme\)/
       end
     end
   end
@@ -135,4 +143,5 @@ describe BooticCli::CLI do
       described_class.start(%w(runner ./foo.rb))
     end
   end
+
 end

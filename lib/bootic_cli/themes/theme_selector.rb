@@ -11,30 +11,30 @@ module BooticCli
 
       def setup_theme_pair(subdomain, dir = nil, production = false)
         shop = find_remote_shop(subdomain)
-        raise "no shop with subdomain #{subdomain}" unless shop
+        raise "No shop with subdomain #{subdomain}" unless shop
 
         path = dir || shop.subdomain
         local_theme = select_local_theme(path, shop.subdomain)
         remote_theme = select_remote_theme(shop, production)
 
         prompt.say "Cloning theme files into #{local_theme.path}"
-        prompt.say "Preview remote theme at #{remote_theme.path}", :yellow
+        prompt.say "Preview this theme at #{remote_theme.path}", :magenta
         [local_theme, remote_theme]
       end
 
       def select_theme_pair(subdomain, dir, production = false)
         local_theme = select_local_theme(dir)
         shop = find_remote_shop(local_theme.subdomain)
-        raise "no shop with subdomain #{local_theme.subdomain}" unless shop
+        raise "No shop with subdomain #{local_theme.subdomain}" unless shop
         remote_theme = select_remote_theme(shop, production)
 
-        prompt.say "Preview remote theme at #{remote_theme.path}", :yellow
+        prompt.say "Preview this theme at #{remote_theme.path}", :magenta
         [local_theme, remote_theme]
       end
 
       def pair(subdomain, dir)
         shop = find_remote_shop(subdomain)
-        raise "no shop with subdomain #{subdomain}" unless shop
+        raise "No shop with subdomain #{subdomain}" unless shop
         select_local_theme(dir, subdomain)
       end
 
@@ -63,11 +63,11 @@ module BooticCli
 
       def resolve_remote_theme(shop, production = false)
         if production
-          prompt.say "Working on production theme", :red
+          prompt.say "Working on public theme of shop #{shop.subdomain}", :red
           return shop.theme
         end
 
-        prompt.say "Working on development theme", :green
+        prompt.say "Working on development theme of shop #{shop.subdomain}", :green
         themes = shop.themes
         if themes.has?(:dev_theme)
           themes.dev_theme

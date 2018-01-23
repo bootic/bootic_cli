@@ -5,8 +5,12 @@ require 'bootic_cli/themes/workflows'
 describe BooticCli::Themes::Workflows do
   let(:local_theme) { BooticCli::Themes::MemTheme.new }
   let(:remote_theme) { BooticCli::Themes::MemTheme.new }
-  let(:prompt) { double('Prompt', yes_or_no?: true, notice: '', say: '', highlight: '') }
+  let(:prompt) { double('Prompt', yes_or_no?: true, notice: '', say: '') }
   subject { described_class.new(prompt: prompt) }
+
+  before do
+    allow(prompt).to receive(:highlight) { |arg| arg }
+  end
 
   describe '#pull' do
     it "copies new remote files into local theme" do
@@ -268,7 +272,7 @@ describe BooticCli::Themes::Workflows do
       local_theme.add_asset('icon.gif', StringIO.new('icon'))
 
       allow(remote_theme).to receive(:href).and_return 'https://acme.bootic.net'
-      expect(prompt).to receive(:highlight).with("published to https://acme.bootic.net", :yellow)
+      # expect(prompt).to receive(:set_color).with("Published to https://acme.bootic.net")
       expect(prompt).to receive(:yes_or_no?).and_return false
       expect(remote_theme).to receive(:publish).with(true).and_return remote_theme
       subject.publish(local_theme, remote_theme)

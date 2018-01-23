@@ -1,32 +1,78 @@
 require 'thor'
+require 'bootic_cli/version'
 require 'bootic_cli/connectivity'
 require 'bootic_cli/formatters'
 
 module BooticCli
+
   class CLI < Thor
     include Thor::Actions
     include BooticCli::Connectivity
 
-    DEFAULT_ENV = 'production'.freeze
     CUSTOM_COMMANDS_DIR = ENV.fetch("BTC_CUSTOM_COMMANDS_PATH") { File.join(ENV["HOME"], "btc") }
 
-    class_option :environment, type: :string, default: DEFAULT_ENV, aliases: :e, banner: '<production>'
+    # override Thor's help method to print banner and check for keys
+    def help
+      say "Bootic CLI v#{BooticCli::VERSION}\n\n", :bold
+      super
+      check_client_keys
+    end
 
-    desc 'setup', 'Setup OAuth2 application credentials'
+    map %w[--version -v] => :__print_version
+    desc "--version, -v", "Prints package version"
+    def __print_version
+      puts BooticCli::VERSION
+    end
+
+    desc 'setup', 'Setup Bootic application credentials'
     def setup
-      say "Please create an OAuth2 app and get its credentials at https://auth.bootic.net/dev/apps or the relevant auth app for your environment", :yellow
-      if options[:environment] != DEFAULT_ENV
-        auth_host     = ask("Enter auth endpoint host (#{BooticClient::AUTH_HOST}):").chomp
-        api_root      = ask("Enter API root (#{BooticClient::API_ROOT}):").chomp
+      apps_host   = "auth.bootic.net"
+      dev_app_url = "#{apps_host}/dev/cli"
+
+      if session.setup?
+        input = ask "Looks like you're already set up. Do you want to re-enter your app's credentials? [n]", :magenta
+        if input != 'y'
+          say 'Thought so. Bye!'
+          exit(1)
+        end
+      else
+        say "This CLI uses the #{bold('Bootic API')} in order to interact with your shop's data."
+        say "This means you need to create a Bootic app at #{bold(dev_app_url)} to access the API and use the CLI.\n"
+      end
+
+      input = ask "Have you created a Bootic app yet? [n]"
+      if input == 'y'
+        say "Great. Remember you can get your app's credentials at #{bold(dev_app_url)}."
+      else
+        say "Please visit https://#{bold(dev_app_url)} and hit the 'Create' button."
+        sleep 2
+        # Launchy.open(apps_url)
+        say ""
+      end
+
+      if current_env != DEFAULT_ENV
+        auth_host = ask("Enter auth endpoint host (#{BooticClient::AUTH_HOST}):", :bold).chomp
+        api_root  = ask("Enter API root (#{BooticClient::API_ROOT}):", :bold).chomp
         auth_host = nil if auth_host == ""
         api_root  = nil if api_root == ""
       end
-      client_id     = ask("Enter your application's client_id:")
-      client_secret = ask("Enter your application's client_secret:")
+
+      client_id     = ask("Enter your application's client_id:", :bold)
+      client_secret = ask("Enter your application's client_secret:", :bold)
 
       session.setup(client_id, client_secret, auth_host: auth_host, api_root: api_root)
 
-      say "Credentials stored for #{options[:environment]} environment. client_id: #{client_id}"
+      if current_env == DEFAULT_ENV
+        say "Credentials stored!", :magenta
+      else
+        say "Credentials stored for #{current_env} env.", :magenta
+      end
+
+      return if ENV['nologin']
+
+      say ""
+      sleep 3
+      login
     end
 
     desc 'login', 'Login to your Bootic account'
@@ -36,44 +82,67 @@ module BooticCli
         invoke :setup, []
       end
 
-      username  = ask("Enter your Bootic email")
-      pwd       = ask("Enter your Bootic password:", echo: false)
+      if session.logged_in?
+        input = ask "Looks like you're already logged in. Do you want to redo this step? [n]", :magenta
+        if input != 'y'
+          say 'Thought so. Bye!'
+          exit(1)
+        end
+      end
 
-      say "Loging in as #{username}. Getting access token..."
+      username  = ask("Enter your Bootic email:", :bold)
+      pwd       = ask("Enter your Bootic password:", :bold, echo: false)
+
+      if username.strip == '' or pwd.strip == ''
+        say "\nPlease make sure to enter valid data.", :red
+        exit 1
+      end
+
+      say "\n\nAlrighty! Getting access token for #{username}...\n"
 
       begin
-        session.login username, pwd, scope
-        say "Logged in as #{username} (#{scope})"
-        say "try: btc help"
+        session.login(username, pwd, scope)
+        say "Great success! You're now logged in as #{username} (#{scope})", :green
+        say "For a list of available commands, run `bootic help`."
       rescue StandardError => e
-        say e.message
+        say e.message, :red
+        if e.message['No application with client ID']
+          sleep 2
+          say "\nTry running `bootic setup` again. Or perhaps you missed the ENV variable?", :magenta
+        end
       end
     end
 
     desc 'logout', 'Log out (delete access token)'
     def logout
-      session.logout!
-      say_status 'Logged out', 'You are now logged out', :red
+      if session.logged_in?
+        session.logout!
+        say 'Done. You are now logged out.', :magenta
+      else
+        say "You're not logged in. Did you mean `bootic login` perhaps?", :red
+      end
     end
 
     desc "erase", "clear all credentials from this computer"
     def erase
-      session.erase!
-      say "all credentials erased from this computer"
+      if session.setup?
+        session.erase!
+        say "Ok mister. All credentials have been erased.", :magenta
+      else
+        say "Couldn't find any stored credentials.", :red
+      end
     end
 
-    desc 'info', 'Test API connectivity'
-    def info
+    desc 'check', 'Test API connectivity'
+    def check
       logged_in_action do
-        print_table([
-          ['username', root.user_name],
-          ['email', root.email],
-          ['scopes', root.scopes],
-          ['shop', "#{shop.url} (#{shop.subdomain})"],
-          ['custom commands dir', CUSTOM_COMMANDS_DIR]
-        ])
+        say "Yup, API connection is working!\n\n", :green
 
-        say_status 'OK', 'API connection is working', :green
+        print_table([
+          [bold('Email'), root.email],
+          [bold('Shop'), "#{shop.url} (#{shop.subdomain})"],
+          [bold('Scopes'), root.scopes]
+        ])
       end
     end
 
@@ -118,6 +187,10 @@ module BooticCli
     end
 
     private
+
+    def bold(str)
+      set_color(str, :bold)
+    end
 
     def self.underscore(str)
       str.gsub(/::/, '/').
