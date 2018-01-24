@@ -42,6 +42,7 @@ module BooticCli
       def push
         within_theme do
           local_theme, remote_theme = theme_selector.select_theme_pair(default_subdomain, current_dir, options['public'])
+          warn_user if remote_theme.public? and options['public'].nil?
           workflows.push(local_theme, remote_theme, destroy: options['delete'] || true)
         end
       end
@@ -51,6 +52,7 @@ module BooticCli
       def sync
         within_theme do
           local_theme, remote_theme = theme_selector.select_theme_pair(default_subdomain, current_dir, options['public'])
+          warn_user if remote_theme.public? and options['public'].nil?
           workflows.sync(local_theme, remote_theme)
         end
       end
@@ -69,6 +71,7 @@ module BooticCli
       def watch
         within_theme do
           _, remote_theme = theme_selector.select_theme_pair(default_subdomain, current_dir, options['public'])
+          warn_user if remote_theme.public? and options['public'].nil?
           workflows.watch(current_dir, remote_theme)
         end
       end
@@ -100,6 +103,13 @@ module BooticCli
       end
 
       private
+
+      def warn_user
+        unless prompt.yes_or_no?("You're pushing changes directly to your public theme. Are you sure?", true)
+          prompt.say("Ok, sure. You can skip the above warning prompt by passing a `--public` flag.")
+          abort
+        end
+      end
 
       def within_theme(&block)
         unless is_within_theme?

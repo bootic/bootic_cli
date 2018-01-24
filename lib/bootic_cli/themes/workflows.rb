@@ -59,8 +59,6 @@ module BooticCli
       end
 
       def push(local_theme, remote_theme, delete = true)
-        warn_user if remote_theme.public?
-
         diff = ThemeDiff.new(source: local_theme, target: remote_theme)
         check_dupes!(local_theme.assets)
 
@@ -85,8 +83,6 @@ module BooticCli
       end
 
       def sync(local_theme, remote_theme)
-        warn_user if remote_theme.public?
-
         diff = ThemeDiff.new(source: local_theme, target: remote_theme)
         check_dupes!(local_theme.assets)
         notice 'Syncing local copy with remote...'
@@ -152,8 +148,6 @@ module BooticCli
       end
 
       def watch(dir, remote_theme, watcher: Listen)
-        warn_user if remote_theme.public?
-
         listener = watcher.to(dir) do |modified, added, removed|
           if modified.any?
             modified.each do |path|
@@ -204,13 +198,6 @@ module BooticCli
 
       private
       attr_reader :prompt
-
-      def warn_user
-        unless prompt.yes_or_no?("You're pushing changes directly to your public theme. Are you sure?", true)
-          prompt.say("Ok, sure. You can skip the above warning prompt by passing a `--public` flag.")
-          abort
-        end
-      end
 
       def check_dupes!(list)
         names = list.map { |f| f.file_name.downcase }
