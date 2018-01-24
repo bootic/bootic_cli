@@ -71,7 +71,7 @@ describe BooticCli::Commands::Themes do
   describe '#pull' do
     it "invokes pull workflow, delegates to ThemeSelector correctly" do
       it_selects_dev_theme
-      expect(workflows).to receive(:pull).with(local_theme, remote_theme, destroy: true)
+      expect(workflows).to receive(:pull).with(local_theme, remote_theme, delete: true)
       described_class.start(%w(pull))
     end
 
@@ -83,7 +83,7 @@ describe BooticCli::Commands::Themes do
 
   describe '#push' do
     it "invokes push workflow" do
-      expect(workflows).to receive(:push).with(local_theme, remote_theme, destroy: true)
+      expect(workflows).to receive(:push).with(local_theme, remote_theme, delete: true)
       described_class.start(%w(push))
     end
 
