@@ -116,7 +116,7 @@ module BooticCli
 
       def within_theme(&block)
         unless is_within_theme?
-          prompt.say "This directory doesn't look like a Bootic theme! (#{dir})", :magenta
+          prompt.say "This directory doesn't look like a Bootic theme! (#{current_expanded_dir})", :magenta
           abort
         end
 
@@ -126,12 +126,15 @@ module BooticCli
       end
 
       def is_within_theme?
-        dir = File.expand_path(current_dir)
-        File.exist?(File.join(dir, 'layout.html'))
+        File.exist?(File.join(current_expanded_dir, 'layout.html'))
       end
 
       def current_dir
         '.'
+      end
+
+      def current_expanded_dir
+        File.expand_path(current_dir)
       end
 
       def default_subdomain
