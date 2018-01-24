@@ -24,6 +24,14 @@ module BooticCli
       end
 
       # this is unique to API themes
+      def public?
+        !dev?
+      end
+
+      def dev?
+        theme.can?(:publish_theme)
+      end
+
       def publish(clone = false)
         if theme.can?(:publish_theme)
           @theme = theme.publish_theme

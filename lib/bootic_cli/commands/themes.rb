@@ -13,46 +13,52 @@ module BooticCli
 
       desc 'clone [dir]', 'Clone remote theme into directory [dir]'
       option :shop, banner: '<shop_subdomain>', type: :string
-      option :destroy, banner: '<true|false>', type: :boolean, default: true
-      option :public, banner: '<true|false>', type: :boolean, default: false, aliases: '-p'
+      option :public, banner: '<true|false>', type: :boolean, aliases: '-p', desc: 'Clones public theme, even if dev theme exists'
+      option :dev, banner: '<true|false>', type: :boolean, aliases: '-d', desc: 'Clones development theme, or creates one if missing'
       def clone(dir = nil)
         logged_in_action do
-          local_theme, remote_theme = theme_selector.setup_theme_pair(options['shop'], dir, options['public'])
-          workflows.pull(local_theme, remote_theme, destroy: options['destroy'])
+          if File.exist?(File.expand_path(dir))
+            prompt.say "Directory already exists! (#{File.expand_path(dir)})", :red
+          else
+            local_theme, remote_theme = theme_selector.setup_theme_pair(options['shop'], dir, options['public'], options['dev'])
+            workflows.pull(local_theme, remote_theme)
+          end
         end
       end
 
       desc 'pull', 'Pull remote changes into current theme directory'
-      option :public, banner: '<true|false>', type: :boolean, default: false, aliases: '-p'
-      option :destroy, banner: '<true|false>', type: :boolean, default: true
+      option :public, banner: '<true|false>', type: :boolean, aliases: '-p', desc: 'Pull from public theme, even if dev theme exists'
+      option :delete, banner: '<true|false>', type: :boolean, desc: 'Remove local files that were removed in remote theme (default: true)'
       def pull
         within_theme do
           local_theme, remote_theme = theme_selector.select_theme_pair(default_subdomain, current_dir, options['public'])
-          workflows.pull(local_theme, remote_theme, destroy: options['destroy'])
+          workflows.pull(local_theme, remote_theme, delete: options['delete'] || true)
         end
       end
 
       desc 'push', 'Push all local theme files in current dir to remote shop'
-      option :public, banner: '<true|false>', type: :boolean, default: false, aliases: '-p'
-      option :destroy, banner: '<true|false>', type: :boolean, default: true
+      option :public, banner: '<true|false>', type: :boolean, aliases: '-p', desc: 'Push to public theme, even if dev theme exists'
+      option :delete, banner: '<true|false>', type: :boolean, desc: 'Remove files in remote theme that were removed locally (default: true)'
       def push
         within_theme do
           local_theme, remote_theme = theme_selector.select_theme_pair(default_subdomain, current_dir, options['public'])
-          workflows.push(local_theme, remote_theme, destroy: options['destroy'])
+          warn_user if remote_theme.public? and options['public'].nil?
+          workflows.push(local_theme, remote_theme, delete: options['delete'] || true)
         end
       end
 
-      desc 'sync', 'Sync local theme copy in local dir with remote shop'
-      option :public, banner: '<true|false>', type: :boolean, default: false, aliases: '-p'
+      desc 'sync', 'Sync changes from local theme copy with remote'
+      option :public, banner: '<true|false>', type: :boolean, aliases: '-p', desc: 'Sync to public theme, even if dev theme exists'
       def sync
         within_theme do
           local_theme, remote_theme = theme_selector.select_theme_pair(default_subdomain, current_dir, options['public'])
+          warn_user if remote_theme.public? and options['public'].nil?
           workflows.sync(local_theme, remote_theme)
         end
       end
 
       desc 'compare', 'Show differences between local and remote copies'
-      option :public, banner: '<true|false>', type: :boolean, default: false, aliases: '-p'
+      option :public, banner: '<true|false>', type: :boolean, aliases: '-p', desc: 'Compare against public theme, even if dev theme exists'
       def compare
         within_theme do
           local_theme, remote_theme = theme_selector.select_theme_pair(default_subdomain, current_dir, options['public'])
@@ -60,11 +66,12 @@ module BooticCli
         end
       end
 
-      desc 'watch', 'Watch local theme directory and create/update/delete remote one when any file changes'
-      option :public, banner: '<true|false>', type: :boolean, default: false, aliases: '-p'
+      desc 'watch', 'Watch local theme dir and update remote when any file changes'
+      option :public, banner: '<true|false>', type: :boolean, aliases: '-p', desc: 'Pushes any changes to public theme, even if dev theme exists'
       def watch
         within_theme do
           _, remote_theme = theme_selector.select_theme_pair(default_subdomain, current_dir, options['public'])
+          warn_user if remote_theme.public? and options['public'].nil?
           workflows.watch(current_dir, remote_theme)
         end
       end
@@ -78,7 +85,7 @@ module BooticCli
       end
 
       desc 'open', 'Open theme preview URL in a browser'
-      option :public, banner: '<true|false>', type: :boolean, default: false, aliases: '-p'
+      option :public, banner: '<true|false>', type: :boolean, aliases: '-p', desc: 'Opens public theme URL'
       def open
         within_theme do
           _, remote_theme = theme_selector.select_theme_pair(default_subdomain, current_dir, options['public'])
@@ -97,9 +104,15 @@ module BooticCli
 
       private
 
+      def warn_user
+        unless prompt.yes_or_no?("You're pushing changes directly to your public theme. Are you sure?", true)
+          prompt.say("Ok, sure. You can skip the above warning prompt by passing a `--public` flag.")
+          abort
+        end
+      end
+
       def within_theme(&block)
-        dir = File.expand_path(current_dir)
-        unless File.exist?(File.join(dir, 'layout.html'))
+        unless is_within_theme?
           prompt.say "This directory doesn't look like a Bootic theme! (#{dir})", :magenta
           abort
         end
@@ -107,6 +120,11 @@ module BooticCli
         logged_in_action do
           yield
         end
+      end
+
+      def is_within_theme?
+        dir = File.expand_path(current_dir)
+        File.exist?(File.join(dir, 'layout.html'))
       end
 
       def current_dir
@@ -136,7 +154,14 @@ module BooticCli
 
         def yes_or_no?(question, default_answer)
           default_char = default_answer ? 'y' : 'n'
-          input = shell.ask("#{question} [#{default_char}]").strip
+
+          begin
+            input = shell.ask("#{question} [#{default_char}]").strip
+          rescue Interrupt
+            say "\nCtrl-C received. Bailing out!", :red
+            abort
+          end
+
           return default_answer if input == '' || input.downcase == default_char
           !default_answer
         end

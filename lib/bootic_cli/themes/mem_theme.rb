@@ -11,6 +11,10 @@ module BooticCli
       # Implement generic Theme interface
       attr_reader :templates, :assets
 
+      def public?
+        false # just for tests
+      end
+
       def reload!
         @templates = []
         @assets = []

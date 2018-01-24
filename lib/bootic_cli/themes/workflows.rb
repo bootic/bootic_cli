@@ -31,7 +31,7 @@ module BooticCli
         @prompt = prompt
       end
 
-      def pull(local_theme, remote_theme, destroy: true)
+      def pull(local_theme, remote_theme, delete: true)
         diff = ThemeDiff.new(source: local_theme, target: remote_theme)
         check_dupes!(local_theme.assets)
 
@@ -45,7 +45,7 @@ module BooticCli
           local_theme.add_template t.file_name, t.body
         end
 
-        if destroy
+        if delete
           notice 'Removing local files that were removed on remote...'
           remove_all(diff.missing_in_target, local_theme)
         else
@@ -58,7 +58,7 @@ module BooticCli
         copy_assets(remote_theme, local_theme, download_opts)
       end
 
-      def push(local_theme, remote_theme, destroy: true)
+      def push(local_theme, remote_theme, delete: true)
         diff = ThemeDiff.new(source: local_theme, target: remote_theme)
         check_dupes!(local_theme.assets)
 
@@ -74,7 +74,7 @@ module BooticCli
         copy_assets(diff.missing_in_target, remote_theme, overwrite: true)
         copy_templates(diff.missing_in_target, remote_theme)
 
-        if destroy
+        if delete
           notice 'Removing remote files that were removed locally...'
           remove_all(diff.missing_in_source, remote_theme)
         else
@@ -188,7 +188,7 @@ module BooticCli
         keep_old_theme = prompt.yes_or_no?("Do you want to keep your old public theme as your dev theme?", false)
         # first push local files to dev theme
         prompt.say "Pushing local changes to development theme"
-        push local_theme, remote_theme, destroy: true
+        push(local_theme, remote_theme, delete: true)
         # now publish remote dev theme
         # let it fail if remote_theme doesn't respond to #publish
         prompt.notice "Publishing development theme"

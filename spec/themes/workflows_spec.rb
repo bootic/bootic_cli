@@ -63,8 +63,8 @@ describe BooticCli::Themes::Workflows do
         expect(local_theme.assets.map(&:file_name)).to eq ['icon.gif']
       end
 
-      it "does not remove if destroy: false" do
-        subject.pull(local_theme, remote_theme, destroy: false)
+      it "does not remove if delete: false" do
+        subject.pull(local_theme, remote_theme, delete: false)
 
         expect(local_theme.templates.map(&:file_name)).to eq ['layout.html', 'master.css', 'product.html']
         expect(local_theme.assets.map(&:file_name)).to eq ['icon.gif', 'logo.gif']
