@@ -4,7 +4,7 @@ require 'bootic_cli/themes/missing_items_theme'
 module BooticCli
   module Themes
     class ThemeDiff
-      def initialize(source:, target:, force_update:)
+      def initialize(source:, target:, force_update: false)
         @source, @target = source, target
         @force_update = force_update
       end
