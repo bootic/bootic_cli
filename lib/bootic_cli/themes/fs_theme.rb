@@ -86,9 +86,16 @@ module BooticCli
         setup
         path = File.join(dir, file_name)
 
-        File.open(path, 'w') do |io|
-          io.write body
+        # remove DOS line endings for new templates
+        # or for existing ones that don't have any.
+        if !File.exist?(path) or !has_dos_line_endings?(path)
+          body = body.gsub(/\r\n?/, "\n")
         end
+
+        File.open(path, 'w') do |io|
+          io.write(body)
+        end
+
         @templates = nil
       end
 
@@ -120,6 +127,10 @@ module BooticCli
       private
 
       attr_reader :dir
+
+      def has_dos_line_endings?(path)
+        !!IO.read(path)["\r\n"]
+      end
 
       def paths_for(patterns)
         patterns.reduce([]) {|m, pattern| m + Dir[File.join(dir, pattern)]}
