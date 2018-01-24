@@ -18,6 +18,10 @@ module BooticCli
       def clone(dir = nil)
         logged_in_action do
           local_theme, remote_theme = theme_selector.setup_theme_pair(options['shop'], dir, options['public'], options['dev'])
+          if File.exist?(local_theme.path)
+            prompt.say "Directory already exists! (#{local_theme.path})", :red
+            abort
+          end
 
           workflows.pull(local_theme, remote_theme)
         end
