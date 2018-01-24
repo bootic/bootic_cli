@@ -15,9 +15,10 @@ module BooticCli
       option :shop, banner: '<shop_subdomain>', type: :string
       option :destroy, banner: '<true|false>', type: :boolean, default: true
       option :public, banner: '<true|false>', type: :boolean, default: false, aliases: '-p'
+      option :dev, banner: '<true|false>', type: :boolean, default: false, aliases: '-d'
       def clone(dir = nil)
         logged_in_action do
-          local_theme, remote_theme = theme_selector.setup_theme_pair(options['shop'], dir, options['public'])
+          local_theme, remote_theme = theme_selector.setup_theme_pair(options['shop'], dir, options['public'], options['dev'])
           workflows.pull(local_theme, remote_theme, destroy: options['destroy'])
         end
       end

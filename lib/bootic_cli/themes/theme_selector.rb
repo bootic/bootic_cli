@@ -9,13 +9,26 @@ module BooticCli
         @prompt = prompt
       end
 
-      def setup_theme_pair(subdomain, dir = nil, production = false)
+      def setup_theme_pair(subdomain, dir = nil, production = false, wants_dev = false)
+        raise "Cannot pass both public and dev flags at the same time!" if production && dev
+
         shop = find_remote_shop(subdomain)
         raise "No shop with subdomain #{subdomain}" unless shop
 
         path = dir || shop.subdomain
         local_theme = select_local_theme(path, shop.subdomain)
         remote_theme = select_remote_theme(shop, production)
+
+        # if no `production` flag was passed and no dev theme is present
+        # ask the user whether he/she wants to create one now.
+        if !production and remote_theme.public?
+          raise 'Dev theme not available!' unless shop.themes.can?(:create_dev_theme)
+
+          if wants_dev or prompt.yes_or_no?("Would you like to create (and work on) a development version of your theme? (recommended)", true)
+            prompt.say "Good thinking. Creating a development theme out of your current public one...", :green
+            remote_theme = shop.themes.create_dev_theme
+          end
+        end
 
         prompt.say "Cloning theme files into #{local_theme.path}"
         prompt.say "Preview this theme at #{remote_theme.path}", :magenta
@@ -62,24 +75,15 @@ module BooticCli
       private
 
       def resolve_remote_theme(shop, production = false)
-        if production
-          prompt.say "Working on public theme of shop #{shop.subdomain}", :red
-          return shop.theme
-        end
-
-        prompt.say "Working on development theme of shop #{shop.subdomain}", :green
-        themes = shop.themes
-        if themes.has?(:dev_theme)
-          themes.dev_theme
-        elsif themes.can?(:create_dev_theme)
-          prompt.say "Creating development theme...", :green
-          themes.create_dev_theme
+        if production or !shop.themes.has?(:dev_theme)
+          prompt.say "Working on public theme of shop #{shop.subdomain}", :yellow
+          shop.theme
         else
-          raise "No dev theme available"
+          prompt.say "Working on development theme of shop #{shop.subdomain}", :green
+          shop.themes.dev_theme
         end
       end
 
-      private
       attr_reader :root, :prompt
     end
   end
