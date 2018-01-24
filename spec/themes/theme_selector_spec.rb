@@ -3,7 +3,7 @@ require 'bootic_cli/themes/theme_selector'
 
 describe BooticCli::Themes::ThemeSelector do
   let(:prod_theme) { double('Prod theme', rels: {theme_preview: double('link', href: 'https://acme.bootic.net')}) }
-  let(:dev_theme) { double('Dev theme', rels: {theme_preview: double('link', href: 'https://acme.bootic.net/preview/dev')}) }
+  let(:dev_theme) { double('Dev theme', dev?: true, rels: { theme_preview: double('link', href: 'https://acme.bootic.net/preview/dev')}) }
   let(:themes) { double('Themes', theme: prod_theme, dev_theme: dev_theme) }
   let(:shop) { double('Shop', subdomain: 'foo', themes: themes, theme: prod_theme) }
   let(:root) { double('Root', has?: true, shops: [shop]) }
@@ -11,9 +11,9 @@ describe BooticCli::Themes::ThemeSelector do
   subject { described_class.new(root, prompt: prompt) }
 
   before do
-    allow(root).to receive(:all_shops)
-      .with(subdomains: 'foo').and_return [shop]
+    allow(root).to receive(:all_shops).with(subdomains: 'foo').and_return [shop]
     allow(themes).to receive(:has?).with(:dev_theme).and_return true
+    allow(dev_theme).to receive(:can?).with(:publish_theme).and_return(true)
   end
 
   describe "#setup_theme_pair" do
@@ -46,10 +46,10 @@ describe BooticCli::Themes::ThemeSelector do
       it_is_remote_theme b
     end
 
-    it "creates dev theme if not available yet" do
+    it "does not create dev theme if not present yet" do
       expect(themes).to receive(:has?).with(:dev_theme).and_return false
-      expect(themes).to receive(:can?).with(:create_dev_theme).and_return true
-      expect(themes).to receive(:create_dev_theme).and_return dev_theme
+      expect(themes).not_to receive(:can?).with(:create_dev_theme) #.and_return true
+      expect(themes).not_to receive(:create_dev_theme)
       a, b = subject.select_theme_pair('foo', './spec/fixtures/theme')
 
       it_is_local_theme a

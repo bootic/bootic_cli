@@ -3,7 +3,7 @@ require 'bootic_cli/cli'
 require 'bootic_cli/commands/themes'
 
 describe BooticCli::Commands::Themes do
-  let(:local_theme) { double('local theme') }
+  let(:local_theme) { double('local theme', path: '/some/dir') }
   let(:remote_theme) { double('remote theme') }
   let(:root) { double('root') }
   let(:client) { double('client', root: root) }
@@ -27,12 +27,14 @@ describe BooticCli::Commands::Themes do
 
   describe '#clone' do
     it "invokes pull workflow, delegates to ThemeSelector correctly" do
+      allow(File).to receive(:exist?).with('/some/dir').and_return(false)
       it_sets_up_dev_theme
-      expect(workflows).to receive(:pull).with(local_theme, remote_theme, destroy: true)
+      expect(workflows).to receive(:pull).with(local_theme, remote_theme)
       described_class.start(%w(clone bar))
     end
 
     it "uses production theme if -p option present" do
+      allow(File).to receive(:exist?).with('/some/dir').and_return(false)
       it_sets_up_production_theme
       described_class.start(%w(clone -p bar))
     end
@@ -147,7 +149,7 @@ describe BooticCli::Commands::Themes do
     expect(selector).to receive(:setup_theme_pair) do |from, to, production|
       expect(from).to eq nil # 'foo'
       expect(to).to eq 'bar'
-      expect(production).to be false
+      expect(production).to be nil
     end.and_return [local_theme, remote_theme]
   end
 
@@ -160,7 +162,7 @@ describe BooticCli::Commands::Themes do
   def it_selects_dev_theme
     expect(selector)
       .to receive(:select_theme_pair)
-      .with(nil, '.', false)
+      .with(nil, '.', nil)
       .and_return [local_theme, remote_theme]
   end
 
