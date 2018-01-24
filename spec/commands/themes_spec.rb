@@ -3,7 +3,9 @@ require 'bootic_cli/cli'
 require 'bootic_cli/commands/themes'
 
 describe BooticCli::Commands::Themes do
-  let(:local_theme) { double('local theme', path: '/some/dir') }
+  let(:theme_dir) { File.expand_path('bar') }
+
+  let(:local_theme) { double('local theme', path: theme_dir) }
   let(:remote_theme) { double('remote theme') }
   let(:root) { double('root') }
   let(:client) { double('client', root: root) }
@@ -26,18 +28,36 @@ describe BooticCli::Commands::Themes do
   end
 
   describe '#clone' do
-    it "invokes pull workflow, delegates to ThemeSelector correctly" do
-      allow(File).to receive(:exist?).with('/some/dir').and_return(false)
-      it_sets_up_dev_theme
-      expect(workflows).to receive(:pull).with(local_theme, remote_theme)
-      described_class.start(%w(clone bar))
+    context 'with existing dir' do
+      before do
+        silence_messages
+        allow(File).to receive(:exist?).with(theme_dir).and_return(true)
+      end
+
+      it "stops without invoking workflow" do
+        expect(selector).not_to receive(:setup_theme_pair)
+        expect(workflows).not_to receive(:pull)
+        described_class.start(%w(clone bar))
+      end
     end
 
-    it "uses production theme if -p option present" do
-      allow(File).to receive(:exist?).with('/some/dir').and_return(false)
-      it_sets_up_production_theme
-      described_class.start(%w(clone -p bar))
+    context 'nonexisting dir' do
+      before do
+        allow(File).to receive(:exist?).with(theme_dir).and_return(false)
+      end
+
+      it "invokes pull workflow, delegates to ThemeSelector correctly" do
+        it_sets_up_dev_theme
+        expect(workflows).to receive(:pull).with(local_theme, remote_theme)
+        described_class.start(%w(clone bar))
+      end
+
+      it "uses production theme if -p option present" do
+        it_sets_up_production_theme
+        described_class.start(%w(clone -p bar))
+      end
     end
+
   end
 
   describe '#pull' do
@@ -47,7 +67,7 @@ describe BooticCli::Commands::Themes do
       described_class.start(%w(pull))
     end
 
-    it "uses production theme if -p option present" do
+    it "uses public themeif -p option present" do
       it_selects_production_theme
       described_class.start(%w(pull -p))
     end

@@ -9,19 +9,19 @@ module BooticCli
         @prompt = prompt
       end
 
-      def setup_theme_pair(subdomain, dir = nil, production = false, wants_dev = false)
-        raise "Cannot pass both public and dev flags at the same time!" if production && dev
+      def setup_theme_pair(subdomain, dir = nil, wants_public = false, wants_dev = false)
+        raise "Cannot pass both public and dev flags at the same time!" if wants_public && wants_dev
 
         shop = find_remote_shop(subdomain)
         raise "No shop with subdomain #{subdomain}" unless shop
 
         path = dir || shop.subdomain
         local_theme = select_local_theme(path, shop.subdomain)
-        remote_theme = select_remote_theme(shop, production)
+        remote_theme = select_remote_theme(shop, wants_public)
 
-        # if no `production` flag was passed and no dev theme is present
+        # if no `wants_public` flag was passed and no dev theme is present
         # ask the user whether he/she wants to create one now.
-        if !production and remote_theme.public?
+        if !wants_public and remote_theme.public?
           raise 'Dev theme not available!' unless shop.themes.can?(:create_dev_theme)
 
           if wants_dev or prompt.yes_or_no?("Would you like to create (and work on) a development version of your theme? (recommended)", true)

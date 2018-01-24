@@ -63,8 +63,8 @@ describe BooticCli::Themes::Workflows do
         expect(local_theme.assets.map(&:file_name)).to eq ['icon.gif']
       end
 
-      it "does not remove if destroy: false" do
-        subject.pull(local_theme, remote_theme, destroy: false)
+      it "does not remove if delete: false" do
+        subject.pull(local_theme, remote_theme, false)
 
         expect(local_theme.templates.map(&:file_name)).to eq ['layout.html', 'master.css', 'product.html']
         expect(local_theme.assets.map(&:file_name)).to eq ['icon.gif', 'logo.gif']
@@ -121,6 +121,12 @@ describe BooticCli::Themes::Workflows do
   end
 
   describe '#push' do
+    it 'warns user if remote theme is public' do
+      expect(remote_theme).to receive(:public?).and_return(true)
+      expect(prompt).to receive(:yes_or_no?).with("You're pushing changes directly to your public theme. Are you sure?", true)
+      subject.push(local_theme, remote_theme)
+    end
+
     it "copies new local files into remote theme" do
       local_theme.add_template('layout.html', 'aaa')
       local_theme.add_template('master.css', 'bbb')
@@ -171,6 +177,12 @@ describe BooticCli::Themes::Workflows do
       remote_theme.add_template('collection.html', "bbb\n", mtime: Time.local(2017))
     end
 
+    it 'warns user if remote theme is public' do
+      expect(remote_theme).to receive(:public?).and_return(true)
+      expect(prompt).to receive(:yes_or_no?).with("You're pushing changes directly to your public theme. Are you sure?", true)
+      subject.sync(local_theme, remote_theme)
+    end
+
     it "syncs up local and remote themes" do
       subject.sync(local_theme, remote_theme)
 
@@ -217,6 +229,13 @@ describe BooticCli::Themes::Workflows do
   end
 
   describe "#watch" do
+    it 'warns user if remote theme is public' do
+      expect(remote_theme).to receive(:public?).and_return(true)
+      expect(prompt).to receive(:yes_or_no?).with("You're pushing changes directly to your public theme. Are you sure?", true).and_return(false)
+      dir = "./spec/fixtures/theme"
+      subject.watch(dir, remote_theme, watcher: nil)
+    end
+
     it "watches" do
       remote_theme.add_template('collection.html', "aa")
       remote_theme.add_template('product.html', "bb")
