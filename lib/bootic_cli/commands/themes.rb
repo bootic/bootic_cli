@@ -164,7 +164,7 @@ module BooticCli
           begin
             input = shell.ask("#{question} [#{default_char}]").strip
           rescue Interrupt
-            say "\nCtrl-C received. Bailing out!", :red
+            say "\nCtrl-C received. Bailing out!", :magenta
             abort
           end
 
