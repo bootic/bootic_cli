@@ -99,8 +99,7 @@ module BooticCli
       private
 
       def within_theme(&block)
-        dir = File.expand_path(current_dir)
-        unless File.exist?(File.join(dir, 'layout.html'))
+        unless is_within_theme?
           prompt.say "This directory doesn't look like a Bootic theme! (#{dir})", :magenta
           abort
         end
@@ -108,6 +107,11 @@ module BooticCli
         logged_in_action do
           yield
         end
+      end
+
+      def is_within_theme?
+        dir = File.expand_path(current_dir)
+        File.exist?(File.join(dir, 'layout.html'))
       end
 
       def current_dir
@@ -137,7 +141,14 @@ module BooticCli
 
         def yes_or_no?(question, default_answer)
           default_char = default_answer ? 'y' : 'n'
-          input = shell.ask("#{question} [#{default_char}]").strip
+
+          begin
+            input = shell.ask("#{question} [#{default_char}]").strip
+          rescue Interrupt
+            say "\nCtrl-C received. Bailing out!", :red
+            abort
+          end
+
           return default_answer if input == '' || input.downcase == default_char
           !default_answer
         end
