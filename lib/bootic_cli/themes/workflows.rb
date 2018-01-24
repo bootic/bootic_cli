@@ -32,7 +32,7 @@ module BooticCli
       end
 
       def pull(local_theme, remote_theme, delete: true)
-        diff = ThemeDiff.new(source: local_theme, target: remote_theme)
+        diff = ThemeDiff.new(source: local_theme, target: remote_theme, force_update: true)
         check_dupes!(local_theme.assets)
 
         download_opts = {
@@ -61,7 +61,7 @@ module BooticCli
       end
 
       def push(local_theme, remote_theme, delete: true)
-        diff = ThemeDiff.new(source: local_theme, target: remote_theme)
+        diff = ThemeDiff.new(source: local_theme, target: remote_theme, force_update: true)
         check_dupes!(local_theme.assets)
 
         notice 'Pushing local changes to remote...'

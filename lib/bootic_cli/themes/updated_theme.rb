@@ -8,14 +8,17 @@ module BooticCli
     class UpdatedTheme
       TemplateWithDiff = Struct.new('TemplateWithDiff', :file_name, :body, :updated_on, :diff)
 
-      def initialize(source:, target:)
+      def initialize(source:, target:, force_update: false)
         @source, @target = source, target
+        # when doing a pull or push, we don't care if the other end has a more recent version
+        # we only do that when syncing changes, in which case force_update should be false
+        @force_update = force_update
       end
 
       def templates
         @templates ||= map_pair(source.templates, target.templates) do |a, b|
           diff = Diffy::Diff.new(normalize_endings(b.body), normalize_endings(a.body), context: 1)
-          if more_recent?(a, b) && !diff.to_s.empty?
+          if !diff.to_s.empty? && should_update?(a, b)
             c = TemplateWithDiff.new(a.file_name, a.body, a.updated_on, diff)
             [true, c]
           else
@@ -26,12 +29,16 @@ module BooticCli
 
       def assets
         @assets ||= map_pair(source.assets, target.assets) do |a, b|
-          [more_recent?(a, b), a]
+          [should_update?(a, b), a]
         end
       end
 
       private
-      attr_reader :source, :target
+      attr_reader :source, :target, :force_update
+
+      def should_update?(a, b)
+        force_update || more_recent?(a, b)
+      end
 
       def more_recent?(a, b)
         a.updated_on > b.updated_on
