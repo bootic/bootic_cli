@@ -31,12 +31,20 @@ module BooticCli
         [item, type]
       end
 
-      attr_reader :subdomain
-
       def initialize(dir, subdomain: nil)
         @dir = dir
         @setup = false
-        @subdomain = subdomain ? write_subdomain(subdomain) : read_subdomain
+        @subdomain = subdomain
+      end
+
+      def subdomain
+        @subdomain || read_subdomain
+      end
+
+      def write_subdomain
+        store.transaction do
+          store['subdomain'] = @subdomain
+        end
       end
 
       def reset!
@@ -132,15 +140,8 @@ module BooticCli
         )
       end
 
-      def write_subdomain(sub)
-        store.transaction do
-          store['subdomain'] = sub
-        end
-        sub
-      end
-
       def read_subdomain
-        store.transaction{ store['subdomain'] }
+        store.transaction { store['subdomain'] }
       end
     end
   end

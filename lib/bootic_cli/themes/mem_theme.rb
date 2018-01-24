@@ -15,6 +15,10 @@ module BooticCli
         false # just for tests
       end
 
+      def path
+        nil
+      end
+
       def reload!
         @templates = []
         @assets = []

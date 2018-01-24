@@ -17,6 +17,7 @@ describe BooticCli::Themes::FSTheme do
     it "can be initialized and persisted" do
       theme = described_class.new('./spec/fixtures/theme2', subdomain: 'foo')
       expect(theme.subdomain).to eq 'foo'
+      theme.write_subdomain
 
       theme2 = described_class.new('./spec/fixtures/theme2')
       expect(theme2.subdomain).to eq 'foo'

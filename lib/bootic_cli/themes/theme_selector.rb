@@ -16,7 +16,7 @@ module BooticCli
         raise "No shop with subdomain #{subdomain}" unless shop
 
         path = dir || shop.subdomain
-        local_theme = select_local_theme(path, shop.subdomain)
+        local_theme  = select_local_theme(path, shop.subdomain)
         remote_theme = select_remote_theme(shop, wants_public)
 
         # if no `wants_public` flag was passed and no dev theme is present
@@ -30,8 +30,6 @@ module BooticCli
           end
         end
 
-        prompt.say "Cloning theme files into #{local_theme.path}"
-        prompt.say "Preview this theme at #{remote_theme.path}", :magenta
         [local_theme, remote_theme]
       end
 
@@ -40,15 +38,15 @@ module BooticCli
         shop = find_remote_shop(local_theme.subdomain)
         raise "No shop with subdomain #{local_theme.subdomain}" unless shop
         remote_theme = select_remote_theme(shop, production)
-
-        prompt.say "Preview this theme at #{remote_theme.path}", :magenta
         [local_theme, remote_theme]
       end
 
       def pair(subdomain, dir)
         shop = find_remote_shop(subdomain)
         raise "No shop with subdomain #{subdomain}" unless shop
-        select_local_theme(dir, subdomain)
+        theme = select_local_theme(dir, subdomain)
+        theme.write_subdomain
+        theme
       end
 
       def select_local_theme(dir, subdomain = nil)

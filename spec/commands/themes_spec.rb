@@ -43,7 +43,7 @@ describe BooticCli::Commands::Themes do
       end
 
       it "stops without invoking workflow" do
-        expect(selector).not_to receive(:setup_theme_pair)
+        it_sets_up_dev_theme
         expect(workflows).not_to receive(:pull)
         described_class.start(%w(clone bar))
       end
@@ -57,11 +57,13 @@ describe BooticCli::Commands::Themes do
       it "invokes pull workflow, delegates to ThemeSelector correctly" do
         it_sets_up_dev_theme
         expect(workflows).to receive(:pull).with(local_theme, remote_theme)
+        expect(local_theme).to receive(:write_subdomain)
         described_class.start(%w(clone bar))
       end
 
       it "uses production theme if -p option present" do
         it_sets_up_production_theme
+        expect(local_theme).to receive(:write_subdomain)
         described_class.start(%w(clone -p bar))
       end
     end

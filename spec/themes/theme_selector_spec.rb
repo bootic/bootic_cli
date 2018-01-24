@@ -61,7 +61,6 @@ describe BooticCli::Themes::ThemeSelector do
           it 'creates and returns dev theme' do
             allow(prompt).to receive(:yes_or_no?).with('Would you like to create (and work on) a development version of your theme? (recommended)', true).and_return(true)
             expect(themes).to receive(:create_dev_theme).and_return(dev_theme)
-            expect(dev_theme).to receive(:path).and_return('/some/path')
             a, b = subject.setup_theme_pair(nil, nil)
             expect(b.dev?).to eq(true)
           end
@@ -119,7 +118,6 @@ describe BooticCli::Themes::ThemeSelector do
         it 'creates and returns dev theme, without prompting user' do
           expect(themes).to receive(:create_dev_theme).and_return(dev_theme)
           expect(prompt).not_to receive(:yes_or_no?)
-          expect(dev_theme).to receive(:path).and_return('/some/path')
           a, b = subject.setup_theme_pair(nil, nil, nil, true)
           expect(b.dev?).to eq(true)
         end
@@ -175,6 +173,7 @@ describe BooticCli::Themes::ThemeSelector do
         with(File.expand_path(dir), subdomain: "foo").
         and_return(theme)
 
+      expect(theme).to receive(:write_subdomain)
       expect(subject.pair("foo", dir)).to eq theme
     end
 

@@ -17,11 +17,14 @@ module BooticCli
       option :dev, banner: '<true|false>', type: :boolean, aliases: '-d', desc: 'Clones development theme, or creates one if missing'
       def clone(dir = nil)
         logged_in_action do
-          if File.exist?(File.expand_path(dir))
-            prompt.say "Directory already exists! (#{File.expand_path(dir)})", :red
+          local_theme, remote_theme = theme_selector.setup_theme_pair(options['shop'], dir, options['public'], options['dev'])
+
+          if File.exist?(local_theme.path)
+            prompt.say "Directory already exists! (#{local_theme.path})", :red
           else
-            local_theme, remote_theme = theme_selector.setup_theme_pair(options['shop'], dir, options['public'], options['dev'])
+            prompt.say "Cloning theme files into #{local_theme.path}"
             workflows.pull(local_theme, remote_theme)
+            local_theme.write_subdomain
           end
         end
       end
