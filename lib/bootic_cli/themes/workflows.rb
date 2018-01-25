@@ -127,7 +127,8 @@ module BooticCli
         notice "Local <--- Remote"
 
         diff.updated_in_target.templates.each do |t|
-          puts "Updated in remote: #{t.file_name}"
+          puts "Updated in remote: #{t.file_name} (updated at #{t.updated_on})"
+          puts t.diff.to_s(:color)
         end
 
         diff.missing_in_source.templates.each do |t|
@@ -141,7 +142,8 @@ module BooticCli
         notice "Local ---> Remote"
 
         diff.updated_in_source.templates.each do |t|
-          puts "Updated locally: #{t.file_name}"
+          puts "Updated locally: #{t.file_name} (updated at #{t.updated_on})"
+          puts t.diff.to_s(:color)
         end
 
         diff.missing_in_target.templates.each do |f|
