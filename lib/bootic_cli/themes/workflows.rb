@@ -183,11 +183,11 @@ module BooticCli
         # ctrl-c
         Signal.trap('INT') {
           listener.stop
-          puts 'See you in another lifetime, brotha.'
+          puts 'See you in another lifetime, brother.'
           exit
         }
 
-        prompt.say "Preview changes at #{remote_theme.path}", :cyan
+        prompt.say "Preview changes at #{remote_theme.path}. Hit Ctrl-C to stop watching for changes.", :cyan
         Kernel.sleep
       end
 
