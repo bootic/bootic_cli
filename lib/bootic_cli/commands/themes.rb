@@ -91,7 +91,7 @@ module BooticCli
             if prompt.yes_or_no?("Would you like to make a local copy of your current public theme before publishing?", false)
 
               backup_path = File.join(local_theme.path, "public-theme-backup-#{Time.now.to_i}")
-              backup_theme, public_theme = theme_selector.select_theme_pair(default_subdomain, backup_path, true)
+              backup_theme, public_theme = theme_selector.select_theme_pair(local_theme.subdomain, backup_path, true)
 
               say("Gotcha. Backing up your public theme into #{backup_theme.path}")
               workflows.pull(backup_theme, public_theme)

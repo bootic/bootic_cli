@@ -124,6 +124,11 @@ module BooticCli
         diff = ThemeDiff.new(source: local_theme, target: remote_theme)
         notice 'Comparing local and remote copies of theme...'
 
+        unless diff.any?
+          prompt.say "No changes between versions."
+          exit 1
+        end
+
         notice "Local <--- Remote"
 
         diff.updated_in_target.templates.each do |t|
@@ -209,7 +214,7 @@ module BooticCli
 
         prompt.notice "Alrighty! Publishing your development theme..."
         remote_theme.publish(true) # syncs dev to public, without flipping them
-        prompt.notice "Yay! Your development theme has been made public. Take a look at #{remote_theme.path}", :cyan
+        prompt.notice "Yay! Your development theme has been made public. Take a look at #{remote_theme.path}"
       end
 
       private

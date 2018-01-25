@@ -16,7 +16,7 @@ module BooticCli
       end
 
       def any?
-        templates.any? || assets.any?
+        templates.any? # || assets.any?
       end
 
       def templates
