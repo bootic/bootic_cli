@@ -79,11 +79,25 @@ module BooticCli
         end
       end
 
-      desc 'publish', 'Publish local files to remote public theme'
+      desc 'publish', 'Moves your development theme into your public website'
       def publish
         within_theme do
-          local_theme, remote_theme = theme_selector.select_theme_pair(default_subdomain, current_dir, false)
-          workflows.publish(local_theme, remote_theme)
+          local_theme, remote_theme = theme_selector.select_theme_pair(default_subdomain, current_dir)
+          if remote_theme.public?
+            say "You don't seem to have a development theme set up, so there's nothing to publish!", :red
+          else
+            say("Publishing means all your public theme's templates and assets will be lost.")
+            if prompt.yes_or_no?("Would you like to make a local copy of your current public theme before publishing?", false)
+
+              backup_path = File.join(local_theme.path, "public-theme-backup-#{Time.now.to_i}")
+              backup_theme, public_theme = theme_selector.select_theme_pair(default_subdomain, backup_path, true)
+
+              say("Gotcha. Backing up your public theme into #{backup_theme.path}")
+              workflows.pull(backup_theme, public_theme)
+            end
+
+            workflows.publish(local_theme, remote_theme)
+          end
         end
       end
 

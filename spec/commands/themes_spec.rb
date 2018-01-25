@@ -157,6 +157,8 @@ describe BooticCli::Commands::Themes do
 
   describe '#publish' do
     it "pushes local changes to dev and switches dev to production" do
+      # expect(prompt).to receive(:say).and_return(nil)
+      expect(prompt).to receive(:yes_or_no?).with("Would you like to make a local copy of your current public theme before publishing?", false).and_return(false)
       expect(workflows).to receive(:publish).with(local_theme, remote_theme)
       described_class.start(%w(publish))
     end

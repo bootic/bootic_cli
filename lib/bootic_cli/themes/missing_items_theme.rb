@@ -5,6 +5,10 @@ module BooticCli
         @source, @target = source, target
       end
 
+      def any?
+        templates.any? || assets.any?
+      end
+
       def templates
         @templates ||= find_missing_files(source.templates, target.templates)
       end

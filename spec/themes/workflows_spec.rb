@@ -271,9 +271,12 @@ describe BooticCli::Themes::Workflows do
       local_theme.add_template('master.css', 'bbb')
       local_theme.add_asset('icon.gif', StringIO.new('icon'))
 
-      allow(remote_theme).to receive(:href).and_return 'https://acme.bootic.net'
+      allow(remote_theme).to receive(:path).and_return 'https://acme.bootic.net'
+
       # expect(prompt).to receive(:set_color).with("Published to https://acme.bootic.net")
       expect(prompt).to receive(:yes_or_no?).and_return false
+
+      expect(remote_theme).to receive(:dev?).and_return(true)
       expect(remote_theme).to receive(:publish).with(true).and_return remote_theme
       subject.publish(local_theme, remote_theme)
 

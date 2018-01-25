@@ -9,6 +9,10 @@ module BooticCli
         @force_update = force_update
       end
 
+      def any?
+        updated_in_source.any? || updated_in_target.any? || missing_in_target.any? || missing_in_source.any?
+      end
+
       def updated_in_source
         @updated_in_source ||= UpdatedTheme.new(source: source, target: target, force_update: force_update)
       end

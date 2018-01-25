@@ -15,6 +15,10 @@ module BooticCli
         @force_update = force_update
       end
 
+      def any?
+        templates.any? || assets.any?
+      end
+
       def templates
         @templates ||= map_pair(source.templates, target.templates) do |a, b|
           diff = Diffy::Diff.new(normalize_endings(b.body), normalize_endings(a.body), context: 1)
