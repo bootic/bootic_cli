@@ -1,3 +1,4 @@
+# -*- encoding: utf-8 -*-
 require 'launchy'
 require 'bootic_cli/themes/workflows'
 require 'bootic_cli/themes/theme_selector'

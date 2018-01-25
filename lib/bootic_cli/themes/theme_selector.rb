@@ -26,7 +26,7 @@ module BooticCli
 
           if wants_dev or prompt.yes_or_no?("Would you like to create (and work on) a development version of your theme? (recommended)", true)
             prompt.say "Good thinking. Creating a development theme out of your current public one...", :green
-            remote_theme = shop.themes.create_dev_theme
+            remote_theme = APITheme.new(shop.themes.create_dev_theme)
           end
         end
 
