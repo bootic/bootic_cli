@@ -6,23 +6,27 @@ o modificar datos, o bien para realizar cambios en la plantilla de la tienda.
 
 ## ¿Cómo instalarla?
 
-El CLI la proveemos como una gema en rubygems.org, y requiere de Ruby 2.2
-o superior. Afortunadamente, en versiones recientes de macOS, ya viene
-instalado Ruby 2.3 (esto lo puedes comprobar corriendo `ruby -v` en un
-terminal).
+El Bootic CLI lo proveemos como una gema en rubygems.org, y requiere de 
+Ruby 2.2 o superior. Afortunadamente, en versiones recientes de macOS, 
+ya viene instalado Ruby 2.3 (esto lo puedes comprobar corriendo `ruby -v`
+en un terminal).
 
-El paso siguiente es asegurarse que estén instaladas las Developer Tools
-de Xcode:
+    $ ruby -v
+    ruby 2.3.3p222 (2016-11-21 revision 56859) [universal.x86_64-darwin17]
 
- - xcode-select --install
+
+Ferpecto. El paso siguiente es asegurarse que estén instaladas las Developer 
+Tools de Xcode:
+
+    $ xcode-select --install
 
 Hecho eso, podemos instalar la gema:
 
- - sudo gem install bootic_cli
+    $ sudo gem install bootic_cli
 
 ## Para configurarlo:
 
- - bootic setup (visitar https://auth.bootic.net/dev/cli y agregar credenciales)
+    $ bootic setup (visitar https://auth.bootic.net/dev/cli y agregar credenciales)
 
 ## Para usarlo:
 
