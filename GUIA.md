@@ -14,9 +14,8 @@ en un terminal).
     $ ruby -v
     ruby 2.3.3p222 (2016-11-21 revision 56859) [universal.x86_64-darwin17]
 
-
-Ferpecto. El paso siguiente es asegurarse que estén instaladas las Developer 
-Tools de Xcode:
+Perfectirijillo. El paso siguiente es asegurarse que estén instaladas 
+las Developer Tools de Xcode:
 
     $ xcode-select --install
 
@@ -24,11 +23,19 @@ Hecho eso, podemos instalar la gema:
 
     $ sudo gem install bootic_cli
 
-## Para configurarlo:
+Lo cual debería escupir un montón de texto, y terminar con un "23 gems installed" si todo salió bien.
 
-    $ bootic setup (visitar https://auth.bootic.net/dev/cli y agregar credenciales)
+## ¿Cómo configurarlo?
+
+Antes de poder usarlo, el CLI necesita saber que tú eres tú para saber a qué datos darte acceso. Para eso corremos:
+
+    $ bootic setup
+
+Te va a hacer algunas preguntas, pero el resumen es que debes entrar a https://auth.bootic.net/dev/cli y copiar las credenciales de acceso que veas ahí. Esto sólo hay que hacerlo una vez, por si aca.
 
 ## Para usarlo:
+
+¿Listo para jugar? Muy bien. Vamos paso a paso:
 
 - En el terminal, para moverte entre carpetas se escribe 'cd [nombreCarpeta]',
   por ejemplo 'cd proyectos'. si quieres subir un nivel, el comando es 'cd ..'
