@@ -23,35 +23,39 @@ Hecho eso, podemos instalar la gema:
 
     $ sudo gem install bootic_cli
 
-Lo cual debería escupir un montón de texto, y terminar con un "23 gems installed" si todo salió bien.
+Lo cual debería escupir un montón de texto, y terminar con algo así como
+"23 gems installed" si todo salió bien.
 
 ## ¿Cómo configurarlo?
 
-Antes de poder usarlo, el CLI necesita saber que tú eres tú para saber a qué datos darte acceso. Para eso corremos:
+Antes de poder usarlo, el CLI necesita saber que tú eres tú para saber a
+qué datos darte acceso. Para eso corremos:
 
     $ bootic setup
 
-Te va a hacer algunas preguntas, pero el resumen es que debes entrar a https://auth.bootic.net/dev/cli y copiar las credenciales de acceso que veas ahí. Esto sólo hay que hacerlo una vez, por si aca.
+Te va a hacer algunas preguntas, pero el resumen es que debes entrar a 
+https://auth.bootic.net/dev/cli y copiar las credenciales de acceso que 
+veas ahí. Esto sólo hay que hacerlo una vez, por si aca.
 
 ## Para usarlo:
 
 ¿Listo para jugar? Muy bien. Vamos paso a paso:
 
-- En el terminal, para moverte entre carpetas se escribe 'cd [nombreCarpeta]',
-  por ejemplo 'cd proyectos'. si quieres subir un nivel, el comando es 'cd ..'
+- En el terminal, para moverte entre carpetas se escribe `cd [nombreCarpeta]`,
+  por ejemplo `cd proyectos`. Si quieres subir un nivel, el comando es `cd ..`
 
-- Siempre puedes correr el comando 'pwd' para saber la ruta completa de la
-  carpeta en la que estás. el comando 'ls' (con ELE) te muestra los archivos
+- Siempre puedes correr el comando `pwd` para saber la ruta completa de la
+  carpeta en la que estás. el comando `ls` (con ELE) te muestra los archivos
   y carpetas que hay en la ruta que estés.
 
-- Una vez dentro de tu carpeta de trabajo (por ejemplo, /Users/zara/proyectos/superCliente),
-  escribe 'bootic themes clone'.
+- Una vez dentro de tu carpeta de trabajo (por ejemplo, `/Users/zara/proyectos/supercliente`),
+  escribe `bootic themes clone`.
 
 - Con esto se va a descargar una copia de la plantilla de tu tienda (la que
   esté asociada a la cuenta con la que te logueaste antes)
 
 - La plantilla se guardará en una carpeta con el mismo subdominio que la tienda.
-  deberías verla si corres 'ls'.
+  deberías verla si corres `ls`.
 
 - Luego, una vez dentro de esa carpeta (cd subdominio), puedes correr los
   siguientes comandos:
@@ -70,7 +74,7 @@ casi instantáneo.
 
 Todos estos cambios los puedes hacer directamente sobre el sitio público,
 o bien hacerlo sobre el sitio/plantilla de desarrollo, que puedes crear al
-momento de correr el comando 'clone'.
+momento de correr el comando `clone`.
 
 Si elijes crear una plantilla de desarrollo todos los cambios que hagas van
 a ser sobre un sitio de desarrollo, que puedes ver en `https://url.del.sitio/preview/dev`
