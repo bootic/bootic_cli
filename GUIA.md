@@ -4,9 +4,9 @@ El CLI de Bootic es una herramienta para diseñadores y desarrolladores que
 quieran realizan tareas con la API de Bootic en forma local, ya sea para ver
 o modificar datos, o bien para realizar cambios en la plantilla de la tienda.
 
-## ¿Cómo instalarla?
+## ¿Cómo se instala?
 
-El Bootic CLI lo proveemos como una gema en rubygems.org, y requiere de 
+El Bootic CLI lo proveemos como una gema en `rubygems.org`, y requiere de 
 Ruby 2.2 o superior. Afortunadamente, en versiones recientes de macOS, 
 ya viene instalado Ruby 2.3 (esto lo puedes comprobar corriendo `ruby -v`
 en un terminal).
