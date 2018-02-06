@@ -6,7 +6,7 @@ o modificar datos, o bien para realizar cambios en la plantilla de la tienda.
 
 ## ¿Cómo se instala?
 
-El Bootic CLI lo proveemos como una gema en `rubygems.org`, y requiere de 
+El CLI lo proveemos como una gema en `rubygems.org`, y requiere de 
 Ruby 2.2 o superior. Afortunadamente, en versiones recientes de macOS, 
 ya viene instalado Ruby 2.3 (esto lo puedes comprobar corriendo `ruby -v`
 en un terminal).
