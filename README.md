@@ -1,10 +1,10 @@
 # Bootic CLI
 
-CLI to interact with the [Bootic.net API](https://developers.bootic.net/) and run custom API scripts.
+CLI to interact with the [Bootic API](https://api.bootic.net/) and run custom API scripts. [Aquí hay una guía](https://github.com/bootic/bootic_cli/blob/master/GUIA.md) en castellano que explica cómo se instala y usa.
 
 ## Installation
 
-Install in your system.
+Install via Rubygems:
 
     gem install bootic_cli
 
