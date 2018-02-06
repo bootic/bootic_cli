@@ -34,12 +34,14 @@ qué datos darte acceso. Para eso corremos:
     $ bootic setup
 
 Te va a hacer algunas preguntas, pero el resumen es que debes entrar a 
-https://auth.bootic.net/dev/cli y copiar las credenciales de acceso que 
-veas ahí. Esto sólo hay que hacerlo una vez, por si aca.
+https://auth.bootic.net/dev/cli, seguir los pasos, y luego copiar las 
+credenciales de acceso que veas ahí. 
+
+Esto sólo hay que hacerlo una vez, por si aca.
 
 ## Para usarlo:
 
-¿Listo para jugar? Muy bien. Vamos paso a paso:
+¿Todo listo? Muy bien. Vamos paso a paso:
 
 - En el terminal, para moverte entre carpetas se escribe `cd [nombreCarpeta]`,
   por ejemplo `cd proyectos`. Si quieres subir un nivel, el comando es `cd ..`
@@ -48,7 +50,7 @@ veas ahí. Esto sólo hay que hacerlo una vez, por si aca.
   carpeta en la que estás. el comando `ls` (con ELE) te muestra los archivos
   y carpetas que hay en la ruta que estés.
 
-- Una vez dentro de tu carpeta de trabajo (por ejemplo, `/Users/zara/proyectos/supercliente`),
+- Una vez dentro de tu carpeta de trabajo (por ejemplo, `/Users/pedro/proyectos/supercliente`),
   escribe `bootic themes clone`.
 
 - Con esto se va a descargar una copia de la plantilla de tu tienda (la que
@@ -86,3 +88,15 @@ en caso de que estés trabajo directamente sobre la plantilla pública.
 En caso de que inicialmente no hayas creado una plantilla de desarrollo y
 luego quieras hacerlo, basta con que elimines la carpeta y corras el comando
 de nuevo.
+
+# ¿Cómo lo hago para bajar la plantilla de otra tienda?
+
+En ese caso debes correr `bootic login` para loguearte usando las credenciales
+asociadas a la otra tienda. El CLI te advertirá que ya estás logueado (en caso
+de que ya lo estés), pero simplemente dile que sí, que quieres reemplazar las
+credenciales actuales por otras.
+
+# Tengo más preguntas. ¿Qué hago?
+
+Escríbenos a soporte@bootic.io o por el chat de soporte dentro del panel de 
+la tienda.
