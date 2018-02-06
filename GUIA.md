@@ -39,9 +39,7 @@ credenciales de acceso que veas ahí.
 
 Esto sólo hay que hacerlo una vez, por si aca.
 
-## Para usarlo:
-
-¿Todo listo? Muy bien. Vamos paso a paso:
+## Primeros pasos y clonar plantilla
 
 - En el terminal, para moverte entre carpetas se escribe `cd [nombreCarpeta]`,
   por ejemplo `cd proyectos`. Si quieres subir un nivel, el comando es `cd ..`
@@ -54,10 +52,12 @@ Esto sólo hay que hacerlo una vez, por si aca.
   escribe `bootic themes clone`.
 
 - Con esto se va a descargar una copia de la plantilla de tu tienda (la que
-  esté asociada a la cuenta con la que te logueaste antes)
+  esté asociada a la cuenta con la que te logueaste antes).
 
 - La plantilla se guardará en una carpeta con el mismo subdominio que la tienda.
   deberías verla si corres `ls`.
+
+## Modificando el código
 
 - Luego, una vez dentro de esa carpeta (cd subdominio), puedes correr los
   siguientes comandos:
@@ -71,15 +71,19 @@ Esto sólo hay que hacerlo una vez, por si aca.
   - `bootic themes watch` que se queda escuchando cualquier cambio local que
      ocurra, y cuando crees o cambies o elimines un archivo lo sube automáticamente.
 
-El sitio lo sigues viendo "a distancia", pero usando `bootic themes watch` es
-casi instantáneo.
+El sitio lo sigues viendo "a distancia", remotamente, pero usando `bootic themes watch`
+es casi instantáneo.
 
 Todos estos cambios los puedes hacer directamente sobre el sitio público,
 o bien hacerlo sobre el sitio/plantilla de desarrollo, que puedes crear al
 momento de correr el comando `clone`.
 
 Si elijes crear una plantilla de desarrollo todos los cambios que hagas van
-a ser sobre un sitio de desarrollo, que puedes ver en `https://url.del.sitio/preview/dev`
+a ser sobre un sitio de desarrollo, en `https://url.del.sitio/preview/dev`.
+Los sitios de desarrollo no tienen caché, así que cualquier cambio que hagas
+deberías verlo ipso-facto y sin retrasos.
+
+## Publicando los cambios cambios
 
 Y finalmente, cuando quieras subir los cambios de la plantilla de desarrollo
 al sitio público, corres `bootic themes publish`. Esto obviamente no aplica
@@ -87,16 +91,16 @@ en caso de que estés trabajo directamente sobre la plantilla pública.
 
 En caso de que inicialmente no hayas creado una plantilla de desarrollo y
 luego quieras hacerlo, basta con que elimines la carpeta y corras el comando
-de nuevo.
+`bootic clone` de nuevo.
 
-# ¿Cómo lo hago para bajar la plantilla de otra tienda?
+## ¿Cómo lo hago para bajar la plantilla de otra tienda?
 
 En ese caso debes correr `bootic login` para loguearte usando las credenciales
 asociadas a la otra tienda. El CLI te advertirá que ya estás logueado (en caso
 de que ya lo estés), pero simplemente dile que sí, que quieres reemplazar las
 credenciales actuales por otras.
 
-# Tengo más preguntas. ¿Qué hago?
+## Tengo más preguntas. ¿Qué hago?
 
 Escríbenos a soporte@bootic.io o por el chat de soporte dentro del panel de 
 la tienda.
