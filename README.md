@@ -84,7 +84,8 @@ class ListProducts < BooticCli::Command
       puts p.title
     end
   end
-
+  
+  declare self, "list_products"
 end
 ```
 
