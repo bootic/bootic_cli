@@ -71,7 +71,7 @@ bootic runner list_products.rb
 
 ### Custom Thor commands
 
-More advanced scripts can be written as [Thor]() commands. Any scripts in `~/.bootic` will be loaded automatically.
+More advanced scripts can be written as [Thor]() commands. Any scripts in `~/bootic` will be loaded automatically.
 
 ```ruby
 # ~/.bootic/list_products.rb
