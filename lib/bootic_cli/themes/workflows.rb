@@ -132,8 +132,12 @@ module BooticCli
         notice "Local <--- Remote"
 
         diff.updated_in_target.templates.each do |t|
-          puts "Updated in remote: #{t.file_name} (updated at #{t.updated_on})"
+          puts "Updated template in remote: #{t.file_name} (updated at #{t.updated_on})"
           puts t.diff.to_s(:color)
+        end
+
+        diff.updated_in_target.assets.each do |t|
+          puts "Updated asset in remote: #{t.file_name} (updated at #{t.updated_on})"
         end
 
         diff.missing_in_source.templates.each do |t|
@@ -149,6 +153,10 @@ module BooticCli
         diff.updated_in_source.templates.each do |t|
           puts "Updated locally: #{t.file_name} (updated at #{t.updated_on})"
           puts t.diff.to_s(:color)
+        end
+
+        diff.updated_in_source.assets.each do |t|
+          puts "Updated locally: #{t.file_name} (updated at #{t.updated_on})"
         end
 
         diff.missing_in_target.templates.each do |f|
@@ -275,7 +283,7 @@ module BooticCli
           if opts[:overwrite]
             true
           else
-            target_asset = to.assets.find{ |t| t.file_name == a.file_name }
+            target_asset = to.assets.find { |t| t.file_name == a.file_name }
             if target_asset
               opts[:interactive] && prompt.yes_or_no?("Asset exists: #{highlight(a.file_name)}. Overwrite?", false)
             else
