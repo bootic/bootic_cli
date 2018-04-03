@@ -110,12 +110,12 @@ module BooticCli
         # now, download missing files on local end
         notice 'Downloading missing local templates & assets...'
         copy_templates(diff.missing_in_source, local_theme, download_opts)
-        copy_assets(diff.missing_in_source, local_theme, overwrite: true)
+        copy_assets(diff.missing_in_source, local_theme, download_opts)
 
         # now, upload missing files on remote
         notice 'Uploading missing remote templates & assets...'
         copy_templates(diff.missing_in_target, remote_theme, download_opts)
-        copy_assets(diff.missing_in_target, remote_theme, overwrite: true)
+        copy_assets(diff.missing_in_target, remote_theme, download_opts)
 
         prompt.say "Synced! Preview this theme at #{remote_theme.path}", :cyan
       end
