@@ -213,7 +213,7 @@ module BooticCli
         end
 
         prompt.notice "Alrighty! Publishing your development theme..."
-        remote_theme.publish(true) # syncs dev to public, without flipping them
+        remote_theme.publish # syncs dev to public, without flipping them
         prompt.notice "Yay! Your development theme has been made public. Take a look at #{remote_theme.path}"
       end
 
