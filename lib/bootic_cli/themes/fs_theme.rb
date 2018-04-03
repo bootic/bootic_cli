@@ -1,11 +1,30 @@
 require 'fileutils'
 require 'yaml/store'
+require 'digest/md5'
 
 module BooticCli
   module Themes
     class FSTheme
-      Template = Struct.new(:file_name, :body, :updated_on)
-      ThemeAsset = Struct.new(:file_name, :file, :updated_on)
+
+      Template = Struct.new(:file_name, :body, :updated_on) do
+        def ==(other)
+          self.updated_on == other.updated_on
+        end
+      end
+
+      ThemeAsset = Struct.new(:file_name, :file, :updated_on) do
+        def body; @body ||= file.read; end
+        def file_size; body.length; end
+        def digest; @digest ||= Digest::MD5.hexdigest(body); end
+
+        def ==(other)
+          if other.digest.to_s == '' # api theme asset without a digest set
+            return self.updated_on == other.updated_on
+          end
+
+          self.file_size == other.file_size && self.digest == other.digest
+        end
+      end
 
       ASSETS_DIR = 'assets'.freeze
       TEMPLATE_PATTERNS = ['*.liquid', '*.html', '*.css', '*.js', 'theme.yml'].freeze
@@ -19,11 +38,11 @@ module BooticCli
 
       def self.resolve_file(path)
         file = File.new(path)
-        file_name = File.basename(path)
         type = resolve_type(path)
+        file_name = File.basename(path)
 
         item = if path =~ /assets\//
-          ThemeAsset.new(file_name, file.read, file.mtime.utc)
+          ThemeAsset.new(file_name, file, file.mtime.utc)
         else
           Template.new(file_name, file.read, file.mtime.utc)
         end

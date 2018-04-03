@@ -41,7 +41,7 @@ module BooticCli
       attr_reader :source, :target, :force_update
 
       def should_update?(a, b)
-        force_update || more_recent?(a, b)
+        force_update || (a != b && more_recent?(a, b))
       end
 
       def more_recent?(a, b)

@@ -7,6 +7,10 @@ module BooticCli
       def updated_on
         Time.parse(super)
       end
+
+      def ==(other)
+        self.updated_on == other.updated_on
+      end
     end
 
     class APIAsset < ItemWithTime
@@ -15,6 +19,11 @@ module BooticCli
           data = Net::HTTP.get(URI.parse(rels[:file].href))
           StringIO.new(data)
         )
+      end
+
+      def ==(other)
+        return super if digest.to_s == '' || other.digest.to_s == ''
+        self.file_size == other.file_size && self.digest == other.digest
       end
     end
 
@@ -52,11 +61,11 @@ module BooticCli
       end
 
       def templates
-        @templates ||= theme.templates.map{|t| ItemWithTime.new(t) }
+        @templates ||= theme.templates.map { |t| ItemWithTime.new(t) }
       end
 
       def assets
-        @assets ||= theme.assets.map{|t| APIAsset.new(t) }
+        @assets ||= theme.assets.map { |t| APIAsset.new(t) }
       end
 
       def add_template(file_name, body)
