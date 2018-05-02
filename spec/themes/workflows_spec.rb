@@ -205,10 +205,10 @@ describe BooticCli::Themes::Workflows do
     end
 
     it "compares" do
-      expect(prompt).to receive(:say).with("Updated in remote: collection.html")
+      expect(prompt).to receive(:say).with("Updated template in remote: collection.html (updated at 2017-01-01 00:00:00 -0300)")
       expect(prompt).to receive(:say).with("Remote template not in local dir: styles.css")
       expect(prompt).to receive(:say).with("Remote asset not in local dir: icon.gif")
-      expect(prompt).to receive(:say).with("Updated locally: product.html")
+      expect(prompt).to receive(:say).with("Updated locally: product.html (updated at 2017-01-01 00:00:00 -0300)")
       expect(prompt).to receive(:say).with("Local template not in remote: master.css")
       expect(prompt).to receive(:say).with("Local asset not in remote: logo.gif")
 

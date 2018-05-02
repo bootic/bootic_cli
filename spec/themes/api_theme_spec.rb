@@ -74,13 +74,5 @@ describe BooticCli::Themes::APITheme do
 
       expect(subject.publish).to be_a described_class
     end
-
-    it "also recreates dev theme if asked to" do
-      expect(theme).to receive(:can?).with(:publish_theme).and_return true
-      expect(theme).to receive(:publish_theme).and_return theme
-      expect(theme).to receive(:create_dev_theme).and_return theme
-
-      expect(subject.publish(true)).to be_a described_class
-    end
   end
 end
