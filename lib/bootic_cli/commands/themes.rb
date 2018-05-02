@@ -13,7 +13,7 @@ module BooticCli
       # end
 
       desc 'clone [dir]', 'Clone remote theme into directory [dir]'
-      option :shop, banner: '<shop_subdomain>', type: :string
+      option :shop, banner: '<shop_subdomain>', aliases: '-s', type: :string
       option :public, banner: '<true|false>', type: :boolean, aliases: '-p', desc: 'Clones public theme, even if dev theme exists'
       option :dev, banner: '<true|false>', type: :boolean, aliases: '-d', desc: 'Clones development theme, or creates one if missing'
       def clone(dir = nil)
