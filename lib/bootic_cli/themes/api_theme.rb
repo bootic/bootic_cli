@@ -14,16 +14,36 @@ module BooticCli
     end
 
     class APIAsset < ItemWithTime
+      REQUEST_OPTS = {
+        open_timeout: 5,
+        read_timeout: 5
+      }
+
       def file
-        @file ||= (
-          data = Net::HTTP.get(URI.parse(rels[:file].href))
-          StringIO.new(data)
-        )
+        @file ||= StringIO.new(fetch_data)
       end
 
       def ==(other)
         return super if digest.to_s == '' || other.digest.to_s == ''
         self.file_size == other.file_size && self.digest == other.digest
+      end
+
+      def fetch_data(attempt = 1)
+        uri = URI.parse(rels[:file].href)
+        opts = REQUEST_OPTS.merge({
+          # verify_mode: OpenSSL::SSL::VERIFY_PEER # OpenSSL::SSL::VERIFY_NONE
+          use_ssl: uri.port == 443
+        })
+
+        Net::HTTP.start(uri.host, uri.port, opts) do |http|
+          resp = http.get(uri.path)
+          raise "Invalid response: #{resp.code}" unless resp.code.to_i == 200
+          resp.body
+        end
+      rescue Net::OpenTimeout, Net::ReadTimeout => e
+        raise if attempt > 3 # max attempts
+        # puts "#{e.class} for #{File.basename(uri.path)}! Retrying request..."
+        fetch_data(attempt + 1)
       end
     end
 

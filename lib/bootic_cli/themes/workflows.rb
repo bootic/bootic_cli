@@ -274,7 +274,7 @@ module BooticCli
       def copy_templates(from, to, opts = {})
         from.templates.each do |t|
           to.add_template t.file_name, t.body
-          puts "Copied #{t.file_name}"
+          puts "Copied #{highlight(t.file_name)}"
         end
       end
 
@@ -297,7 +297,7 @@ module BooticCli
         files.each do |a|
           pool.schedule do
             to.add_asset a.file_name, a.file
-            puts "Copied asset #{a.file_name}"
+            puts "Copied asset #{highlight(a.file_name)} (#{a.file_size} bytes)"
           end
         end
 
