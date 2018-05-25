@@ -56,8 +56,6 @@ module BooticCli
         copy_templates(diff.missing_in_source, local_theme, download_opts)
         # lets copy all of them and let user decide to overwrite existing
         copy_assets(remote_theme, local_theme, download_opts)
-
-        prompt.say "Done! Preview this theme at #{remote_theme.path}", :cyan
       end
 
       def push(local_theme, remote_theme, delete: true)
@@ -82,8 +80,6 @@ module BooticCli
         else
           notice 'Not removing remote files that were removed locally.'
         end
-
-        prompt.say "Done! View updated version at #{remote_theme.path}", :cyan
       end
 
       def sync(local_theme, remote_theme)
@@ -116,8 +112,6 @@ module BooticCli
         notice 'Uploading missing remote templates & assets...'
         copy_templates(diff.missing_in_target, remote_theme, download_opts)
         copy_assets(diff.missing_in_target, remote_theme, download_opts)
-
-        prompt.say "Synced! Preview this theme at #{remote_theme.path}", :cyan
       end
 
       def compare(local_theme, remote_theme)
@@ -221,8 +215,8 @@ module BooticCli
         end
 
         prompt.notice "Alrighty! Publishing your development theme..."
-        remote_theme.publish # syncs dev to public, without flipping them
-        prompt.notice "Yay! Your development theme has been made public. Take a look at #{remote_theme.path}"
+        updated_theme = remote_theme.publish # syncs dev to public, without flipping them
+        prompt.notice "Yay! Your development theme has been made public. Take a look at #{remote_theme.path.sub('/preview/dev', '')}"
       end
 
       private

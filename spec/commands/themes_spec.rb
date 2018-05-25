@@ -15,14 +15,14 @@ end
 describe BooticCli::Commands::Themes do
   let(:theme_dir) { File.expand_path('bar') }
 
-  let(:local_theme) { double('local theme', path: theme_dir) }
-  let(:remote_theme) { double('remote theme', public?: false) }
-  let(:root) { double('root') }
-  let(:client) { double('client', root: root) }
-  let(:session) { double('session', client: client, needs_upgrade?: false, setup?: true, logged_in?: true) }
-  let(:workflows) { double('workflows', pull: true, push: true, sync: true, compare: true, watch: true) }
-  let(:selector) { instance_double(BooticCli::Themes::ThemeSelector, select_theme_pair: [local_theme, remote_theme]) }
-  let(:prompt) { double('Prompt', say: '') }
+  let(:local_theme)  { double('local theme', path: theme_dir) }
+  let(:remote_theme) { double('remote theme', public?: false, path: 'http://some.url') }
+  let(:root)         { double('root') }
+  let(:client)       { double('client', root: root) }
+  let(:session)      { double('session', client: client, needs_upgrade?: false, setup?: true, logged_in?: true) }
+  let(:workflows)    { double('workflows', pull: true, push: true, sync: true, compare: true, watch: true) }
+  let(:selector)     { instance_double(BooticCli::Themes::ThemeSelector, select_theme_pair: [local_theme, remote_theme]) }
+  let(:prompt)       { double('Prompt', say: '') }
 
   before do
     allow(BooticCli::Themes::ThemeSelector).to receive(:new).and_return selector
@@ -158,6 +158,9 @@ describe BooticCli::Commands::Themes do
   describe '#publish' do
     it "pushes local changes to dev and switches dev to production" do
       # expect(prompt).to receive(:say).and_return(nil)
+      expect(remote_theme).to receive(:templates).at_least(:once).and_return([])
+      expect(remote_theme).to receive(:assets).at_least(:once).and_return([])
+      expect(prompt).to receive(:yes_or_no?).with("Your public and development themes seem to be in sync (no differences). Publish anyway?", false).and_return(true)
       expect(prompt).to receive(:yes_or_no?).with("Would you like to make a local copy of your current public theme before publishing?", false).and_return(false)
       expect(workflows).to receive(:publish).with(local_theme, remote_theme)
       described_class.start(%w(publish))

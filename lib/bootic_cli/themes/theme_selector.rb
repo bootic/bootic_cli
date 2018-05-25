@@ -34,7 +34,7 @@ module BooticCli
       end
 
       def select_theme_pair(subdomain, dir, production = false)
-        local_theme = select_local_theme(dir)
+        local_theme = select_local_theme(dir, subdomain)
         shop = find_remote_shop(local_theme.subdomain)
         raise "No shop with subdomain #{local_theme.subdomain}" unless shop
         remote_theme = select_remote_theme(shop, production)
