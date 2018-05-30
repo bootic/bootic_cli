@@ -334,13 +334,13 @@ module BooticCli
         rescue APITheme::EntityErrors => e
           fields = e.errors.map(&:field)
 
-          error_msg = if fields.include?("file_content_type")
+          error_msg = if fields.include?("file_content_type") or fields.include?("content_type")
             "is an unsupported file type."
           elsif fields.include?("file_file_size") # big asset
             size_str = file.file_size.to_i > 0 ? "(#{file.file_size} KB) " : ''
             "#{size_str}is heavier than the maximum allowed for assets (1 MB)"
           elsif fields.include?("body") # big template
-            str = file.file_name[/\.(css|js)/] ? "Try saving it as an asset instead" : "Try splitting it into smaller chunks"
+            str = file.file_name[/\.(html|liquid)$/] ? "Try splitting it into smaller chunks" : "Try saving it as an asset instead"
             str += ", since templates can hold up to 64 KB of data."
           else
             "has invalid #{fields.join(', ')}"
@@ -350,7 +350,7 @@ module BooticCli
           # abort
 
         rescue JSON::GeneratorError => e
-          prompt.say("#{file.file_name} looks like a binary file. Skipping...", :red)
+          prompt.say("#{file.file_name} looks like a binary file, not a template. Skipping...", :red)
           # abort
 
         rescue BooticClient::ServerError => e
