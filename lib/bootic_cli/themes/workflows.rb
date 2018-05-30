@@ -95,12 +95,12 @@ module BooticCli
         # first, update existing templates in each side
         notice 'Updating local templates...'
         maybe_update(diff.updated_in_target.templates, 'remote', 'local') do |t|
-          local_theme.add_template t.file_name, t.body
+          local_theme.add_template(t.file_name, t.body)
         end
 
         notice 'Updating remote templates...'
         maybe_update(diff.updated_in_source.templates, 'local', 'remote') do |t|
-          remote_theme.add_template t.file_name, t.body
+          remote_theme.add_template(t.file_name, t.body)
         end
 
         # now, download missing files on local end
@@ -166,19 +166,19 @@ module BooticCli
         listener = watcher.to(dir) do |modified, added, removed|
           if modified.any?
             modified.each do |path|
-              upsert_file remote_theme, path
+              upsert_file(remote_theme, path)
             end
           end
 
           if added.any?
             added.each do |path|
-              upsert_file remote_theme, path
+              upsert_file(remote_theme, path)
             end
           end
 
           if removed.any?
             removed.each do |path|
-              delete_file remote_theme, path
+              delete_file(remote_theme, path)
             end
           end
 
@@ -267,8 +267,10 @@ module BooticCli
 
       def copy_templates(from, to, opts = {})
         from.templates.each do |t|
-          to.add_template t.file_name, t.body
-          puts "Copied #{highlight(t.file_name)}"
+          handle_file_errors(:template, t) do
+            to.add_template(t.file_name, t.body)
+            puts "Copied #{highlight(t.file_name)}"
+          end
         end
       end
 
@@ -290,8 +292,11 @@ module BooticCli
 
         files.each do |a|
           pool.schedule do
-            to.add_asset a.file_name, a.file
-            puts "Copied asset #{highlight(a.file_name)} (#{a.file_size} bytes)"
+            handle_file_errors(:asset, a) do
+              to.add_asset(a.file_name, a.file)
+              size_str = a.file_size.to_i > 0 ? " (#{a.file_size} bytes)" : ''
+              puts "Copied asset #{highlight(a.file_name)}#{size_str}"
+            end
           end
         end
 
@@ -300,13 +305,15 @@ module BooticCli
 
       def upsert_file(theme, path)
         item, type = FSTheme.resolve_file(path)
-        case type
-        when :template
-          theme.add_template item.file_name, item.body
-        when :asset
-          theme.add_asset item.file_name, item.file
+        handle_file_errors(type, item) do
+          case type
+          when :template
+            theme.add_template(item.file_name, item.body)
+          when :asset
+            theme.add_asset(item.file_name, item.file)
+          end
         end
-        puts "Uploaded #{type}: #{item.file_name}"
+        puts "Uploaded #{type}: #{highlight(item.file_name)}"
       end
 
       def delete_file(theme, path)
@@ -314,11 +321,42 @@ module BooticCli
         file_name = File.basename(path)
         case type
         when :template
-          theme.remove_template file_name
+          theme.remove_template(file_name)
         when :asset
-          theme.remove_asset file_name
+          theme.remove_asset(file_name)
         end
-        puts "Deleted remote #{type}: #{file_name}"
+        puts "Deleted remote #{type}: #{highlight(file_name)}"
+      end
+
+      def handle_file_errors(type, file, &block)
+        begin
+          yield
+        rescue APITheme::EntityErrors => e
+          fields = e.errors.map(&:field)
+
+          error_msg = if fields.include?("file_content_type")
+            "is an unsupported file type."
+          elsif fields.include?("file_file_size") # big asset
+            size_str = file.file_size.to_i > 0 ? "(#{file.file_size} KB) " : ''
+            "#{size_str}is heavier than the maximum allowed for assets (1 MB)"
+          elsif fields.include?("body") # big template
+            str = file.file_name[/\.(css|js)/] ? "Try saving it as an asset instead" : "Try splitting it into smaller chunks"
+            str += ", since templates can hold up to 64 KB of data."
+          else
+            "has invalid #{fields.join(', ')}"
+          end
+
+          prompt.say("#{file.file_name} #{error_msg}. Skipping...", :red)
+          # abort
+
+        rescue JSON::GeneratorError => e
+          prompt.say("#{file.file_name} looks like a binary file. Skipping...", :red)
+          # abort
+
+        rescue BooticClient::ServerError => e
+          prompt.say("Couldn't save #{file.file_name}. Please try again in a few minutes.", :red)
+          abort
+        end
       end
     end
   end

@@ -48,6 +48,15 @@ module BooticCli
     end
 
     class APITheme
+
+      class EntityErrors < StandardError
+        attr_reader :errors
+        def initialize(errors)
+          @errors = errors
+          super "Entity has errors: #{errors.map(&:field)}"
+        end
+      end
+
       def initialize(theme)
         @theme = theme
       end
@@ -115,13 +124,6 @@ module BooticCli
       private
       attr_reader :theme
 
-      class EntityErrors < StandardError
-        attr_reader :errors
-        def initialize(errors)
-          @errors = errors
-          super "Entity has errors: #{errors.map(&:field)}"
-        end
-      end
 
       def check_errors!(entity)
         if entity.has?(:errors)
