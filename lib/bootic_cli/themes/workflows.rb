@@ -335,7 +335,7 @@ module BooticCli
           fields = e.errors.map(&:field)
 
           error_msg = if fields.include?("file_content_type") or fields.include?("content_type")
-            "is an unsupported file type."
+            "is an unsupported file type for #{type}s."
           elsif fields.include?("file_file_size") # big asset
             size_str = file.file_size.to_i > 0 ? "(#{file.file_size} KB) " : ''
             "#{size_str}is heavier than the maximum allowed for assets (1 MB)"
