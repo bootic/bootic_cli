@@ -61,7 +61,7 @@ describe BooticCli::Commands::Themes do
         described_class.start(%w(clone bar))
       end
 
-      it "uses production theme if -p option present" do
+      it "uses public theme if -p option present" do
         it_sets_up_production_theme
         expect(local_theme).to receive(:write_subdomain)
         described_class.start(%w(clone -p bar))
@@ -137,6 +137,15 @@ describe BooticCli::Commands::Themes do
   end
 
   describe '#watch' do
+
+    before do
+      expect(local_theme).to receive(:templates).at_least(:once).and_return([])
+      expect(remote_theme).to receive(:templates).at_least(:once).and_return([])
+      expect(local_theme).to receive(:assets).at_least(:once).and_return([])
+      expect(remote_theme).to receive(:assets).at_least(:once).and_return([])
+    end
+
+
     it "invokes watch workflow" do
       expect(workflows).to receive(:watch).with('.', remote_theme)
       described_class.start(%w(watch))

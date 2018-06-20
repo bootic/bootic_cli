@@ -48,7 +48,7 @@ module BooticCli
       def push
         within_theme do
           local_theme, remote_theme = theme_selector.select_theme_pair(default_subdomain, current_dir, options['public'])
-          warn_user if remote_theme.public? and options['public'].nil?
+          warn_about_public if remote_theme.public? and options['public'].nil?
           workflows.push(local_theme, remote_theme, delete: options['delete'] || true)
           prompt.say "Done! View updated version at #{remote_theme.path}", :cyan
         end
@@ -59,7 +59,7 @@ module BooticCli
       def sync
         within_theme do
           local_theme, remote_theme = theme_selector.select_theme_pair(default_subdomain, current_dir, options['public'])
-          warn_user if remote_theme.public? and options['public'].nil?
+          warn_about_public if remote_theme.public? and options['public'].nil?
           workflows.sync(local_theme, remote_theme)
           prompt.say "Synced! Preview this theme at #{remote_theme.path}", :cyan
         end
@@ -78,8 +78,17 @@ module BooticCli
       option :public, banner: '<true|false>', type: :boolean, aliases: '-p', desc: 'Pushes any changes to public theme, even if dev theme exists'
       def watch
         within_theme do
-          _, remote_theme = theme_selector.select_theme_pair(default_subdomain, current_dir, options['public'])
-          warn_user if remote_theme.public? and options['public'].nil?
+          local_theme, remote_theme = theme_selector.select_theme_pair(default_subdomain, current_dir, options['public'])
+          warn_about_public if remote_theme.public? and options['public'].nil?
+
+          diff = BooticCli::Themes::ThemeDiff.new(source: local_theme, target: remote_theme)
+          if diff.any?
+            unless prompt.yes_or_no?("There are differences between the remote theme and your local copy. Continue anyway?", true)
+              prompt.say "No problem. Bye."
+              exit 1
+            end
+          end
+
           workflows.watch(current_dir, remote_theme)
         end
       end
@@ -90,7 +99,7 @@ module BooticCli
           local_theme, remote_theme = theme_selector.select_theme_pair(default_subdomain, current_dir)
 
           if remote_theme.public?
-            say "You don't seem to have a development theme set up, so there's nothing to publish!", :red
+            prompt.say "You don't seem to have a development theme set up, so there's nothing to publish!", :red
           else
 
             # check if there are any differences between the dev and public themes
@@ -104,13 +113,13 @@ module BooticCli
               end
             end
 
-            # say("Publishing means all your public theme's templates and assets will be replaced and lost.")
+            # prompt.say("Publishing means all your public theme's templates and assets will be replaced and lost.")
             if prompt.yes_or_no?("Would you like to make a local copy of your current public theme before publishing?", diff.any?) # default to true if changes exist
 
               backup_path = File.join(local_theme.path, "public-theme-backup-#{Time.now.to_i}")
               backup_theme = theme_selector.select_local_theme(backup_path, local_theme.subdomain)
 
-              say("Gotcha. Backing up your public theme into #{prompt.highlight(backup_theme.path)}")
+              prompt.say("Gotcha. Backing up your public theme into #{prompt.highlight(backup_theme.path)}")
               workflows.pull(backup_theme, public_theme)
               prompt.say "Done! Existing public theme was saved to #{prompt.highlight(File.basename(backup_theme.path))}", :cyan
             end
@@ -140,7 +149,7 @@ module BooticCli
 
       private
 
-      def warn_user
+      def warn_about_public
         unless prompt.yes_or_no?("You're pushing changes directly to your public theme. Are you sure?", true)
           prompt.say("Ok, sure. You can skip the above warning prompt by passing a `--public` flag.")
           abort
