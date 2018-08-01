@@ -65,12 +65,17 @@ module BooticCli
         end
       end
 
-      desc 'compare', 'Show differences between local and remote copies'
-      option :public, banner: '<true|false>', type: :boolean, aliases: '-p', desc: 'Compare against public theme, even if dev theme exists'
+      desc 'compare', 'Show differences between local and remote copies (both public and dev, if present)'
       def compare
         within_theme do
-          local_theme, remote_theme = theme_selector.select_theme_pair(default_subdomain, current_dir, options['public'])
+          local_theme, remote_theme = theme_selector.select_theme_pair(default_subdomain, current_dir)
           workflows.compare(local_theme, remote_theme)
+
+          # if we just compared against the dev theme, redo the mumbo-jumbo but with the public one
+          unless remote_theme.public?
+            local_theme, public_theme = theme_selector.select_theme_pair(default_subdomain, current_dir, true)
+            workflows.compare(local_theme, public_theme)
+          end
         end
       end
 

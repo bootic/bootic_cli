@@ -33,6 +33,7 @@ describe BooticCli::Commands::Themes do
 
     # assume all commands are run within a valid theme
     dir = File.expand_path('.')
+    allow(File).to receive(:exist?).and_call_original
     allow(File).to receive(:exist?).with(dir + '/layout.html').and_return(true)
   end
 
@@ -130,9 +131,10 @@ describe BooticCli::Commands::Themes do
       described_class.start(%w(compare))
     end
 
-    it "uses production theme if -p option present" do
-      it_selects_production_theme
-      described_class.start(%w(compare -p))
+    it "uses both dev and production theme" do
+      expect(selector).to receive(:select_theme_pair).once.with(nil, '.').and_return [local_theme, remote_theme]
+      expect(selector).to receive(:select_theme_pair).once.with(nil, '.', true).and_return [local_theme, remote_theme]
+      described_class.start(%w(compare))
     end
   end
 
