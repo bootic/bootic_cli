@@ -104,7 +104,8 @@ module BooticCli
           local_theme, remote_theme = theme_selector.select_theme_pair(default_subdomain, current_dir)
 
           if remote_theme.public?
-            prompt.say "You don't seem to have a development theme set up, so there's nothing to publish!", :red
+            prompt.say "You don't seem to have a development theme set up, so there's nothing to publish. :)", :red
+            prompt.say "To push your local changes directly to your public theme, either run the `push` or `sync` commands.", :red
           else
 
             # check if there are any differences between the dev and public themes
