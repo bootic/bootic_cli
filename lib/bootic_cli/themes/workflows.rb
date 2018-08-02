@@ -168,7 +168,7 @@ module BooticCli
         changes = ThemeDiff.new(source: local_theme, target: remote_theme)
         if changes.any?
           prompt.say "There are differences between your local and the remote version of your shop's development theme."
-          if prompt.yes_or_no? "Push your local changes now?", false
+          if prompt.yes_or_no? "Push your local changes now?", true
             push(local_theme, remote_theme, delete: true)
           else
             prompt.say "No problem. Please make sure both versions are synced before publishing.", :magenta

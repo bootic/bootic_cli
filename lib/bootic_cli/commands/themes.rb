@@ -31,6 +31,22 @@ module BooticCli
         end
       end
 
+      desc 'dev', 'Create a development theme for your current shop'
+      def dev
+        within_theme do
+          local_theme, remote_theme = theme_selector.select_theme_pair(default_subdomain, current_dir)
+          unless remote_theme.public?
+            prompt.say "You already have a development theme set up!", :red
+            abort
+          end
+
+          local_theme = theme_selector.create_dev_theme(current_dir)
+          prompt.say "Success! You're now working on a development copy of your theme."
+          prompt.say "Any changes you push or sync won't appear on your public website, but on the development version."
+          prompt.say "Once you're ready to merge your changes back, run the `publish` command."
+        end
+      end
+
       desc 'pull', 'Pull remote changes into current theme directory'
       option :public, banner: '<true|false>', type: :boolean, aliases: '-p', desc: 'Pull from public theme, even if dev theme exists'
       option :delete, banner: '<true|false>', type: :boolean, desc: 'Remove local files that were removed in remote theme (default: true)'
@@ -54,7 +70,7 @@ module BooticCli
         end
       end
 
-      desc 'sync', 'Sync changes from local theme copy with remote'
+      desc 'sync', 'Sync changes between local and remote themes'
       option :public, banner: '<true|false>', type: :boolean, aliases: '-p', desc: 'Sync to public theme, even if dev theme exists'
       def sync
         within_theme do
