@@ -70,9 +70,9 @@ module BooticCli
         theme.can?(:publish_theme)
       end
 
-      def publish
+      def publish(opts = {})
         if theme.can?(:publish_theme)
-          @theme = theme.publish_theme
+          @theme = theme.publish_theme(opts)
           reload!(false)
         end
       end

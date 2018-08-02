@@ -162,6 +162,27 @@ module BooticCli
         end
       end
 
+      def publish(local_theme, remote_theme)
+        raise "This command is meant for dev themes only" unless remote_theme.dev?
+
+        changes = ThemeDiff.new(source: local_theme, target: remote_theme)
+        if changes.any?
+          prompt.say "There are differences between your local and the remote version of your shop's development theme."
+          if prompt.yes_or_no? "Push your local changes now?", false
+            push(local_theme, remote_theme, delete: true)
+          else
+            prompt.say "No problem. Please make sure both versions are synced before publishing.", :magenta
+            exit(1)
+          end
+        end
+
+        delete_dev = prompt.yes_or_no? "Delete the development copy of your theme after publishing?", true
+        prompt.notice "Alrighty! Publishing your development theme..."
+        updated_theme = remote_theme.publish(delete: delete_dev)
+
+        prompt.notice "Yay! Your development theme has been made public. Take a look at #{remote_theme.path.sub('/preview/dev', '')}"
+      end
+
       def watch(dir, remote_theme, watcher: Listen)
         listener = watcher.to(dir) do |modified, added, removed|
           if modified.any?
@@ -198,25 +219,6 @@ module BooticCli
 
         prompt.say "Preview changes at #{remote_theme.path}. Hit Ctrl-C to stop watching for changes.", :cyan
         Kernel.sleep
-      end
-
-      def publish(local_theme, remote_theme)
-        raise "This command is meant for dev themes only" unless remote_theme.dev?
-
-        changes = ThemeDiff.new(source: local_theme, target: remote_theme)
-        if changes.any?
-          prompt.say "There are some differences between your local and the remote version of your development theme."
-          if prompt.yes_or_no? "Do you want to push your local changes now?", false
-            push(local_theme, remote_theme, delete: true)
-          else
-            prompt.say "Oh well. Please make sure both versions are synced before publishing.", :magenta
-            exit(1)
-          end
-        end
-
-        prompt.notice "Alrighty! Publishing your development theme..."
-        updated_theme = remote_theme.publish # syncs dev to public, without flipping them
-        prompt.notice "Yay! Your development theme has been made public. Take a look at #{remote_theme.path.sub('/preview/dev', '')}"
       end
 
       private
