@@ -6,8 +6,8 @@ require 'bootic_cli/version'
 Gem::Specification.new do |spec|
   spec.name          = "bootic_cli"
   spec.version       = BooticCli::VERSION
-  spec.authors       = ["Ismael Celis"]
-  spec.email         = ["ismael@bootic.io"]
+  spec.authors       = ["Ismael Celis", "Tomás Pollak"]
+  spec.email         = ["ismael@bootic.io", "tomas@bootic.io"]
 
   spec.summary       = %q{Bootic command-line client.}
   spec.description   = %q{Bootic command-line client.}
