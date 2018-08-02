@@ -181,6 +181,10 @@ module BooticCli
         updated_theme = remote_theme.publish(delete: delete_dev)
 
         prompt.notice "Yay! Your development theme has been made public. Take a look at #{remote_theme.path.sub('/preview/dev', '')}"
+
+        if delete_dev
+          prompt.say "Run the `dev` command to copy your public theme into a development copy later."
+        end
       end
 
       def watch(dir, remote_theme, watcher: Listen)

@@ -114,7 +114,7 @@ module BooticCli
         end
       end
 
-      desc 'publish', 'Moves your development theme into your public website'
+      desc 'publish', 'Merges your development theme back into your public website'
       def publish
         within_theme do
           local_theme, remote_theme = theme_selector.select_theme_pair(default_subdomain, current_dir)
@@ -137,7 +137,6 @@ module BooticCli
 
             # prompt.say("Publishing means all your public theme's templates and assets will be replaced and lost.")
             if prompt.yes_or_no?("Would you like to make a local copy of your current public theme before publishing?", diff.any?) # default to true if changes exist
-
               backup_path = File.join(local_theme.path, "public-theme-backup-#{Time.now.to_i}")
               backup_theme = theme_selector.select_local_theme(backup_path, local_theme.subdomain)
 
