@@ -2,8 +2,8 @@ require 'spec_helper'
 require 'bootic_cli/themes/theme_selector'
 
 describe BooticCli::Themes::ThemeSelector do
-  let(:prod_theme) { double('Prod theme', dev?: false, rels: { theme_preview: double('link', href: 'https://acme.bootic.net')}) }
-  let(:dev_theme) { double('Dev theme', dev?: true, rels: { theme_preview: double('link', href: 'https://acme.bootic.net/preview/dev')}) }
+  let(:prod_theme) { double('Prod theme', dev?: false, has?: false, rels: { theme_preview: double('link', href: 'https://acme.bootic.net')}) }
+  let(:dev_theme) { double('Dev theme', dev?: true, has?: false, rels: { theme_preview: double('link', href: 'https://acme.bootic.net/preview/dev')}) }
   let(:themes) { double('Themes', theme: prod_theme, dev_theme: dev_theme) }
   let(:shop) { double('Shop', subdomain: 'foo', themes: themes, theme: prod_theme) }
   let(:root) { double('Root', has?: true, shops: [shop]) }

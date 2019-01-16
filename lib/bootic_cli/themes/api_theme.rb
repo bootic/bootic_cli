@@ -53,12 +53,13 @@ module BooticCli
         attr_reader :errors
         def initialize(errors)
           @errors = errors
-          super "Entity has errors: #{errors.map(&:field)}"
+          super "Entity has errors: #{errors.map(&:field).join(', ')}"
         end
       end
 
       def initialize(theme)
         @theme = theme
+        puts "Entity has errors: #{theme.errors.map(&:messages).join(', ')}" if theme.has?(:errors)
       end
 
       # this is unique to API themes
@@ -123,7 +124,6 @@ module BooticCli
 
       private
       attr_reader :theme
-
 
       def check_errors!(entity)
         if entity.has?(:errors)
