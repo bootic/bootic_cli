@@ -284,18 +284,20 @@ module BooticCli
         files = from.assets.find_all do |a|
           if opts[:overwrite]
             true
-          else
-            target_asset = to.assets.find { |t| t.file_name == a.file_name }
-            if target_asset
-              opts[:interactive] && prompt.yes_or_no?("Asset exists: #{highlight(a.file_name)}. Overwrite?", false)
+          elsif existing = to.assets.find { |t| t.file_name == a.file_name }
+            if existing == a # exact copy, no need to overwrite
+              false
             else
-              true
+              opts[:interactive] && prompt.yes_or_no?("Asset exists: #{highlight(a.file_name)}. Overwrite?", false)
             end
+          else
+            true
           end
         end
 
         pool = BooticCli::WorkerPool.new(CONCURRENCY)
 
+        # puts "Downloading assets: #{files.count}"
         files.each do |a|
           pool.schedule do
             handle_file_errors(:asset, a) do

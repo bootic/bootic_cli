@@ -19,10 +19,12 @@ module BooticCli
 
         def ==(other)
           if other.digest.to_s == '' # api theme asset without a digest set
+            # puts "Other has no digest, so comparing dates: #{self.updated_on} vs #{other.updated_on}"
             return self.updated_on == other.updated_on
           end
 
-          self.file_size == other.file_size && self.digest == other.digest
+          # file sizes may differ as they are served by CDN (that shrinks them)
+          self.digest == other.digest # self.file_size == other.file_size
         end
       end
 

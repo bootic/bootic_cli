@@ -9,6 +9,7 @@ module BooticCli
       end
 
       def ==(other)
+        # puts "Comparing with time #{self.updated_on} vs #{other.updated_on}"
         self.updated_on == other.updated_on
       end
     end
@@ -24,8 +25,13 @@ module BooticCli
       end
 
       def ==(other)
-        return super if digest.to_s == '' || other.digest.to_s == ''
-        self.file_size == other.file_size && self.digest == other.digest
+        if digest.to_s == '' || other.digest.to_s == ''
+          # puts "One or the other digest is empty: #{digest} -- #{other.digest}"
+          return super 
+        end
+
+        # file sizes may differ as they are served by CDN (that shrinks them)
+        self.digest == other.digest # && self.file_size == other.file_size
       end
 
       def fetch_data(attempt = 1)
