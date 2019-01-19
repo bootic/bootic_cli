@@ -183,7 +183,7 @@ module BooticCli
         prompt.notice "Yay! Your development theme has been made public. Take a look at #{remote_theme.path.sub('/preview/dev', '')}"
 
         if delete_dev
-          prompt.say "Run the `dev` command to copy your public theme into a development copy later."
+          prompt.say "Run `bootic themes dev` on this directory to create a development copy of your public theme later."
         end
       end
 
