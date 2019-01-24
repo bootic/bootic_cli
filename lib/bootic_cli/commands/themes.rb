@@ -104,9 +104,9 @@ module BooticCli
 
           diff = BooticCli::Themes::ThemeDiff.new(source: local_theme, target: remote_theme)
           if diff.any?
-            unless prompt.yes_or_no?("There are differences between the remote theme and your local copy. Continue anyway?", true)
-              prompt.say "No problem. Bye."
-              exit 1
+            if prompt.yes_or_no?("There are differences between the remote theme and your local copy. Sync now?", true)
+              workflows.sync(local_theme, remote_theme)
+              prompt.say "Synced!", :cyan
             end
           end
 
