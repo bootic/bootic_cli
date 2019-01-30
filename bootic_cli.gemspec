@@ -12,7 +12,7 @@ Gem::Specification.new do |spec|
   spec.summary       = %q{Bootic command-line client.}
   spec.description   = %q{Bootic command-line client.}
   spec.homepage      = "http://www.bootic.io"
-  spec.license       = "MIT"
+  spec.license       = "MPLv2"
 
   spec.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
   spec.bindir        = 'bin'
