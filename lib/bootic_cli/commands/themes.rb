@@ -89,6 +89,7 @@ module BooticCli
 
           # if we just compared against the dev theme, redo the mumbo-jumbo but with the public one
           unless remote_theme.public?
+            prompt.say "Comparing againt public theme now.", :cyan
             local_theme, public_theme = theme_selector.select_theme_pair(default_subdomain, current_dir, true)
             workflows.compare(local_theme, public_theme)
           end
@@ -150,21 +151,43 @@ module BooticCli
         end
       end
 
-      desc 'open', 'Open theme preview URL in a browser'
-      option :public, banner: '<true|false>', type: :boolean, aliases: '-p', desc: 'Opens public theme URL'
-      def open
-        within_theme do
-          _, remote_theme = theme_selector.select_theme_pair(default_subdomain, current_dir, options['public'])
-          Launchy.open remote_theme.path
-        end
-      end
+      # desc 'open', 'Open theme preview URL in a browser'
+      # option :public, banner: '<true|false>', type: :boolean, aliases: '-p', desc: 'Opens public theme URL'
+      # def open
+      #   within_theme do
+      #     _, remote_theme = theme_selector.select_theme_pair(default_subdomain, current_dir, options['public'])
+      #     Launchy.open remote_theme.path
+      #   end
+      # end
 
       desc 'pair', 'Pair this directory to remote [shop]'
       option :shop, banner: '<shop_subdomain>', type: :string, required: true
       def pair
         within_theme do
           local_theme = theme_selector.pair(options['shop'], current_dir)
-          prompt.say "Directory #{local_theme.path} paired with shop #{options['shop']}", :green
+          prompt.say "Directory #{File.dirname(local_theme.path)} paired with shop #{options['shop']}", :green
+        end
+      end
+
+      desc 'local_pull [from_path]', 'Pull changes from a local (parent) theme into current one'
+      # option :path, banner: '<path>', type: :string, required: true
+      option :delete, banner: '<true|false>', type: :boolean, desc: 'Remove local files that were removed in parent theme (default: false)'
+      def local_pull(dir)
+        within_theme do
+          unless File.directory?(dir) and contains_theme?(dir)
+            prompt.say("Path doesn't exist or doesn't contain theme: #{dir}")
+            abort
+          end
+
+          dirname = File.dirname(dir)
+          local_theme = theme_selector.select_local_theme(current_dir)
+          parent_theme = theme_selector.select_local_theme(dir)
+
+          prompt.say "Pulling changes from parent theme at #{dirname}", :green
+          delete_removed = options['delete'].nil? ? false : options['delete']
+          workflows.pull(local_theme, parent_theme, delete: delete_removed)
+
+          prompt.say "Synced changes from parent theme at #{dirname} with local one.", :cyan
         end
       end
 
@@ -188,8 +211,12 @@ module BooticCli
         end
       end
 
+      def contains_theme?(path)
+        File.exist?(File.join(path, 'layout.html'))
+      end
+
       def is_within_theme?
-        File.exist?(File.join(current_expanded_dir, 'layout.html'))
+        contains_theme?(current_expanded_dir)
       end
 
       def current_dir

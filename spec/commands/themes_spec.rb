@@ -178,6 +178,7 @@ describe BooticCli::Commands::Themes do
     end
   end
 
+=begin
   describe "#open" do
     it "opens the remote theme URL" do
       expect(remote_theme).to receive(:path).and_return 'https://acme.bootic.net/preview/dev'
@@ -192,6 +193,7 @@ describe BooticCli::Commands::Themes do
       described_class.start(%w(open -p))
     end
   end
+=end
 
   describe "#pair" do
     let(:theme) { double('LocalTheme', path: './foo') }
