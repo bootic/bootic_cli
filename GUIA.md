@@ -83,7 +83,7 @@ a ser sobre un sitio de desarrollo, en `https://url.del.sitio/preview/dev`.
 Los sitios de desarrollo no tienen caché, así que cualquier cambio que hagas
 deberías verlo ipso-facto y sin retrasos.
 
-## Publicando los cambios cambios
+## Publicando los cambios
 
 Y finalmente, cuando quieras subir los cambios de la plantilla de desarrollo
 al sitio público, corres `bootic themes publish`. Esto obviamente no aplica
@@ -103,4 +103,5 @@ credenciales actuales por otras.
 ## Tengo más preguntas. ¿Qué hago?
 
 Escríbenos a soporte@bootic.io o por el chat de soporte dentro del panel de 
-la tienda.
+la tienda. Y si hay algo que no esté funcionando bien, crea un [nuevo issue](https://github.com/bootic/bootic_cli/issues) en
+este repositorio!
