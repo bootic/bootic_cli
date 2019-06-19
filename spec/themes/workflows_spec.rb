@@ -205,7 +205,9 @@ describe BooticCli::Themes::Workflows do
     end
 
     it "compares" do
-      expect(prompt).to receive(:say).with("Updated template in remote: collection.html (updated at 2017-01-01 00:00:00 -0300)")
+      expect(prompt).to receive(:say).with("Updated template in remote: collection.html (updated at 2017-01-01 00:00:00 -0300)").once
+      expect(prompt).to receive(:say).with("\e[31m-aaa\e[0m\n\e[32m+bbb\e[0m\n").twice
+      expect(prompt).to receive(:say).with("Local template not in remote: layout.html")
       expect(prompt).to receive(:say).with("Remote template not in local dir: styles.css")
       expect(prompt).to receive(:say).with("Remote asset not in local dir: icon.gif")
       expect(prompt).to receive(:say).with("Updated locally: product.html (updated at 2017-01-01 00:00:00 -0300)")
@@ -242,7 +244,7 @@ describe BooticCli::Themes::Workflows do
           self.block.call(*@parts)
         end
 
-        def stop;end
+        def stop; end
       end
 
       watcher = fake_listen.new(
@@ -259,6 +261,7 @@ describe BooticCli::Themes::Workflows do
       # silence reloading
       expect(remote_theme).to receive(:reload!).and_return true
       expect(Kernel).to receive(:sleep)
+      expect(Signal).to receive(:trap).with('INT')
       subject.watch(dir, remote_theme, watcher: watcher)
 
       expect(remote_theme.templates.map(&:file_name)).to eq ['collection.html', 'layout.html', 'master.css']
