@@ -21,7 +21,10 @@ module BooticCli
 
       def templates
         @templates ||= map_pair(source.templates, target.templates) do |a, b|
-          diff = Diffy::Diff.new(normalize_endings(b.body), normalize_endings(a.body), context: 1)
+          # don't use context until diffy bug is fixed: https://github.com/samg/diffy/pull/103
+          # diff = Diffy::Diff.new(normalize_endings(b.body), normalize_endings(a.body), context: 1)
+          diff = Diffy::Diff.new(normalize_endings(b.body), normalize_endings(a.body))
+
           if !diff.to_s.empty? && should_update?(a, b)
             c = TemplateWithDiff.new(a.file_name, a.body, a.updated_on, diff)
             [true, c]
