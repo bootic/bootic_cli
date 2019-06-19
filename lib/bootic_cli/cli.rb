@@ -51,8 +51,8 @@ module BooticCli
       end
 
       if current_env != DEFAULT_ENV
-        auth_host = ask("Enter auth endpoint host (#{BooticClient::AUTH_HOST}):", :bold).chomp
-        api_root  = ask("Enter API root (#{BooticClient::API_ROOT}):", :bold).chomp
+        auth_host = ask("Enter auth endpoint host (#{BooticClient.configuration.auth_host}):", :bold).chomp
+        api_root  = ask("Enter API root (#{BooticClient.configuration.api_root}):", :bold).chomp
         auth_host = nil if auth_host == ""
         api_root  = nil if api_root == ""
       end
