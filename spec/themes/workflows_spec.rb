@@ -205,12 +205,12 @@ describe BooticCli::Themes::Workflows do
     end
 
     it "compares" do
-      expect(prompt).to receive(:say).with("Updated template in remote: collection.html (updated at 2017-01-01 00:00:00 -0300)").once
-      expect(prompt).to receive(:say).with("\e[31m-aaa\e[0m\n\e[32m+bbb\e[0m\n").twice
+      expect(prompt).to receive(:say).with("Updated template in remote: collection.html (updated at #{Time.local(2017).to_s})").once
+      # expect(prompt).to receive(:say).with("\e[31m-aaa\e[0m\n\e[32m+bbb\e[0m\n").twice
       expect(prompt).to receive(:say).with("Local template not in remote: layout.html")
       expect(prompt).to receive(:say).with("Remote template not in local dir: styles.css")
       expect(prompt).to receive(:say).with("Remote asset not in local dir: icon.gif")
-      expect(prompt).to receive(:say).with("Updated locally: product.html (updated at 2017-01-01 00:00:00 -0300)")
+      expect(prompt).to receive(:say).with("Updated locally: product.html (updated at #{Time.local(2017).to_s})")
       expect(prompt).to receive(:say).with("Local template not in remote: master.css")
       expect(prompt).to receive(:say).with("Local asset not in remote: logo.gif")
 
@@ -274,13 +274,12 @@ describe BooticCli::Themes::Workflows do
       local_theme.add_template('master.css', 'bbb')
       local_theme.add_asset('icon.gif', StringIO.new('icon'))
 
-      allow(remote_theme).to receive(:path).and_return 'https://acme.bootic.net'
-
-      # expect(prompt).to receive(:set_color).with("Published to https://acme.bootic.net")
-      expect(prompt).to receive(:yes_or_no?).and_return false
-
+      expect(prompt).to receive(:yes_or_no?).with("Push your local changes now?", true).and_return(true)
+      expect(prompt).to receive(:yes_or_no?).with("Delete the development copy of your theme after publishing?", true).and_return(false)
+      
       expect(remote_theme).to receive(:dev?).and_return(true)
-      expect(remote_theme).to receive(:publish).with(true).and_return remote_theme
+      expect(remote_theme).to receive(:publish).with(delete: false).and_return remote_theme
+      allow(remote_theme).to receive(:path).and_return 'https://acme.bootic.net'
       subject.publish(local_theme, remote_theme)
 
       expect(remote_theme.templates.map(&:file_name)).to eq ['layout.html', 'master.css']
