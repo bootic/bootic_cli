@@ -115,7 +115,7 @@ module BooticCli
       @oauth_client ||= OAuth2::Client.new(
         config[:client_id],
         config[:client_secret],
-        site: (config[:auth_host] || BooticClient.auth_host)
+        site: (config[:auth_host] || BooticClient.configuration.auth_host)
       )
     end
 
