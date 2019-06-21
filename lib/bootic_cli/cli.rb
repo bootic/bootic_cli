@@ -177,7 +177,12 @@ module BooticCli
         IRB.conf[:PROMPT_MODE] = :CUSTOM
         IRB.conf[:AUTO_INDENT] = false
 
-        IRB.irb nil, context
+        begin
+          IRB.irb nil, context
+        rescue ThreadError => e
+          # puts "#{e.class} -> #{e.message}"
+          exit(1)
+        end
       end
     end
 
