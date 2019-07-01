@@ -27,17 +27,17 @@ module BooticCli
       def ==(other)
         if digest.to_s == '' || other.digest.to_s == ''
           # puts "One or the other digest is empty: #{digest} -- #{other.digest}"
-          return super 
+          return super
         end
 
         # file sizes may differ as they are served by CDN (that shrinks them)
         self.digest == other.digest # && self.file_size == other.file_size
       end
 
-      def fetch_data(attempt = 1)
+      def fetch_data(attempt = 1, skip_verify = false)
         uri = URI.parse(rels[:file].href)
         opts = REQUEST_OPTS.merge({
-          # verify_mode: OpenSSL::SSL::VERIFY_PEER # OpenSSL::SSL::VERIFY_NONE
+          verify_mode: skip_verify ? OpenSSL::SSL::VERIFY_NONE : OpenSSL::SSL::VERIFY_PEER,
           use_ssl: uri.port == 443
         })
 
@@ -50,6 +50,9 @@ module BooticCli
         raise if attempt > 3 # max attempts
         # puts "#{e.class} for #{File.basename(uri.path)}! Retrying request..."
         fetch_data(attempt + 1)
+      rescue OpenSSL::SSL::SSLError => e
+        # retry but skipping verification
+        fetch_data(attempt + 1, true)
       end
     end
 
