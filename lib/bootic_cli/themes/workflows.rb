@@ -267,15 +267,21 @@ module BooticCli
       end
 
       def remove_all(from, to)
-        from.templates.each { |f| to.remove_template(f.file_name) }
-        from.assets.each { |f| to.remove_asset(f.file_name) }
+        from.templates.each do |f|
+          puts "Removing template #{highlight(f.file_name)}"
+          to.remove_template(f.file_name)
+        end
+        from.assets.each do |f|
+          puts "Removing asset #{highlight(f.file_name)}"
+          to.remove_asset(f.file_name)
+        end
       end
 
       def copy_templates(from, to, opts = {})
         from.templates.each do |t|
           handle_file_errors(:template, t) do
             to.add_template(t.file_name, t.body)
-            puts "Copied #{highlight(t.file_name)}"
+            puts "Copied template #{highlight(t.file_name)}"
           end
         end
       end
@@ -332,6 +338,8 @@ module BooticCli
           theme.remove_template(file_name)
         when :asset
           theme.remove_asset(file_name)
+        else
+          raise "Invalid type: #{type}"
         end
         puts "Deleted remote #{type}: #{highlight(file_name)}"
       end
@@ -361,7 +369,7 @@ module BooticCli
           prompt.say("#{file.file_name} looks like a binary file, not a template. Skipping...", :red)
           # abort
 
-        rescue Net::OpenTimeout, Net::ReadTimeout => e 
+        rescue Net::OpenTimeout, Net::ReadTimeout => e
           prompt.say("I'm having trouble connecting to the server. Please try again in a minute.", :red)
           abort
 
