@@ -120,7 +120,7 @@ module BooticCli
 
         unless diff.any?
           prompt.say "No changes between versions."
-          exit 1
+          return
         end
 
         notice "Local <--- Remote"
