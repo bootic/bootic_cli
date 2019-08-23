@@ -1,5 +1,14 @@
 require 'diffy'
 
+module Diffy
+  class Diff
+    # monkey patch diffy to fix buggy bug: https://github.com/samg/diffy/pull/103
+    def diff_options
+      Array(options[:context] ? "-U#{options[:context]}" : options[:diff])
+    end
+  end
+end
+
 module BooticCli
   module Themes
     # given :source and :target themes,
@@ -21,9 +30,7 @@ module BooticCli
 
       def templates
         @templates ||= map_pair(source.templates, target.templates) do |a, b|
-          # don't use context until diffy bug is fixed: https://github.com/samg/diffy/pull/103
-          # diff = Diffy::Diff.new(normalize_endings(b.body), normalize_endings(a.body), context: 1)
-          diff = Diffy::Diff.new(normalize_endings(b.body), normalize_endings(a.body))
+          diff = Diffy::Diff.new(normalize_endings(b.body), normalize_endings(a.body), context: 1)
 
           if !diff.to_s.empty? && should_update?(a, b)
             c = TemplateWithDiff.new(a.file_name, a.body, a.updated_on, diff)
