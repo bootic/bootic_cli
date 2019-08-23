@@ -89,7 +89,7 @@ module BooticCli
 
           # if we just compared against the dev theme, redo the mumbo-jumbo but with the public one
           unless remote_theme.public?
-            prompt.say "Comparing againt public theme now.", :cyan
+            prompt.pause "Comparing againt public theme now. Press any key to continue.", :cyan
             local_theme, public_theme = theme_selector.select_theme_pair(default_subdomain, current_dir, true)
             workflows.compare(local_theme, public_theme)
           end
@@ -260,6 +260,15 @@ module BooticCli
 
           return default_answer if input == '' || input.downcase == default_char
           !default_answer
+        end
+
+        def pause(string, color = nil)
+          begin
+            input = shell.ask(string, color)
+          rescue Interrupt
+            say "\nCtrl-C received. Bailing out!", :magenta
+            abort
+          end
         end
 
         def notice(str)
