@@ -126,6 +126,10 @@ describe BooticCli::Commands::Themes do
   end
 
   describe '#compare' do
+    before do
+      allow(prompt).to receive(:pause)
+    end
+
     it "invokes compare workflow" do
       expect(workflows).to receive(:compare).with(local_theme, remote_theme)
       described_class.start(%w(compare))
