@@ -1,5 +1,5 @@
 require 'time'
-require 'net/http'
+require 'bootic_cli/utils'
 
 module BooticCli
   module Themes
@@ -15,13 +15,8 @@ module BooticCli
     end
 
     class APIAsset < ItemWithTime
-      REQUEST_OPTS = {
-        open_timeout: 5,
-        read_timeout: 5
-      }
-
       def file
-        @file ||= StringIO.new(fetch_data)
+        @file ||= BooticCli::Utils.fetch_http_file(rels[:file].href)
       end
 
       def ==(other)
@@ -32,27 +27,6 @@ module BooticCli
 
         # file sizes may differ as they are served by CDN (that shrinks them)
         self.digest == other.digest # && self.file_size == other.file_size
-      end
-
-      def fetch_data(attempt = 1, skip_verify = false)
-        uri = URI.parse(rels[:file].href)
-        opts = REQUEST_OPTS.merge({
-          verify_mode: skip_verify ? OpenSSL::SSL::VERIFY_NONE : OpenSSL::SSL::VERIFY_PEER,
-          use_ssl: uri.port == 443
-        })
-
-        Net::HTTP.start(uri.host, uri.port, opts) do |http|
-          resp = http.get(uri.path)
-          raise "Invalid response: #{resp.code}" unless resp.code.to_i == 200
-          resp.body
-        end
-      rescue Net::OpenTimeout, Net::ReadTimeout => e
-        raise if attempt > 3 # max attempts
-        # puts "#{e.class} for #{File.basename(uri.path)}! Retrying request..."
-        fetch_data(attempt + 1)
-      rescue OpenSSL::SSL::SSLError => e
-        # retry but skipping verification
-        fetch_data(attempt + 1, true)
       end
     end
 
