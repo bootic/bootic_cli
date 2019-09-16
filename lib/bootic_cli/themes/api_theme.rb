@@ -87,6 +87,14 @@ module BooticCli
         end
       end
 
+      def delete!
+        if theme.can?(:delete_theme)
+          res = theme.delete_theme
+          return !res.has?(:errors)
+        end
+        false
+      end
+
       def path
         theme.rels[:theme_preview].href
       end

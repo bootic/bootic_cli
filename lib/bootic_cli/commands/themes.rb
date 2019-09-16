@@ -31,19 +31,37 @@ module BooticCli
         end
       end
 
-      desc 'dev', 'Create a development theme for your current shop'
+      desc 'dev', 'Create or delete a development theme for shop'
+      option :shop, banner: '<shop_subdomain>', aliases: '-s', type: :string
+      option :delete, banner: '<true|false>', type: :boolean, desc: 'Deletes theme, if present'
       def dev
         within_theme do
-          local_theme, remote_theme = theme_selector.select_theme_pair(default_subdomain, current_dir)
-          unless remote_theme.public?
-            prompt.say "You already have a development theme set up!", :red
-            abort
+          local_theme, remote_theme = theme_selector.select_theme_pair(options['shop'], current_dir)
+
+          if options['delete']
+            if remote_theme.public?
+              prompt.say "No development theme found!", :red
+              abort
+            end
+
+            if remote_theme.delete!
+              prompt.say "No problem! The development theme was removed."
+            else
+              prompt.say "Whoops! Couldn't delete theme dev theme."
+            end
+
+          else # create
+            unless remote_theme.public?
+              prompt.say "You already have a development theme set up!", :red
+              abort
+            end
+
+            local_theme = theme_selector.create_dev_theme(current_dir)
+            prompt.say "Success! You're now working on a development copy of your theme."
+            prompt.say "Any changes you push or sync won't appear on your public website, but on the development version (in /preview/dev)."
+            prompt.say "Once you're ready to merge your changes back, run the `publish` command."
           end
 
-          local_theme = theme_selector.create_dev_theme(current_dir)
-          prompt.say "Success! You're now working on a development copy of your theme."
-          prompt.say "Any changes you push or sync won't appear on your public website, but on the development version."
-          prompt.say "Once you're ready to merge your changes back, run the `publish` command."
         end
       end
 
