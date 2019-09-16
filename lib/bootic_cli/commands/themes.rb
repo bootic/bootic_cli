@@ -65,6 +65,10 @@ module BooticCli
               return prompt.say('Dev theme not available!')
             end
 
+            unless prompt.yes_or_no?("This will create a development copy of your current public theme. Proceed?", true)
+              return prompt.say "Ok, bye."
+            end
+
             result = shop.themes.create_dev_theme
             if result.has?(:errors)
               prompt.say "Couldn't create dev theme: #{result.errors.map(&:field).join(', ')}"

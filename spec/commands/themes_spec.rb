@@ -151,6 +151,8 @@ describe BooticCli::Commands::Themes do
 
       expect(shop.themes).to receive(:can?).with(:create_dev_theme).and_return(true)
       expect(shop.themes).to receive(:create_dev_theme).and_return(double(has?: false, errors: []))
+      expect(prompt).to receive(:yes_or_no?).with("This will create a development copy of your current public theme. Proceed?", true).and_return(true)
+
       described_class.start(%w(dev))
     end
 
