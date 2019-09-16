@@ -32,16 +32,22 @@ module BooticCli
       end
 
       desc 'dev', 'Create or delete a development theme for shop'
-      option :shop, banner: '<shop_subdomain>', aliases: '-s', type: :string
+      # option :shop, banner: '<shop_subdomain>', aliases: '-s', type: :string
       option :delete, banner: '<true|false>', type: :boolean, desc: 'Deletes theme, if present'
       def dev
         within_theme do
-          local_theme, remote_theme = theme_selector.select_theme_pair(options['shop'], current_dir)
+          # shop = theme_selector.find_remote_shop(options['shop'])
+          local_theme = theme_selector.select_local_theme(current_dir)
+          shop = theme_selector.find_remote_shop(local_theme.subdomain)
+          remote_theme = theme_selector.select_remote_theme(shop)
 
           if options['delete']
             if remote_theme.public?
-              prompt.say "No development theme found!", :red
-              abort
+              return prompt.say("No development theme found!", :red)
+            end
+
+            unless prompt.yes_or_no?("Are you ABSOLUTELY sure you want to delete your development theme?", false)
+              return prompt.say "No worries, mate."
             end
 
             if remote_theme.delete!
@@ -52,14 +58,21 @@ module BooticCli
 
           else # create
             unless remote_theme.public?
-              prompt.say "You already have a development theme set up!", :red
-              abort
+              return prompt.say("You already have a development theme set up!", :red)
             end
 
-            local_theme = theme_selector.create_dev_theme(current_dir)
-            prompt.say "Success! You're now working on a development copy of your theme."
-            prompt.say "Any changes you push or sync won't appear on your public website, but on the development version (in /preview/dev)."
-            prompt.say "Once you're ready to merge your changes back, run the `publish` command."
+            unless shop.themes.can?(:create_dev_theme)
+              return prompt.say('Dev theme not available!')
+            end
+
+            result = shop.themes.create_dev_theme
+            if result.has?(:errors)
+              prompt.say "Couldn't create dev theme: #{result.errors.map(&:field).join(', ')}"
+            else
+              prompt.say "Success! You're now working on a development copy of your theme."
+              prompt.say "Any changes you push or sync won't appear on your public website, but on the development version (in /preview/dev)."
+              prompt.say "Once you're ready to merge your changes back, run the `publish` command."
+            end
           end
 
         end

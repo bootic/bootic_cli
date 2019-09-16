@@ -122,7 +122,53 @@ describe BooticCli::Commands::Themes do
       expect(prompt).to receive(:yes_or_no?).with("You're pushing changes directly to your public theme. Are you sure?", true).and_return(true)
       described_class.start(%w(sync))
     end
+  end
 
+  describe '#dev' do
+    let(:shop) {
+      double('shop', themes: double('themes'))
+    }
+
+    before do
+      allow(local_theme).to receive(:subdomain).and_return('foo')
+      expect(selector).to receive(:select_local_theme).with('.').and_return(local_theme)
+      expect(selector).to receive(:find_remote_shop).with('foo').and_return(shop)
+      expect(selector).to receive(:select_remote_theme).with(shop).and_return(remote_theme)
+    end
+
+    it "it returns if creating, but dev theme already exists" do
+      allow(remote_theme).to receive(:public?).and_return(false)
+
+      expect(shop.themes).not_to receive(:can?)
+      expect(shop.themes).not_to receive(:create_dev_theme)
+      expect(prompt).to receive(:say).with("You already have a development theme set up!", :red)
+
+      described_class.start(%w(dev))
+    end
+
+    it "creats dev theme if not exists" do
+      allow(remote_theme).to receive(:public?).and_return(true)
+
+      expect(shop.themes).to receive(:can?).with(:create_dev_theme).and_return(true)
+      expect(shop.themes).to receive(:create_dev_theme).and_return(double(has?: false, errors: []))
+      described_class.start(%w(dev))
+    end
+
+    it "it returns if deleting and dev theme not exists" do
+      allow(remote_theme).to receive(:public?).and_return(true)
+      expect(prompt).to receive(:say).with("No development theme found!", :red)
+      expect(remote_theme).not_to receive(:delete!)
+
+      described_class.start(%w(dev --delete))
+    end
+
+    it "deletes dev theme if exists" do
+      allow(remote_theme).to receive(:public?).and_return(false)
+      expect(prompt).to receive(:yes_or_no?).with("Are you ABSOLUTELY sure you want to delete your development theme?", false).and_return(true)
+
+      expect(remote_theme).to receive(:delete!)
+      described_class.start(%w(dev --delete))
+    end
   end
 
   describe '#compare' do

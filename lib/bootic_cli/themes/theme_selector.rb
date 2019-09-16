@@ -49,14 +49,6 @@ module BooticCli
         theme
       end
 
-      def create_dev_theme(dir)
-        theme = select_local_theme(dir)
-        shop = find_remote_shop(theme.subdomain)
-        raise "No shop with subdomain #{subdomain}" unless shop
-        raise 'Dev theme not available!' unless shop.themes.can?(:create_dev_theme)
-        new_theme = APITheme.new(shop.themes.create_dev_theme)
-      end
-
       def select_local_theme(dir, subdomain = nil)
         FSTheme.new(File.expand_path(dir), subdomain: subdomain)
       end
