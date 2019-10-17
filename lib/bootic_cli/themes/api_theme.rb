@@ -90,7 +90,7 @@ module BooticCli
       def delete!
         if theme.can?(:delete_theme)
           res = theme.delete_theme
-          return !res.has?(:errors)
+          return res.status <= 204
         end
         false
       end

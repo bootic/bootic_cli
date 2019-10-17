@@ -58,7 +58,7 @@ module BooticCli
 
           else # create
             unless remote_theme.public?
-              return prompt.say("You already have a development theme set up!", :red)
+              return prompt.say("You already have a development theme set up. If you want to delete it, please pass the --delete flag.", :red)
             end
 
             unless shop.themes.can?(:create_dev_theme)
