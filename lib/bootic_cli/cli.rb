@@ -161,8 +161,10 @@ module BooticCli
         require 'irb'
         require 'irb/completion'
         IRB.setup nil
-        IRB.conf[:MAIN_CONTEXT] = IRB::Irb.new.context
-        require 'irb/ext/multi-irb'
+
+        # IRB.conf[:MAIN_CONTEXT] = IRB::Irb.new.context
+        # require 'irb/ext/multi-irb'
+
         require 'bootic_cli/console'
         context = Console.new(session)
         prompt = "/#{shop.subdomain} (#{root.user_name}|#{root.scopes}) $ "
@@ -174,14 +176,22 @@ module BooticCli
           :PROMPT_N => prompt,
           :RETURN => "=> %s\n"
         }
+
         IRB.conf[:PROMPT_MODE] = :CUSTOM
         IRB.conf[:AUTO_INDENT] = false
+        irb = IRB::Irb.new(IRB::WorkSpace.new(context))
+        IRB.conf[:MAIN_CONTEXT] = irb.context
+
+        trap("SIGINT") do
+          irb.signal_handle
+        end
 
         begin
-          IRB.irb nil, context
-        rescue ThreadError => e
-          # puts "#{e.class} -> #{e.message}"
-          exit(1)
+          catch(:IRB_EXIT) do
+            irb.eval_input
+          end
+        ensure
+          IRB.irb_at_exit
         end
       end
     end
