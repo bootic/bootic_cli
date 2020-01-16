@@ -1,6 +1,6 @@
 # Guía para usar la línea de comandos de Bootic (Bootic CLI)
 
-El CLI de Bootic es una herramienta para diseñadores y desarrolladores que
+El [CLI de Bootic](https://github.com/bootic/bootic_cli) es una herramienta para diseñadores y desarrolladores que
 quieran realizan tareas con la API de Bootic en forma local, ya sea para ver
 o modificar datos, o bien para realizar cambios en la plantilla de la tienda.
 
