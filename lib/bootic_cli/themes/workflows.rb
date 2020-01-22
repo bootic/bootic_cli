@@ -216,8 +216,12 @@ module BooticCli
 
         # ctrl-c
         Signal.trap('INT') {
-          listener.stop
-          puts 'See you in another lifetime, brother.'
+          begin
+            listener.stop
+          rescue ThreadError => e
+            # 
+          end
+          puts "\nSee you in another lifetime, brother."
           exit
         }
 
