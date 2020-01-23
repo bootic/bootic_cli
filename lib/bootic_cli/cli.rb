@@ -162,9 +162,6 @@ module BooticCli
         require 'irb/completion'
         IRB.setup nil
 
-        # IRB.conf[:MAIN_CONTEXT] = IRB::Irb.new.context
-        # require 'irb/ext/multi-irb'
-
         require 'bootic_cli/console'
         context = Console.new(session)
         prompt = "/#{shop.subdomain} (#{root.user_name}|#{root.scopes}) $ "
@@ -182,7 +179,7 @@ module BooticCli
         irb = IRB::Irb.new(IRB::WorkSpace.new(context))
         IRB.conf[:MAIN_CONTEXT] = irb.context
 
-        trap("SIGINT") do
+        trap('SIGINT') do
           irb.signal_handle
         end
 
