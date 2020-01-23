@@ -216,8 +216,12 @@ module BooticCli
 
         # ctrl-c
         Signal.trap('INT') {
-          listener.stop
-          puts 'See you in another lifetime, brother.'
+          begin
+            listener.stop
+          rescue ThreadError => e # cant be called from trap context
+            # nil
+          end
+          puts "\nSee you in another lifetime, brother."
           exit
         }
 
@@ -318,6 +322,7 @@ module BooticCli
       end
 
       def upsert_file(theme, path)
+        return if File.basename(path)[0] == '.' # filter out .lock and .state
         item, type = FSTheme.resolve_file(path)
         handle_file_errors(type, item) do
           case type

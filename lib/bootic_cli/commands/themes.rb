@@ -133,8 +133,15 @@ module BooticCli
 
       desc 'watch', 'Watch local theme dir and update remote when any file changes'
       option :public, banner: '<true|false>', type: :boolean, aliases: '-p', desc: 'Pushes any changes to public theme, even if dev theme exists'
+      option :force, banner: '<true|false>', type: :boolean, aliases: '-f', desc: 'Force watch to run even if lockfile is found'
       def watch
         within_theme do
+          if options['force'].nil? && has_lockfile?
+            prompt.say("Looks like there's another process already watching this dir.")
+            prompt.say("If this is not the case, please run this command with --force (or -f)")
+            abort
+          end
+
           local_theme, remote_theme = theme_selector.select_theme_pair(default_subdomain, current_dir, options['public'])
           warn_about_public if remote_theme.public? and options['public'].nil?
 
@@ -146,6 +153,8 @@ module BooticCli
             end
           end
 
+          write_lockfile
+          at_exit { remove_lockfile }
           workflows.watch(current_dir, remote_theme)
         end
       end
@@ -227,6 +236,20 @@ module BooticCli
       end
 
       private
+
+      DEFAULT_LOCKFILE = '.lock'.freeze
+
+      def has_lockfile?(dir = current_dir, filename = DEFAULT_LOCKFILE)
+        File.exist?(File.join(dir, filename))
+      end
+
+      def write_lockfile(dir = current_dir, filename = DEFAULT_LOCKFILE)
+        File.open(File.join(dir, filename), 'w') { |f| f.write($$) }
+      end
+
+      def remove_lockfile(dir = current_dir, filename = DEFAULT_LOCKFILE)
+        FileUtils.rm_f(File.join(dir, filename))
+      end
 
       def warn_about_public
         unless prompt.yes_or_no?("You're pushing changes directly to your public theme. Are you sure?", true)

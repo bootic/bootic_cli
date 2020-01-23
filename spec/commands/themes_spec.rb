@@ -141,7 +141,7 @@ describe BooticCli::Commands::Themes do
 
       expect(shop.themes).not_to receive(:can?)
       expect(shop.themes).not_to receive(:create_dev_theme)
-      expect(prompt).to receive(:say).with("You already have a development theme set up!", :red)
+      expect(prompt).to receive(:say).with("You already have a development theme set up. If you want to delete it, please pass the --delete flag.", :red)
 
       described_class.start(%w(dev))
     end
