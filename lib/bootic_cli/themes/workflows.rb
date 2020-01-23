@@ -218,8 +218,8 @@ module BooticCli
         Signal.trap('INT') {
           begin
             listener.stop
-          rescue ThreadError => e
-            # 
+          rescue ThreadError => e # cant be called from trap context
+            # nil
           end
           puts "\nSee you in another lifetime, brother."
           exit
