@@ -193,6 +193,8 @@ describe BooticCli::Commands::Themes do
   describe '#watch' do
 
     before do
+      allow(File).to receive(:exist?).with('./.lock').and_return(false)
+
       expect(local_theme).to receive(:templates).at_least(:once).and_return([])
       expect(remote_theme).to receive(:templates).at_least(:once).and_return([])
       expect(local_theme).to receive(:assets).at_least(:once).and_return([])
