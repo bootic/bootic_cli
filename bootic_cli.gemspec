@@ -20,7 +20,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.add_dependency 'thor', '~> 0'
-  spec.add_dependency 'bootic_client', "~> 0.0.27"
+  spec.add_dependency 'bootic_client', "~> 0.0.28"
   spec.add_dependency 'diffy', "~> 3.2"
   spec.add_dependency 'listen', "~> 3.1"
   spec.add_dependency 'launchy', "~> 2.4"
