@@ -324,7 +324,7 @@ module BooticCli
       def upsert_file(theme, path)
         return if File.basename(path)[0] == '.' # filter out .lock and .state
         item, type = FSTheme.resolve_file(path)
-        handle_file_errors(type, item) do
+        success = handle_file_errors(type, item) do
           case type
           when :template
             theme.add_template(item.file_name, item.body)
@@ -332,7 +332,7 @@ module BooticCli
             theme.add_asset(item.file_name, item.file)
           end
         end
-        puts "Uploaded #{type}: #{highlight(item.file_name)}"
+        puts "Uploaded #{type}: #{highlight(item.file_name)}" if success
       end
 
       def delete_file(theme, path)
@@ -352,15 +352,21 @@ module BooticCli
       def handle_file_errors(type, file, &block)
         begin
           yield
+          true
         rescue APITheme::EntityErrors => e
           fields = e.errors.map(&:field)
 
-          error_msg = if fields.include?("file_content_type") or fields.include?("content_type")
+          if fields.include?('$.updated_on') || fields.include?('updated_on')
+            prompt.say("#{file.file_name} timestamp #{e.errors.first.messages.first}", :red)
+            abort
+          end
+
+          error_msg = if fields.include?('file_content_type') or fields.include?('content_type')
             "is an unsupported file type for #{type}s."
-          elsif fields.include?("file_file_size") # big asset
+          elsif fields.include?('file_file_size') # big asset
             size_str = file.file_size.to_i > 0 ? "(#{file.file_size} KB) " : ''
             "#{size_str}is heavier than the maximum allowed for assets (1 MB)"
-          elsif fields.include?("body") # big template
+          elsif fields.include?('body') # big template
             str = file.file_name[/\.(html|liquid)$/] ? "Try splitting it into smaller chunks" : "Try saving it as an asset instead"
             str += ", since templates can hold up to 64 KB of data."
           else
@@ -368,11 +374,11 @@ module BooticCli
           end
 
           prompt.say("#{file.file_name} #{error_msg}. Skipping...", :red)
-          # abort
+          false # abort
 
         rescue JSON::GeneratorError => e
           prompt.say("#{file.file_name} looks like a binary file, not a template. Skipping...", :red)
-          # abort
+          false # just continue, don't abort
 
         rescue Net::OpenTimeout, Net::ReadTimeout => e
           prompt.say("I'm having trouble connecting to the server. Please try again in a minute.", :red)
