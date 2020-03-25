@@ -10,7 +10,7 @@ module BooticCli
 
       def ==(other)
         # puts "Comparing with time #{self.updated_on} vs #{other.updated_on}"
-        self.updated_on == other.updated_on
+        self.updated_on.to_i == other.updated_on.to_i
       end
     end
 

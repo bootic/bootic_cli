@@ -8,7 +8,7 @@ module BooticCli
 
       Template = Struct.new(:file_name, :body, :updated_on) do
         def ==(other)
-          self.updated_on == other.updated_on
+          self.updated_on.to_i == other.updated_on.to_i
         end
       end
 
@@ -20,10 +20,11 @@ module BooticCli
         def ==(other)
           if other.digest.to_s == '' # api theme asset without a digest set
             # puts "Other has no digest, so comparing dates: #{self.updated_on} vs #{other.updated_on}"
-            return self.updated_on == other.updated_on
+            return self.updated_on.to_i == other.updated_on.to_i
           end
 
           # file sizes may differ as they are served by CDN (that shrinks them)
+          # puts "Comparing digests:\n#{digest}\n#{other.digest}"
           self.digest == other.digest # self.file_size == other.file_size
         end
       end
