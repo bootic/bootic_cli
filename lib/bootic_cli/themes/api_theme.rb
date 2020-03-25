@@ -116,10 +116,18 @@ module BooticCli
       end
 
       def add_template(file_name, body)
-        check_errors! theme.create_template(
+        params = {
           file_name: file_name,
           body: body
-        )
+        }
+
+        if ts = get_updated_on(file_name)
+          params.merge!(last_updated_on: ts.to_i)
+        end
+
+        check_errors!(theme.create_template(params)).tap do |entity|
+          template_updated(file_name, entity)
+        end
       end
 
       def remove_template(file_name)
@@ -151,6 +159,18 @@ module BooticCli
 
       private
       attr_reader :theme
+
+      def get_updated_on(file_name)
+        if tpl = templates.find { |t| t.file_name == file_name }
+          tpl.updated_on
+        end
+      end
+
+      def template_updated(file_name, new_template)
+        if index = templates.index { |t| t.file_name == file_name }
+          templates[index] = ItemWithTime.new(new_template)
+        end
+      end
 
       def check_errors!(entity)
         if entity.has?(:errors)
