@@ -134,7 +134,7 @@ module BooticCli
         tpl = theme.templates.find { |t| t.file_name == file_name }
         if tpl && tpl.can?(:delete_template)
           res = tpl.delete_template
-          check_errors!(res) if res.respond_to?(:can?)
+          res.status.to_i < 300
         else
           puts "Cannot delete #{file_name}"
         end
@@ -151,7 +151,7 @@ module BooticCli
         asset = theme.assets.find { |t| t.file_name == file_name }
         if asset and asset.can?(:delete_theme_asset)
           res = asset.delete_theme_asset
-          check_errors!(res) if res.respond_to?(:can?)
+          res.status.to_i < 300
         else
           puts "Cannot delete asset: #{file_name}"
         end

@@ -338,7 +338,7 @@ module BooticCli
       def delete_file(theme, path)
         type = FSTheme.resolve_type(path)
         file_name = File.basename(path)
-        case type
+        success = case type
         when :template
           theme.remove_template(file_name)
         when :asset
@@ -346,7 +346,7 @@ module BooticCli
         else
           raise "Invalid type: #{type}"
         end
-        puts "Deleted remote #{type}: #{highlight(file_name)}"
+        puts "Deleted remote #{type}: #{highlight(file_name)}" if success
       end
 
       def handle_file_errors(type, file, &block)
