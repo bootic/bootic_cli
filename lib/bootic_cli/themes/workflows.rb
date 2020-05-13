@@ -189,21 +189,22 @@ module BooticCli
 
       def watch(dir, remote_theme, watcher: Listen)
         listener = watcher.to(dir) do |modified, added, removed|
+
           if modified.any?
             modified.each do |path|
-              upsert_file(remote_theme, path)
+              upsert_file(remote_theme, path, dir)
             end
           end
 
           if added.any?
             added.each do |path|
-              upsert_file(remote_theme, path)
+              upsert_file(remote_theme, path, dir)
             end
           end
 
           if removed.any?
             removed.each do |path|
-              delete_file(remote_theme, path)
+              delete_file(remote_theme, path, dir)
             end
           end
 
@@ -321,9 +322,10 @@ module BooticCli
         pool.start
       end
 
-      def upsert_file(theme, path)
+      def upsert_file(theme, path, dir)
         return if File.basename(path)[0] == '.' # filter out .lock and .state
-        item, type = FSTheme.resolve_file(path)
+
+        item, type = FSTheme.resolve_file(path, dir)
         success = handle_file_errors(type, item) do
           case type
           when :template
@@ -335,9 +337,9 @@ module BooticCli
         puts "Uploaded #{type}: #{highlight(item.file_name)}" if success
       end
 
-      def delete_file(theme, path)
+      def delete_file(theme, path, dir)
         type = FSTheme.resolve_type(path)
-        file_name = File.basename(path)
+        file_name = FSTheme.resolve_path(path, dir)
         success = case type
         when :template
           theme.remove_template(file_name)

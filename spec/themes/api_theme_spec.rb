@@ -46,7 +46,7 @@ describe BooticCli::Themes::APITheme do
     allow(theme).to receive(:templates).and_return([
       api_template
     ])
-    expect(api_template).to receive(:delete_template).and_return(double('API response', has?: false))
+    expect(api_template).to receive(:delete_template).and_return(double('API response', status: 200, has?: false))
     subject.remove_template 'foo.html'
   end
 
@@ -65,7 +65,7 @@ describe BooticCli::Themes::APITheme do
     allow(theme).to receive(:assets).and_return([
       api_asset
     ])
-    expect(api_asset).to receive(:delete_theme_asset).and_return(double('API response', has?: false))
+    expect(api_asset).to receive(:delete_theme_asset).and_return(double('API response', status: 200, has?: false))
     subject.remove_asset 'foo.js'
   end
 
