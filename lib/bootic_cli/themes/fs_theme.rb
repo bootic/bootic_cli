@@ -30,7 +30,7 @@ module BooticCli
       end
 
       ASSETS_DIR = 'assets'.freeze
-      TEMPLATE_PATTERNS = ['*.liquid', '*.html', '*.css', '*.js', 'theme.yml'].freeze
+      TEMPLATE_PATTERNS = ['sections/*.html', '*.html', '*.css', '*.js', 'theme.yml', 'settings.json'].freeze
       ASSET_PATTERNS = [File.join(ASSETS_DIR, '*')].freeze
 
       # helper to resolve the right type (Template or Asset) from a local path
@@ -87,7 +87,7 @@ module BooticCli
       def templates
         @templates ||= (
           paths_for(TEMPLATE_PATTERNS).sort.map do |path|
-            name = File.basename(path)
+            name = path.sub(dir + '/', '')
             file = File.new(path)
             Template.new(name, file.read, file.mtime.utc)
           end
@@ -113,6 +113,9 @@ module BooticCli
         if !File.exist?(path) or !has_dos_line_endings?(path)
           body = body.gsub(/\r\n?/, "\n")
         end
+
+        dir = File.dirname(path)
+        FileUtils.mkdir_p(dir) unless File.exist?(dir)
 
         File.open(path, 'w') do |io|
           io.write(body)
@@ -155,7 +158,9 @@ module BooticCli
       end
 
       def paths_for(patterns)
-        patterns.reduce([]) {|m, pattern| m + Dir[File.join(dir, pattern)]}
+        patterns.reduce([]) do |m, pattern|
+          m + Dir[File.join(dir, pattern)]
+        end
       end
 
       def setup
