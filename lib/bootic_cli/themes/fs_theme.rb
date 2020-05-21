@@ -46,12 +46,13 @@ module BooticCli
       def self.resolve_file(path, workdir)
         file = File.new(path)
         type = resolve_type(path)
-        file_name = resolve_path(path, workdir)
 
         # initialize a new asset or template as it might be a new file
         item = if path =~ /assets\//
+          file_name = File.basename(path)
           ThemeAsset.new(file_name, file, file.mtime.utc)
         else
+          file_name = resolve_path(path, workdir)
           Template.new(file_name, file.read, file.mtime.utc)
         end
 
