@@ -270,7 +270,7 @@ module BooticCli
       end
 
       def contains_theme?(path)
-        File.exist?(File.join(path, 'layout.html'))
+        File.exist?(File.join(path, 'settings.json')) || File.exist?(File.join(path, 'layout.html'))
       end
 
       def is_within_theme?
