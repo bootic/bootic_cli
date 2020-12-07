@@ -188,6 +188,7 @@ module BooticCli
       end
 
       def watch(dir, remote_theme, watcher: Listen)
+        shutting_down = false
         listener = watcher.to(dir) do |modified, added, removed|
 
           if modified.any?
@@ -209,7 +210,11 @@ module BooticCli
           end
 
           # update local cache
-          remote_theme.reload!
+          begin Zlib::BufError
+            remote_theme.reload!
+          rescue => e
+            raise unless shutting_down
+          end
         end
 
         notice "Watching #{File.expand_path(dir)} for changes..."
@@ -217,6 +222,8 @@ module BooticCli
 
         # ctrl-c
         Signal.trap('INT') {
+          shutting_down = true
+
           begin
             listener.stop
           rescue ThreadError => e # cant be called from trap context
