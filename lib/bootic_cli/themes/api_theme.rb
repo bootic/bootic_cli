@@ -58,9 +58,9 @@ module BooticCli
 
     class APITheme
 
-      class InvalidRequest < StandardError;
+      class InvalidRequest < StandardError; end
       class EntityTooLargeError < InvalidRequest; end
-      class UnknownResponse < InvalidRequest;
+      class UnknownResponse < InvalidRequest; end
 
       class EntityErrors < StandardError
         attr_reader :errors
