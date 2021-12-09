@@ -58,6 +58,10 @@ module BooticCli
 
     class APITheme
 
+      class InvalidRequest < StandardError;
+      class EntityTooLargeError < InvalidRequest; end
+      class UnknownResponse < InvalidRequest;
+
       class EntityErrors < StandardError
         attr_reader :errors
         def initialize(errors)
@@ -173,7 +177,13 @@ module BooticCli
       end
 
       def check_errors!(entity)
-        if entity.has?(:errors)
+        if !entity.respond_to?(:has)
+          if entity.body['Request Entity Too Large']
+            raise EntityTooLargeError.new("Request Entity Too Large")
+          else
+            raise UnknownResponse.new(entity.body)
+          end
+        elsif entity.has?(:errors)
           raise EntityErrors.new(entity.errors)
         end
 
