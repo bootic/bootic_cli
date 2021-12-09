@@ -58,11 +58,12 @@ module BooticCli
 
     class APITheme
 
-      class InvalidRequest < StandardError; end
+      class RequestFailed < StandardError; end
+      class InvalidRequest < RequestFailed; end
       class EntityTooLargeError < InvalidRequest; end
-      class UnknownResponse < InvalidRequest; end
+      class UnknownResponse < RequestFailed; end
 
-      class EntityErrors < StandardError
+      class EntityErrors < RequestFailed
         attr_reader :errors
         def initialize(errors)
           @errors = errors
