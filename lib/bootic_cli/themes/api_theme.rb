@@ -178,7 +178,7 @@ module BooticCli
       end
 
       def check_errors!(entity)
-        if !entity.respond_to?(:has)
+        if !entity.respond_to?(:has?)
           if entity.body['Request Entity Too Large']
             raise EntityTooLargeError.new("Request Entity Too Large")
           else
