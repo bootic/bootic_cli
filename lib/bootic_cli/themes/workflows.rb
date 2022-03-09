@@ -377,11 +377,19 @@ module BooticCli
           end
 
           prompt.say("#{file.file_name} #{error_msg}. Skipping...", :red)
-          false # abort
+          false # just continue, don't abort
 
         rescue JSON::GeneratorError => e
           prompt.say("#{file.file_name} looks like a binary file, not a template. Skipping...", :red)
           false # just continue, don't abort
+
+        rescue APITheme::InvalidRequest => e
+          prompt.say("Invalid request: #{e.message}. Skipping...", :red)
+          false # just continue, don't abort
+
+        rescue APITheme::UnknownResponse => e # 502s, 503s, etc
+          prompt.say("Got an unknown response from server: #{e.message}. Please try again in a minute.", :red)
+          abort
 
         rescue Net::OpenTimeout, Net::ReadTimeout => e
           prompt.say("I'm having trouble connecting to the server. Please try again in a minute.", :red)
