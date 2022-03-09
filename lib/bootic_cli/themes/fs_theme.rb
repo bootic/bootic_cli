@@ -103,10 +103,12 @@ module BooticCli
       def assets
         @assets ||= (
           paths_for(ASSET_PATTERNS).sort.map do |path|
-            fname = File.basename(path)
-            file = File.new(path)
-            ThemeAsset.new(fname, file, file.mtime.utc)
-          end
+            if File.file?(path)
+              fname = File.basename(path)
+              file = File.new(path)
+              ThemeAsset.new(fname, file, file.mtime.utc)
+            end
+          end.compact
         )
       end
 
