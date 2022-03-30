@@ -226,7 +226,7 @@ module BooticCli
           exit
         }
 
-        prompt.say "Preview changes at #{remote_theme.path}. Hit Ctrl-C to stop watching for changes.", :cyan
+        prompt.say "Preview changes at #{remote_theme.path} -- Hit Ctrl-C to stop watching for changes.", :cyan
         Kernel.sleep
       end
 
