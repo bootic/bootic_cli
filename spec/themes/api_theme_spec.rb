@@ -32,11 +32,11 @@ describe BooticCli::Themes::APITheme do
     api_template = double('API Template', file_name: 'foo.html', updated_on: '2017-01-01T00:10:10Z', has?: false)
     allow(theme).to receive(:templates).and_return([api_template])
 
-    expect(theme).to receive(:create_template).with(
+    expect(theme).to receive(:create_template).with({
       file_name: 'foo.html',
       body: 'Hello!',
       last_updated_on: Time.parse('2017-01-01T00:10:10Z').to_i
-    ).and_return api_template
+    }).and_return api_template
 
     expect(subject.add_template('foo.html', 'Hello!')).to eq api_template
   end

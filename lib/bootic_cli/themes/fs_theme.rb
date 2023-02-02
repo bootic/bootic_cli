@@ -134,7 +134,7 @@ module BooticCli
 
       def remove_template(file_name)
         path = File.join(dir, file_name)
-        return false unless File.exists?(path)
+        return false unless File.exist?(path)
         File.unlink path
         @templates = nil
       end
@@ -151,7 +151,7 @@ module BooticCli
 
       def remove_asset(file_name)
         path = File.join(dir, ASSETS_DIR, file_name)
-        return false unless File.exists?(path)
+        return false unless File.exist?(path)
 
         File.unlink path
         @assets = nil

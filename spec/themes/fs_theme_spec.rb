@@ -6,7 +6,7 @@ describe BooticCli::Themes::FSTheme do
 
   before :all do
     path = File.expand_path('./spec/fixtures/theme/.state')
-    File.unlink path if File.exists?(path)
+    File.unlink path if File.exist?(path)
   end
 
   describe "#subdomain" do
@@ -54,7 +54,7 @@ describe BooticCli::Themes::FSTheme do
     subject.remove_template 'foo.html'
 
     expect(subject.templates.size).to eq 2
-    expect(File.exists?('./spec/fixtures/theme/foo.html')).to be false
+    expect(File.exist?('./spec/fixtures/theme/foo.html')).to be false
   end
 
   it "#add_asset" do
@@ -78,6 +78,6 @@ describe BooticCli::Themes::FSTheme do
     subject.remove_asset 'foo.js'
 
     expect(subject.assets.size).to eq 1
-    expect(File.exists?('./spec/fixtures/theme/assets/foo.js')).to be false
+    expect(File.exist?('./spec/fixtures/theme/assets/foo.js')).to be false
   end
 end
