@@ -21,7 +21,7 @@ module BooticCli
     map %w[--version -v] => :__print_version
     desc "--version, -v", "Prints package version"
     def __print_version
-      puts BooticCli::VERSION
+      puts "#{BooticCli::VERSION} (Ruby #{RUBY_VERSION})"
     end
 
     desc 'setup', 'Setup Bootic application credentials'
