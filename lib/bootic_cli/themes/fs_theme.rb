@@ -30,7 +30,7 @@ module BooticCli
       end
 
       ASSETS_DIR = 'assets'.freeze
-      TEMPLATE_PATTERNS = ['sections/*.html', '*.html', '*.css', '*.js', 'theme.yml', 'settings.json'].freeze
+      TEMPLATE_PATTERNS = ['sections/*.html', '*.html', '*.css', '*.js', '*.json', 'theme.yml'].freeze
       ASSET_PATTERNS = [File.join(ASSETS_DIR, '*')].freeze
 
       def self.resolve_path(path, dir)
