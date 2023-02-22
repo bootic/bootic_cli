@@ -325,7 +325,7 @@ module BooticCli
             input = shell.ask(string, color)
           rescue Interrupt
             say "\nCtrl-C received. Bailing out!", :magenta
-            abort
+            exit
           end
         end
 
