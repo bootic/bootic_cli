@@ -31,6 +31,7 @@ module BooticCli
         end
 
         # file sizes may differ as they are served by CDN (that shrinks them)
+        # puts "Comparing APIAsset vs other digest:\n#{digest}\n#{other.digest}"
         self.digest == other.digest # && self.file_size == other.file_size
       end
 
