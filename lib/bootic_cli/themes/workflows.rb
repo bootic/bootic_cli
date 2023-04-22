@@ -391,7 +391,7 @@ module BooticCli
           prompt.say("Got an unknown response from server: #{e.message}. Please try again in a minute.", :red)
           exit
 
-        rescue Net::OpenTimeout, Net::ReadTimeout => e
+        rescue SocketError, Net::OpenTimeout, Net::ReadTimeout => e
           prompt.say("I'm having trouble connecting to the server. Please try again in a minute.", :red)
           exit
 
