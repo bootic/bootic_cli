@@ -139,7 +139,7 @@ module BooticCli
           if options['force'].nil? && has_lockfile?
             prompt.say("Looks like there's another process already watching this dir.")
             prompt.say("If this is not the case, please run this command with --force (or -f)")
-            abort
+            exit
           end
 
           local_theme, remote_theme = theme_selector.select_theme_pair(default_subdomain, current_dir, options['public'])
@@ -220,7 +220,7 @@ module BooticCli
         within_theme do
           unless File.directory?(dir) and contains_theme?(dir)
             prompt.say("Path doesn't exist or doesn't contain theme: #{dir}")
-            abort
+            exit
           end
 
           dirname = File.dirname(dir)
@@ -254,14 +254,14 @@ module BooticCli
       def warn_about_public
         unless prompt.yes_or_no?("You're pushing changes directly to your public theme. Are you sure?", true)
           prompt.say("Ok, sure. You can skip the above warning prompt by passing a `--public` flag.")
-          abort
+          exit
         end
       end
 
       def within_theme(&block)
         unless is_within_theme?
           prompt.say "This directory doesn't look like a Bootic theme! (#{current_expanded_dir})", :magenta
-          abort
+          exit
         end
 
         logged_in_action do
@@ -313,7 +313,7 @@ module BooticCli
             input = shell.ask("#{question} [#{default_char}]").strip
           rescue Interrupt
             say "\nCtrl-C received. Bailing out!", :magenta
-            abort
+            exit
           end
 
           return default_answer if input == '' || input.downcase == default_char

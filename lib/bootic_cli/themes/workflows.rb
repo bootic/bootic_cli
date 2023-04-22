@@ -361,7 +361,7 @@ module BooticCli
 
           if fields.include?('$.updated_on') || fields.include?('updated_on')
             prompt.say("#{file.file_name} timestamp #{e.errors.first.messages.first}", :red)
-            abort
+            exit
           end
 
           error_msg = if fields.include?('file_content_type') or fields.include?('content_type')
@@ -389,15 +389,15 @@ module BooticCli
 
         rescue APITheme::UnknownResponse => e # 502s, 503s, etc
           prompt.say("Got an unknown response from server: #{e.message}. Please try again in a minute.", :red)
-          abort
+          exit
 
         rescue Net::OpenTimeout, Net::ReadTimeout => e
           prompt.say("I'm having trouble connecting to the server. Please try again in a minute.", :red)
-          abort
+          exit
 
         rescue BooticClient::ServerError => e
           prompt.say("Couldn't save #{file.file_name}. Please try again in a few minutes.", :red)
-          abort
+          exit
         end
       end
     end
