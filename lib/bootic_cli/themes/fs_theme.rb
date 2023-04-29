@@ -33,22 +33,34 @@ module BooticCli
       TEMPLATE_PATTERNS = ['sections/*.html', '*.html', '*.css', '*.js', '*.json', 'theme.yml'].freeze
       ASSET_PATTERNS = [File.join(ASSETS_DIR, '*')].freeze
 
+      ASSET_PATH_REGEX = /^assets\/[^\/]+$/.freeze
+      TEMPLATE_PATH_REGEX = /^[^\/]+\.(html|css|scss|js|json|yml)$/.freeze
+      SECTION_PATH_REGEX = /^sections\/[^\/]+.html$/.freeze
+
       def self.resolve_path(path, dir)
         File.expand_path(path).sub(File.expand_path(dir) + '/', '')
       end
 
-      # helper to resolve the right type (Template or Asset) from a local path
+      # helper to resolve the right type (Template or Asset) from a local path
       # this is not part of the generic Theme interface
-      def self.resolve_type(path)
-        path =~ /assets\// ? :asset : :template
+      def self.resolve_type(path, dir)
+        relative_path = resolve_path(path, dir)
+
+        if relative_path[ASSET_PATH_REGEX]
+          :asset
+        elsif relative_path[TEMPLATE_PATH_REGEX] || relative_path[SECTION_PATH_REGEX]
+          :template
+        end
       end
 
       def self.resolve_file(path, workdir)
-        file = File.new(path)
-        type = resolve_type(path)
+        unless type = resolve_type(path, workdir)
+          return # neither an asset or template
+        end
 
         # initialize a new asset or template as it might be a new file
-        item = if path =~ /assets\//
+        file = File.new(path)
+        item = if type == :asset
           file_name = File.basename(path)
           ThemeAsset.new(file_name, file, file.mtime.utc)
         else
