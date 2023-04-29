@@ -327,8 +327,10 @@ module BooticCli
 
         item, type = FSTheme.resolve_file(path, dir)
         unless item
-          puts "Not a template or asset: #{path}"
+          # puts "Not a template or asset: #{path}"
+          return
         end
+
         success = handle_file_errors(type, item) do
           case type
           when :template
@@ -342,9 +344,10 @@ module BooticCli
 
       def delete_file(theme, path, dir)
         unless type = FSTheme.resolve_type(path, dir)
-          puts "Not a template or asset: #{path}"
+          # puts "Not a template or asset: #{path}"
           return
         end
+
         success = case type
         when :template
           file_name = FSTheme.resolve_path(path, dir)
