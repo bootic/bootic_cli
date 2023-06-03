@@ -168,6 +168,8 @@ module BooticCli
         changes = ThemeDiff.new(source: local_theme, target: remote_theme)
         if changes.any?
           prompt.say "There are differences between your local and the remote version of your shop's development theme."
+          puts changes.summary
+
           if prompt.yes_or_no? "Push your local changes now?", true
             push(local_theme, remote_theme, delete: true)
           else
@@ -327,7 +329,7 @@ module BooticCli
 
         item, type = FSTheme.resolve_file(path, dir)
         unless item
-          # puts "Not a template or asset: #{path}"
+          puts "Not a template or asset: #{path}"
           return
         end
 

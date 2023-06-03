@@ -9,6 +9,16 @@ module BooticCli
         @force_update = force_update
       end
 
+      def summary
+        msg = []
+        msg.push(" - Updated in source: #{updated_in_source.count}") if updated_in_source.any?
+        msg.push(" - Updated in target: #{updated_in_target.count}") if updated_in_target.any?
+        msg.push(" - Missing in target: #{missing_in_target.count}") if missing_in_target.any?
+        msg.push(" - Missing in source: #{missing_in_source.count}") if missing_in_source.any?
+        msg.unshift("Summary:") if msg.any?
+        msg.join("\n")
+      end
+
       def any?
         updated_in_source.any? || updated_in_target.any? || missing_in_target.any? || missing_in_source.any?
       end
