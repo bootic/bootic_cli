@@ -30,7 +30,7 @@ module BooticCli
       end
 
       ASSETS_DIR = 'assets'.freeze
-      TEMPLATE_PATTERNS = ['sections/*.html', '*.html', '*.css', '*.js', '*.json', 'theme.yml'].freeze
+      TEMPLATE_PATTERNS = ['sections/*.html', '*.html', '*.css', '*.js', '*.json', '*.yml'].freeze
       ASSET_PATTERNS = [File.join(ASSETS_DIR, '*')].freeze
 
       ASSET_PATH_REGEX = /^assets\/[^\/]+$/.freeze
