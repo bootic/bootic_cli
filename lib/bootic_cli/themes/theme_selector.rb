@@ -64,7 +64,7 @@ module BooticCli
         end
 
         if root.has?(:all_shops)
-          root.all_shops(subdomains: subdomain).first
+          root.all_shops(subdomains: subdomain).find { |s| s.subdomain == subdomain }
         else
           root.shops.find { |s| s.subdomain == subdomain }
         end
