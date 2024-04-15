@@ -184,7 +184,7 @@ module BooticCli
 
             # prompt.say("Publishing means all your public theme's templates and assets will be replaced and lost.")
             if prompt.yes_or_no?("Would you like to make a local copy of your current public theme before publishing?", diff.any?) # default to true if changes exist
-              path = File.join(local_theme.path, "public-theme-backup-#{Time.now.to_i}")
+              path = File.join(local_theme.path, "backups", "public-theme-backup-#{Time.now.to_i}")
               create_backup_from(public_theme, local_theme, path)
             end
 
@@ -198,7 +198,7 @@ module BooticCli
       def backup(path = nil)
         within_theme do
           local_theme, remote_theme = theme_selector.select_theme_pair(default_subdomain, current_dir, options['dev'].nil?)
-          path ||= File.join(local_theme.path, "#{remote_theme.public? ? 'public' : 'dev'}-theme-backup-#{Time.now.to_i}")
+          path ||= File.join(local_theme.path, "backups", "#{remote_theme.public? ? 'public' : 'dev'}-theme-backup-#{Time.now.to_i}")
           create_backup_from(remote_theme, local_theme, path)
         end
       end
