@@ -184,16 +184,22 @@ module BooticCli
 
             # prompt.say("Publishing means all your public theme's templates and assets will be replaced and lost.")
             if prompt.yes_or_no?("Would you like to make a local copy of your current public theme before publishing?", diff.any?) # default to true if changes exist
-              backup_path = File.join(local_theme.path, "public-theme-backup-#{Time.now.to_i}")
-              backup_theme = theme_selector.select_local_theme(backup_path, local_theme.subdomain)
-
-              prompt.say("Gotcha. Backing up your public theme into #{prompt.highlight(backup_theme.path)}")
-              workflows.pull(backup_theme, public_theme)
-              prompt.say "Done! Existing public theme was saved to #{prompt.highlight(File.basename(backup_theme.path))}", :cyan
+              path = File.join(local_theme.path, "public-theme-backup-#{Time.now.to_i}")
+              create_backup_from(public_theme, locale_theme, path)
             end
 
             workflows.publish(local_theme, remote_theme)
           end
+        end
+      end
+
+      desc 'backup', 'Create a backup copy of the current remote theme'
+      option :dev, banner: '<true|false>', type: :boolean, aliases: '-d', desc: 'Clones development theme instead of the public one (default)'
+      def backup(path = nil)
+        within_theme do
+          local_theme, remote_theme = theme_selector.select_theme_pair(default_subdomain, current_dir, options['dev'].nil?)
+          path ||= File.join(local_theme.path, "#{remote_theme.public? ? 'public' : 'dev'}-theme-backup-#{Time.now.to_i}")
+          create_backup_from(remote_theme, local_theme, path)
         end
       end
 
@@ -301,6 +307,13 @@ module BooticCli
 
       def theme_selector
         @theme_selector ||= BooticCli::Themes::ThemeSelector.new(root, prompt: prompt)
+      end
+
+      def create_backup_from(theme, local_theme, backup_path)
+        backup_theme = theme_selector.select_local_theme(backup_path, local_theme.subdomain)
+        prompt.say("Gotcha. Backing up your #{theme.public? ? 'public' : 'dev'} theme into #{prompt.highlight(backup_theme.path)}")
+        workflows.pull(backup_theme, theme)
+        prompt.say "Done! Existing #{theme.public? ? 'public' : 'dev'} theme was saved to #{prompt.highlight(File.basename(backup_theme.path))}", :cyan
       end
 
       class Prompt
