@@ -185,7 +185,7 @@ module BooticCli
             # prompt.say("Publishing means all your public theme's templates and assets will be replaced and lost.")
             if prompt.yes_or_no?("Would you like to make a local copy of your current public theme before publishing?", diff.any?) # default to true if changes exist
               path = File.join(local_theme.path, "public-theme-backup-#{Time.now.to_i}")
-              create_backup_from(public_theme, locale_theme, path)
+              create_backup_from(public_theme, local_theme, path)
             end
 
             workflows.publish(local_theme, remote_theme)
