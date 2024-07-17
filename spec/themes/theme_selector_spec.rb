@@ -187,7 +187,7 @@ describe BooticCli::Themes::ThemeSelector do
 
   def it_is_local_theme(theme)
     expect(theme).to be_a BooticCli::Themes::FSTheme
-    expect(theme.templates.map(&:file_name)).to eq ['layout.html', 'master.css', 'strings.en.json']
+    expect(theme.templates.map(&:file_name)).to eq ['layout.html', 'master.css', 'strings.en.json', "sections/gallery.html", "data/test.json"]
   end
 
   def it_is_remote_theme(theme)

@@ -30,12 +30,16 @@ module BooticCli
       end
 
       ASSETS_DIR = 'assets'.freeze
-      TEMPLATE_PATTERNS = ['sections/*.html', '*.html', '*.css', '*.js', '*.json', '*.yml'].freeze
+      TEMPLATE_PATTERNS = [
+        '*.html', '*.css', '*.js', '*.json', '*.yml',
+        'sections/*.html', 'partials/*.html', 'data/*.json', 'data/*.yml'
+      ].freeze
       ASSET_PATTERNS = [File.join(ASSETS_DIR, '*')].freeze
 
       ASSET_PATH_REGEX = /^assets\/[^\/]+$/.freeze
       TEMPLATE_PATH_REGEX = /^[^\/]+\.(html|css|scss|js|json|yml)$/.freeze
-      SECTION_PATH_REGEX = /^sections\/[^\/]+.html$/.freeze
+      SECTION_PATH_REGEX = /^(sections|partials)\/[^\/]+\.html$/.freeze
+      DATA_PATH_REGEX = /^data\/[^\/]+\.(json|yml)$/.freeze
 
       def self.resolve_path(path, dir)
         File.expand_path(path).sub(File.expand_path(dir) + '/', '')
@@ -48,7 +52,7 @@ module BooticCli
 
         if relative_path[ASSET_PATH_REGEX]
           :asset
-        elsif relative_path[TEMPLATE_PATH_REGEX] || relative_path[SECTION_PATH_REGEX]
+        elsif relative_path[TEMPLATE_PATH_REGEX] || relative_path[SECTION_PATH_REGEX] || relative_path[DATA_PATH_REGEX]
           :template
         end
       end
@@ -104,7 +108,7 @@ module BooticCli
 
       def templates
         @templates ||= (
-          paths_for(TEMPLATE_PATTERNS).sort.map do |path|
+          paths_for(TEMPLATE_PATTERNS).map do |path|
             name = self.class.resolve_path(path, dir)
             file = File.new(path)
             Template.new(name, file.read, file.mtime.utc)
