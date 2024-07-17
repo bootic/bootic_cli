@@ -30,7 +30,10 @@ module BooticCli
       end
 
       ASSETS_DIR = 'assets'.freeze
-      TEMPLATE_PATTERNS = ['sections/*.html', 'partials/*.html', 'data/*.json', 'data/*.yml', '*.html', '*.css', '*.js', '*.json', '*.yml'].freeze
+      TEMPLATE_PATTERNS = [
+        '*.html', '*.css', '*.js', '*.json', '*.yml',
+        'sections/*.html', 'partials/*.html', 'data/*.json', 'data/*.yml'
+      ].freeze
       ASSET_PATTERNS = [File.join(ASSETS_DIR, '*')].freeze
 
       ASSET_PATH_REGEX = /^assets\/[^\/]+$/.freeze
@@ -105,7 +108,7 @@ module BooticCli
 
       def templates
         @templates ||= (
-          paths_for(TEMPLATE_PATTERNS).sort.map do |path|
+          paths_for(TEMPLATE_PATTERNS).map do |path|
             name = self.class.resolve_path(path, dir)
             file = File.new(path)
             Template.new(name, file.read, file.mtime.utc)

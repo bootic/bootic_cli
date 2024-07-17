@@ -30,10 +30,12 @@ describe BooticCli::Themes::FSTheme do
     expect(subject.assets.size).to eq 1
     it_is_an_asset(subject.assets.first, file_name: 'script.js')
 
-    expect(subject.templates.size).to eq 3
+    expect(subject.templates.size).to eq 5
     it_is_a_template(subject.templates[0], file_name: 'layout.html')
     it_is_a_template(subject.templates[1], file_name: 'master.css')
     it_is_a_template(subject.templates[2], file_name: 'strings.en.json')
+    it_is_a_template(subject.templates[3], file_name: 'sections/gallery.html')
+    it_is_a_template(subject.templates[4], file_name: 'data/test.json')
   end
 
   it "#add_template" do
@@ -42,8 +44,8 @@ describe BooticCli::Themes::FSTheme do
     file = File.new('./spec/fixtures/theme/foo.html')
     expect(file.read).to eq 'Hello!'
 
-    expect(subject.templates.size).to eq 4
-    expect(subject.templates.map(&:file_name).sort).to eq ['foo.html', 'layout.html', 'master.css', 'strings.en.json']
+    expect(subject.templates.size).to eq 6
+    expect(subject.templates.map(&:file_name).sort).to eq ['data/test.json', 'foo.html', 'layout.html', 'master.css', 'sections/gallery.html', 'strings.en.json']
     tpl = subject.templates.find{|t| t.file_name == 'foo.html' }
     expect(tpl.updated_on).to eq file.mtime.utc
 
@@ -54,7 +56,7 @@ describe BooticCli::Themes::FSTheme do
     subject.add_template 'foo.html', 'Hello!'
     subject.remove_template 'foo.html'
 
-    expect(subject.templates.size).to eq 3
+    expect(subject.templates.size).to eq 5
     expect(File.exist?('./spec/fixtures/theme/foo.html')).to be false
   end
 
