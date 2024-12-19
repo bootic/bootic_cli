@@ -217,18 +217,6 @@ module BooticCli
         notice "Watching #{File.expand_path(dir)} for changes..."
         listener.start
 
-        if local_theme && File.exists?(File.join(dir, 'tailwind.config.js'))
-          source = local_theme.templates.find { |t| t.name['css'] && t.name['input'] }
-          target = local_theme.templates.find { |t| t.name['css'] && t.name['output'] }
-
-          if source && target
-            notice "Tailwind config found! Firing the CLI in watch mode.."
-            run_tailwind_cli(source, target)
-          else
-            notice "Tailwind config found, but couldn't determine the source and target files"
-          end
-        end
-
         # ctrl-c
         Signal.trap('INT') {
           begin
@@ -241,6 +229,21 @@ module BooticCli
         }
 
         prompt.say "Preview changes at #{remote_theme.path} -- Hit Ctrl-C to stop watching for changes.", :cyan
+
+
+        if local_theme && File.exists?(File.join(dir, 'tailwind.config.js'))
+          source = local_theme.templates.find { |t| t.name['css'] && t.name['input'] }
+          target = local_theme.templates.find { |t| t.name['css'] && t.name['output'] }
+
+          if source && target
+            notice "Tailwind config found! Firing the CLI in watch mode.."
+            run_tailwind_cli(source, target) # blocks
+            return
+          else
+            notice "Tailwind config found, but couldn't determine the source/input and target/output files..."
+          end
+        end
+
         Kernel.sleep
       end
 
