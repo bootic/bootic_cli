@@ -189,7 +189,7 @@ module BooticCli
         end
       end
 
-      def watch(dir, remote_theme, watcher: Listen)
+      def watch(dir, remote_theme, local_theme, watcher: Listen)
         listener = watcher.to(dir) do |modified, added, removed|
 
           if modified.any?
@@ -217,6 +217,18 @@ module BooticCli
         notice "Watching #{File.expand_path(dir)} for changes..."
         listener.start
 
+        if local_theme && File.exists?(File.join(dir, 'tailwind.config.js'))
+          source = local_theme.templates.find { |t| t.name['css'] && t.name['input'] }
+          target = local_theme.templates.find { |t| t.name['css'] && t.name['output'] }
+
+          if source && target
+            notice "Tailwind config found! Firing the CLI in watch mode.."
+            run_tailwind_cli(source, target)
+          else
+            notice "Tailwind config found, but couldn't determine the source and target files"
+          end
+        end
+
         # ctrl-c
         Signal.trap('INT') {
           begin
@@ -234,6 +246,10 @@ module BooticCli
 
       private
       attr_reader :prompt
+
+      def run_tailwind_cli(source_css, target_css)
+        `npx tailwindcss -i #{source_css} -o #{target_css} --watch`
+      end
 
       def check_dupes!(list)
         names = list.map { |f| f.file_name.downcase }

@@ -157,7 +157,7 @@ module BooticCli
 
           write_lockfile
           at_exit { remove_lockfile }
-          workflows.watch(current_dir, remote_theme)
+          workflows.watch(current_dir, remote_theme, local_theme)
         end
       end
 
