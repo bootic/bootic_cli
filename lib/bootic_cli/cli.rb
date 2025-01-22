@@ -177,18 +177,23 @@ module BooticCli
         IRB.conf[:PROMPT_MODE] = :CUSTOM
         IRB.conf[:AUTO_INDENT] = false
         irb = IRB::Irb.new(IRB::WorkSpace.new(context))
-        IRB.conf[:MAIN_CONTEXT] = irb.context
 
-        trap('SIGINT') do
-          irb.signal_handle
-        end
+        if irb.respond_to?(:run)
+          irb.run
+        else
+          IRB.conf[:MAIN_CONTEXT] = irb.context
 
-        begin
-          catch(:IRB_EXIT) do
-            irb.eval_input
+          trap('SIGINT') do
+            irb.signal_handle
           end
-        ensure
-          IRB.irb_at_exit
+
+          begin
+            catch(:IRB_EXIT) do
+              irb.eval_input
+            end
+          ensure
+            IRB.irb_at_exit
+          end
         end
       end
     end
