@@ -59,15 +59,15 @@ module BooticCli
       end
 
       def find_remote_shop(subdomain = nil)
-        if !subdomain
-          return root.shops.first
-        end
-
-        if root.has?(:all_shops)
+        found = if subdomain.nil?
+          root.shops.first
+        elsif root.has?(:all_shops)
           root.all_shops(subdomains: subdomain).find { |s| s.subdomain == subdomain }
         else
           root.shops.find { |s| s.subdomain == subdomain }
         end
+
+        found or raise "No active shop named #{subdomain}"
       end
 
       private
