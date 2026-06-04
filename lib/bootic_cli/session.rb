@@ -25,7 +25,7 @@ module BooticCli
     end
 
     def logged_in?
-      store.transaction{ store['access_token'] }
+      store.transaction { store['access_token'] }
     end
 
     def ready?
@@ -102,7 +102,7 @@ module BooticCli
         end
 
         BooticClient.client(:authorized, access_token: config[:access_token]) do |new_token|
-          store.transaction{ store['access_token'] = new_token }
+          store.transaction { store['access_token'] = new_token }
         end
       end
     end

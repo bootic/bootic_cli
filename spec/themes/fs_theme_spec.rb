@@ -83,4 +83,70 @@ describe BooticCli::Themes::FSTheme do
     expect(subject.assets.size).to eq 1
     expect(File.exist?('./spec/fixtures/theme/assets/foo.js')).to be false
   end
+
+  describe "v2 theme structure" do
+    subject { described_class.new('./spec/fixtures/theme_v2') }
+
+    before :all do
+      path = File.expand_path('./spec/fixtures/theme_v2/.state')
+      File.unlink path if File.exist?(path)
+    end
+
+    it "loads templates from layouts/, templates/, sections/, and strings/" do
+      expect(subject.templates.map(&:file_name).sort).to eq [
+        'layouts/layout.html',
+        'sections/gallery.html',
+        'strings/es.json',
+        'templates/product.html',
+      ]
+    end
+
+    it "loads public/ assets with subpath as file_name (no 'public/' prefix)" do
+      expect(subject.assets.map(&:file_name).sort).to eq ['css/main.css', 'images/logo.png']
+    end
+
+    it "#add_template writes into the correct v2 subdir" do
+      subject.add_template 'layouts/layout2.html', '<html>v2</html>'
+      expect(File.exist?('./spec/fixtures/theme_v2/layouts/layout2.html')).to be true
+      subject.remove_template 'layouts/layout2.html'
+    end
+
+    it "#add_asset with subpath writes under public/" do
+      subject.add_asset 'css/extra.css', StringIO.new("h1 {}")
+      expect(File.exist?('./spec/fixtures/theme_v2/public/css/extra.css')).to be true
+      subject.remove_asset 'css/extra.css'
+    end
+
+    it "#remove_asset with subpath deletes from public/" do
+      subject.add_asset 'css/tmp.css', StringIO.new("p {}")
+      subject.remove_asset 'css/tmp.css'
+      expect(File.exist?('./spec/fixtures/theme_v2/public/css/tmp.css')).to be false
+    end
+
+    describe ".resolve_type" do
+      it "resolves layouts/ files as :template" do
+        expect(described_class.resolve_type('./spec/fixtures/theme_v2/layouts/layout.html', './spec/fixtures/theme_v2')).to eq :template
+      end
+
+      it "resolves templates/ files as :template" do
+        expect(described_class.resolve_type('./spec/fixtures/theme_v2/templates/product.html', './spec/fixtures/theme_v2')).to eq :template
+      end
+
+      it "resolves strings/ json files as :template" do
+        expect(described_class.resolve_type('./spec/fixtures/theme_v2/strings/es.json', './spec/fixtures/theme_v2')).to eq :template
+      end
+
+      it "resolves public/ files as :asset" do
+        expect(described_class.resolve_type('./spec/fixtures/theme_v2/public/css/main.css', './spec/fixtures/theme_v2')).to eq :asset
+      end
+    end
+
+    describe ".resolve_file for a public/ asset" do
+      it "strips the 'public/' prefix so file_name matches the API convention" do
+        item, type = described_class.resolve_file('./spec/fixtures/theme_v2/public/css/main.css', './spec/fixtures/theme_v2')
+        expect(type).to eq :asset
+        expect(item.file_name).to eq 'css/main.css'
+      end
+    end
+  end
 end
