@@ -30,6 +30,10 @@ Gem::Specification.new do |spec|
     spec.add_dependency 'wdm', '>= 0.1.0'
   end
 
+  spec.add_dependency 'csv'
+  spec.add_dependency 'base64'
+  spec.add_dependency 'bigdecimal'
+
   # spec.add_development_dependency "bundler", "~> 1.9"
   spec.add_development_dependency "rake" #, "~> 10.0"
   spec.add_development_dependency "rspec" #, "~> 3.2"

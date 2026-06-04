@@ -57,8 +57,6 @@ module BooticCli
         api_root  = nil if api_root == ""
       end
 
-      client_id, client_secret = session.get_keys
-
       client_id     = ask("Enter your application's client_id:", :bold)
       client_secret = ask("Enter your application's client_secret:", :bold)
 
