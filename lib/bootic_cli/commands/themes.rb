@@ -25,8 +25,18 @@ module BooticCli
             prompt.say "Directory already exists! (#{local_theme.path})", :red
           else
             prompt.say "Cloning theme files into #{local_theme.path}"
-            workflows.pull(local_theme, remote_theme)
+
+            # write the pairing info first, so that if the pull below fails partway
+            # through, the directory is still resumable with `bootic themes pull`
             local_theme.write_subdomain
+
+            begin
+              workflows.pull(local_theme, remote_theme)
+            rescue BooticCli::Themes::Workflows::RetryableError => e
+              prompt.say e.message, :red
+              prompt.say "Once your connection is back, run `bootic themes pull` from within #{local_theme.path} to finish cloning.", :magenta
+              exit 1
+            end
           end
         end
       end
@@ -273,7 +283,13 @@ module BooticCli
         end
 
         logged_in_action do
-          yield
+          begin
+            yield
+          rescue BooticCli::Themes::Workflows::RetryableError => e
+            prompt.say e.message, :red
+            prompt.say "Once your connection is back, run `bootic themes pull` from within this directory to resume.", :magenta
+            exit 1
+          end
         end
       end
 
