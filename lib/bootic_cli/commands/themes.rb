@@ -32,7 +32,7 @@ module BooticCli
 
             begin
               workflows.pull(local_theme, remote_theme)
-            rescue BooticCli::Themes::Workflows::ConnectionError => e
+            rescue BooticCli::Themes::Workflows::RetryableError => e
               prompt.say e.message, :red
               prompt.say "Once your connection is back, run `bootic themes pull` from within #{local_theme.path} to finish cloning.", :magenta
               exit 1
@@ -285,7 +285,7 @@ module BooticCli
         logged_in_action do
           begin
             yield
-          rescue BooticCli::Themes::Workflows::ConnectionError => e
+          rescue BooticCli::Themes::Workflows::RetryableError => e
             prompt.say e.message, :red
             prompt.say "Once your connection is back, run `bootic themes pull` from within this directory to resume.", :magenta
             exit 1

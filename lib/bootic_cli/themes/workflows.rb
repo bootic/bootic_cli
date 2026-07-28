@@ -28,8 +28,12 @@ module BooticCli
       CONCURRENCY = 10
       MAX_ATTEMPTS = 3 # 1 initial try + 2 retries
 
-      # raised when a connection-related error persists after retrying
-      class ConnectionError < StandardError; end
+      # raised when a transient error (network or server-side) persists after retrying
+      class RetryableError < StandardError; end
+      # client couldn't reach the server at all (timeouts, DNS/socket errors)
+      class ConnectionError < RetryableError; end
+      # server responded, but with an error (502s, 503s, etc)
+      class ServerUnavailableError < RetryableError; end
 
       def initialize(prompt: NullPrompt)
         @prompt = prompt
@@ -402,13 +406,21 @@ module BooticCli
           prompt.say("Invalid request: #{e.message}. Skipping...", :red)
           false # just continue, don't abort
 
-        rescue APITheme::UnknownResponse, Faraday::TimeoutError, SocketError, Net::OpenTimeout, Net::ReadTimeout, BooticClient::ServerError => e
+        rescue Faraday::TimeoutError, SocketError, Net::OpenTimeout, Net::ReadTimeout => e
           if attempts < MAX_ATTEMPTS
-            prompt.say("Connection trouble while saving #{file.file_name} (#{e.message}). Retrying (attempt #{attempts + 1}/#{MAX_ATTEMPTS})...", :yellow)
+            prompt.say("Trouble connecting to the server while saving #{file.file_name} (#{e.message}). Retrying (attempt #{attempts + 1}/#{MAX_ATTEMPTS})...", :yellow)
             retry
           end
 
           raise ConnectionError, "Couldn't reach the server to save #{file.file_name} after #{attempts} attempts (#{e.message})."
+
+        rescue APITheme::UnknownResponse, BooticClient::ServerError => e # 502s, 503s, etc
+          if attempts < MAX_ATTEMPTS
+            prompt.say("Server error while saving #{file.file_name} (#{e.message}). Retrying (attempt #{attempts + 1}/#{MAX_ATTEMPTS})...", :yellow)
+            retry
+          end
+
+          raise ServerUnavailableError, "Server kept failing to save #{file.file_name} after #{attempts} attempts (#{e.message})."
         end
       end
     end
