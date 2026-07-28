@@ -26,6 +26,10 @@ module BooticCli
 
     class Workflows
       CONCURRENCY = 10
+      MAX_ATTEMPTS = 3 # 1 initial try + 2 retries
+
+      # raised when a connection-related error persists after retrying
+      class ConnectionError < StandardError; end
 
       def initialize(prompt: NullPrompt)
         @prompt = prompt
@@ -362,7 +366,9 @@ module BooticCli
       end
 
       def handle_file_errors(type, file, &block)
+        attempts = 0
         begin
+          attempts += 1
           yield
           true
         rescue APITheme::EntityErrors => e
@@ -396,17 +402,13 @@ module BooticCli
           prompt.say("Invalid request: #{e.message}. Skipping...", :red)
           false # just continue, don't abort
 
-        rescue APITheme::UnknownResponse => e # 502s, 503s, etc
-          prompt.say("Got an unknown response from server: #{e.message}. Please try again in a minute.", :red)
-          exit
+        rescue APITheme::UnknownResponse, Faraday::TimeoutError, SocketError, Net::OpenTimeout, Net::ReadTimeout, BooticClient::ServerError => e
+          if attempts < MAX_ATTEMPTS
+            prompt.say("Connection trouble while saving #{file.file_name} (#{e.message}). Retrying (attempt #{attempts + 1}/#{MAX_ATTEMPTS})...", :yellow)
+            retry
+          end
 
-        rescue Faraday::TimeoutError, SocketError, Net::OpenTimeout, Net::ReadTimeout => e
-          prompt.say("I'm having trouble connecting to the server. Please try again in a minute.", :red)
-          exit
-
-        rescue BooticClient::ServerError => e
-          prompt.say("Couldn't save #{file.file_name}. Please try again in a few minutes.", :red)
-          exit
+          raise ConnectionError, "Couldn't reach the server to save #{file.file_name} after #{attempts} attempts (#{e.message})."
         end
       end
     end
