@@ -24,93 +24,75 @@ module BooticCli
       puts "#{BooticCli::VERSION} (Ruby #{RUBY_VERSION})"
     end
 
-    desc 'setup', 'Setup Bootic application credentials'
-    def setup
-      apps_host   = "auth.bootic.net"
-      dev_app_url = "#{apps_host}/dev/cli"
-
-      if session.setup?
-        input = ask "Looks like you're already set up. Do you want to re-enter your app's credentials? [n]", :magenta
-        if input != 'y'
-          say 'Thought so. You can run `bootic help` for a list of supported commands.'
-          exit(1)
-        end
-      else
-        say "This CLI uses the #{bold('Bootic API')} in order to interact with your shop's data."
-        say "This means you need to create a Bootic app at #{bold(dev_app_url)} to access the API and use the CLI.\n"
-      end
-
-      input = ask "Have you created a Bootic app yet? [n]"
-      if input == 'y'
-        say "Great. Remember you can get your app's credentials at #{bold(dev_app_url)}."
-      else
-        say "Please visit https://#{bold(dev_app_url)} and hit the 'Create' button."
-        sleep 2
-        # Launchy.open(apps_url)
-        say ""
-      end
-
-      if current_env != DEFAULT_ENV
-        auth_host = ask("Enter auth endpoint host (#{BooticClient.configuration.auth_host}):", :bold).chomp
-        api_root  = ask("Enter API root (#{BooticClient.configuration.api_root}):", :bold).chomp
-        auth_host = nil if auth_host == ""
-        api_root  = nil if api_root == ""
-      end
-
-      client_id     = ask("Enter your application's client_id:", :bold)
-      client_secret = ask("Enter your application's client_secret:", :bold)
-
-      session.setup(client_id, client_secret, auth_host: auth_host, api_root: api_root)
-
-      if current_env == DEFAULT_ENV
-        say "Credentials stored!", :magenta
-      else
-        say "Credentials stored for #{current_env} env.", :magenta
-      end
-
-      return if ENV['nologin']
-
-      say ""
-      sleep 3
-      login
-    end
-
     desc 'login', 'Login to your Bootic account'
-    def login(scope = 'admin')
-      if !session.setup?
-        say "App not configured for #{options[:environment]} environment. Running setup first. You only need to do this once.", :red
-        invoke :setup, []
-      end
+    def login
+      require 'launchy'
+      require 'bootic_cli/local_server'
 
       if session.logged_in?
-        input = ask "Looks like you're already logged in. Do you want to redo this step? [n]", :magenta
-        if input != 'y'
-          say "That's what I thought! Try running `bootic help`."
+        input = ask "You're already logged in. Re-authenticate? [n]", :magenta
+        if input.strip.downcase != 'y'
+          say "Already logged in! Try `bootic help`."
           exit(1)
         end
       end
 
-      email = ask("Enter your Bootic email:", :bold)
-      pass  = ask("Enter your Bootic password:", :bold, echo: false)
+      state = verifier = callback_port = nil
+      params = nil
 
-      if email.strip == '' or email['@'].nil? or pass.strip == ''
-        say "\nPlease make sure to enter valid data.", :red
+      begin
+        params = BooticCli::LocalServer.wait_for_callback do |port|
+          callback_port = port
+          url, state, verifier = session.authorization_request(port: port)
+          say "\nOpening your browser to complete authentication...", :cyan
+          say "If it doesn't open automatically, visit:\n#{url}\n", :magenta
+          Launchy.open(url)
+        end
+      rescue BooticCli::LocalServer::NoPortAvailable => e
+        say e.message, :red
+        exit 1
+      rescue BooticCli::LocalServer::TimedOut
+        say "Authentication timed out (no response after 2 minutes). Please try again.", :red
         exit 1
       end
 
-      say "\n\nAlrighty! Getting access token for #{email}...\n"
+      if params['state'] != state
+        say "Security error: state mismatch. Please try again.", :red
+        exit 1
+      end
+
+      if params['error']
+        say "Authentication failed: #{params['error_description'] || params['error']}", :red
+        exit 1
+      end
 
       begin
-        session.login(email, pass, scope)
-        say "Great success! You're now logged in as #{email} (#{scope})", :green
+        session.login_with_browser(params['code'], code_verifier: verifier, port: callback_port)
+        say "\nYou're now logged in!", :green
         say "For a list of available commands, run `bootic help`."
       rescue StandardError => e
-        say e.message, :red
-        if e.message['No application with client ID']
-          sleep 2
-          say "\nTry running `bootic setup` again. Or perhaps you missed the ENV variable?", :magenta
-        end
+        say "Could not exchange token: #{e.message}", :red
+        exit 1
       end
+    end
+
+    desc 'setup', 'Configure a custom OAuth app (advanced)'
+    def setup
+      say "Note: `bootic setup` is only needed if you want to use your own OAuth app.", :cyan
+      say "For normal use, just run `bootic login`.\n"
+
+      if current_env != DEFAULT_ENV
+        auth_host = ask("Auth endpoint host (#{BooticClient.configuration.auth_host}):", :bold).chomp
+        api_root  = ask("API root (#{BooticClient.configuration.api_root}):", :bold).chomp
+        auth_host = nil if auth_host.empty?
+        api_root  = nil if api_root.empty?
+      end
+
+      client_id     = ask("Client ID:", :bold)
+      client_secret = ask("Client secret:", :bold)
+
+      session.setup(client_id, client_secret, auth_host: auth_host, api_root: api_root)
+      say "Custom app credentials stored.", :magenta
     end
 
     desc 'logout', 'Log out (delete access token)'
