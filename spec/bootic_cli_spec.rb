@@ -21,77 +21,83 @@ describe BooticCli::CLI do
     expect(Thor::LineEditor).to receive(:readline).with("#{question} ", opts).and_return response
   end
 
-  def assert_login
-    allow_ask("Looks like you're already logged in. Do you want to redo this step? [n]", "y")
-
-    allow_ask("Enter your Bootic email:", "joe@gmail.com")
-    allow_ask("Enter your Bootic password:", "bloggs", echo: false)
-
-    expect(session).to receive(:login).with("joe@gmail.com", "bloggs", "admin")
-
-    content = capture(:stdout) { described_class.start(%w(login)) }
-    expect(content).to match /You're now logged in as joe@gmail.com \(admin\)/
-  end
-
-  def assert_setup(env = 'production', &block)
-    ENV['ENV'] = env
-    ENV['nologin'] = '1' # otherwise we'de be testing the two things
-    allow(session).to receive(:setup?).and_return(false)
-
-    auth_host = nil
-    api_root = nil
-
-    if env != 'production'
-      auth_host = "https://auth-staging.bootic.net"
-      api_root = "https://api-staging.bootic.net/v1"
-      allow_ask("Enter auth endpoint host (https://auth.bootic.net):", auth_host)
-      allow_ask("Enter API root (https://api.bootic.net/v1):", api_root)
-    end
-
-    allow_ask("Have you created a Bootic app yet? [n]", "y")
-    allow_ask("Enter your application's client_id:", "abc")
-    allow_ask("Enter your application's client_secret:", "xyz")
-
-    # allow(session).to receive(:logout!)
-    expect(session).to receive(:setup).with("abc", "xyz", auth_host: auth_host, api_root: api_root)
-
-    if block_given?
-      content = capture(:stdout) { yield }
-      expect(content).to match /Credentials stored/
-    end
-  end
-
   before do
     allow(BooticCli::Session).to receive(:new).and_return session
     allow(session).to receive(:client).and_return client
   end
 
-  describe "#setup" do
-    it "calls Session#setup(client_id, client_secret)" do
-      assert_setup { described_class.start(%w(setup)) }
+  describe "#login" do
+    let(:state)    { 'deadbeefcafe' }
+    let(:verifier) { 'pkce-verifier-abc' }
+
+    before { allow(Launchy).to receive(:open) }
+
+    context "not yet logged in" do
+      before { allow(session).to receive(:logged_in?).and_return(false) }
+
+      it "opens browser and exchanges the code for a token" do
+        allow(BooticCli::LocalServer).to receive(:wait_for_callback) do |&block|
+          block.call(33100)
+          { 'code' => 'auth-code-123', 'state' => state }
+        end
+
+        expect(session).to receive(:authorization_request).with(port: 33100)
+                                                          .and_return(['https://auth.example.com/authorize', state, verifier])
+        expect(session).to receive(:login_with_browser).with('auth-code-123', code_verifier: verifier, port: 33100)
+
+        content = capture(:stdout) { described_class.start(%w(login)) }
+        expect(content).to match /You're now logged in!/
+      end
+
+      it "aborts on state mismatch without exchanging the code" do
+        allow(BooticCli::LocalServer).to receive(:wait_for_callback) do |&block|
+          block.call(33100)
+          { 'code' => 'auth-code-123', 'state' => 'tampered' }
+        end
+        allow(session).to receive(:authorization_request).and_return(['https://auth.example.com/authorize', state, verifier])
+        expect(session).not_to receive(:login_with_browser)
+
+        expect { described_class.start(%w(login)) }.to raise_error(SystemExit)
+      end
     end
 
-    it "sets up with custom env" do
-      assert_setup('staging') {
-        described_class.start(%w(setup))
-      }
+    context "already logged in" do
+      it "exits early when user declines re-authentication" do
+        allow_ask("You're already logged in. Re-authenticate? [n]", "n")
+        expect { described_class.start(%w(login)) }.to raise_error(SystemExit)
+      end
     end
   end
 
-  describe "#login" do
-    context "not setup yet" do
-      it "invokes setup" do
-        allow(session).to receive(:setup?).and_return false
-        assert_setup
-        assert_login
-      end
+  describe "#setup" do
+    before { ENV.delete('ENV') }
+    after  { ENV.delete('ENV') }
+
+    it "calls Session#setup(client_id, client_secret)" do
+      allow_ask("Client ID:", "abc")
+      allow_ask("Client secret:", "xyz")
+
+      expect(session).to receive(:setup).with("abc", "xyz", auth_host: nil, api_root: nil)
+
+      content = capture(:stdout) { described_class.start(%w(setup)) }
+      expect(content).to match /Custom app credentials stored/
     end
 
-    context "already setup" do
-      it "calls Session#setup(client_id, client_secret)" do
-        allow(session).to receive(:setup?).and_return true
-        assert_login
-      end
+    it "sets up with custom env" do
+      ENV['ENV'] = 'staging'
+      allow_ask("Auth endpoint host (https://auth.bootic.net):", "https://auth-staging.bootic.net")
+      allow_ask("API root (https://api.bootic.net/v1):", "https://api-staging.bootic.net/v1")
+      allow_ask("Client ID:", "abc")
+      allow_ask("Client secret:", "xyz")
+
+      expect(session).to receive(:setup).with(
+        "abc", "xyz",
+        auth_host: "https://auth-staging.bootic.net",
+        api_root:  "https://api-staging.bootic.net/v1"
+      )
+
+      content = capture(:stdout) { described_class.start(%w(setup)) }
+      expect(content).to match /Custom app credentials stored/
     end
   end
 
@@ -99,7 +105,6 @@ describe BooticCli::CLI do
     it "calls Session#logout!" do
       expect(session).to receive(:logout!)
       content = capture(:stdout) { described_class.start(%w(logout)) }
-
       expect(content).to match /Done. You are now logged out/
     end
   end
@@ -108,7 +113,6 @@ describe BooticCli::CLI do
     it "calls Session#erase!" do
       expect(session).to receive(:erase!)
       content = capture(:stdout) { described_class.start(%w(erase)) }
-
       expect(content).to match /Ok mister. All credentials have been erased/
     end
   end
@@ -139,9 +143,7 @@ describe BooticCli::CLI do
   describe "#runner" do
     it "uses FileRunner" do
       expect(BooticCli::FileRunner).to receive(:run).with(root, "./foo.rb")
-
       described_class.start(%w(runner ./foo.rb))
     end
   end
-
 end
