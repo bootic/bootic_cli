@@ -30,12 +30,13 @@ describe BooticCli::Themes::FSTheme do
     expect(subject.assets.size).to eq 1
     it_is_an_asset(subject.assets.first, file_name: 'script.js')
 
-    expect(subject.templates.size).to eq 5
+    expect(subject.templates.size).to eq 6
     it_is_a_template(subject.templates[0], file_name: 'layout.html')
     it_is_a_template(subject.templates[1], file_name: 'master.css')
     it_is_a_template(subject.templates[2], file_name: 'strings.en.json')
-    it_is_a_template(subject.templates[3], file_name: 'sections/gallery.html')
-    it_is_a_template(subject.templates[4], file_name: 'data/test.json')
+    it_is_a_template(subject.templates[3], file_name: 'readme.md')
+    it_is_a_template(subject.templates[4], file_name: 'sections/gallery.html')
+    it_is_a_template(subject.templates[5], file_name: 'data/test.json')
   end
 
   it "#add_template" do
@@ -44,19 +45,29 @@ describe BooticCli::Themes::FSTheme do
     file = File.new('./spec/fixtures/theme/foo.html')
     expect(file.read).to eq 'Hello!'
 
-    expect(subject.templates.size).to eq 6
-    expect(subject.templates.map(&:file_name).sort).to eq ['data/test.json', 'foo.html', 'layout.html', 'master.css', 'sections/gallery.html', 'strings.en.json']
+    expect(subject.templates.size).to eq 7
+    expect(subject.templates.map(&:file_name).sort).to eq ['data/test.json', 'foo.html', 'layout.html', 'master.css', 'readme.md', 'sections/gallery.html', 'strings.en.json']
     tpl = subject.templates.find{|t| t.file_name == 'foo.html' }
     expect(tpl.updated_on).to eq file.mtime.utc
 
     subject.remove_template 'foo.html'
   end
 
+  it "recognizes .md files at the theme root as templates" do
+    subject.add_template 'CHANGELOG.md', '# Changes'
+
+    tpl = subject.templates.find { |t| t.file_name == 'CHANGELOG.md' }
+    expect(tpl).not_to be_nil
+    expect(tpl.body).to eq '# Changes'
+
+    subject.remove_template 'CHANGELOG.md'
+  end
+
   it "#remove_template" do
     subject.add_template 'foo.html', 'Hello!'
     subject.remove_template 'foo.html'
 
-    expect(subject.templates.size).to eq 5
+    expect(subject.templates.size).to eq 6
     expect(File.exist?('./spec/fixtures/theme/foo.html')).to be false
   end
 
